@@ -114,20 +114,27 @@ function Home() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/check-status"
-              className="hidden rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#FFF8EF] sm:inline-block"
-            >
-              Check status
-            </Link>
+  <Link
+    to="/admin/login"
+    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] inline-block"
+  >
+    Admin
+  </Link>
 
-            <Link
-              to="/submit-listing"
-              className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              List PG
-            </Link>
-          </div>
+  <Link
+    to="/check-status"
+    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] sm:inline-block"
+  >
+    Check status
+  </Link>
+
+  <Link
+    to="/submit-listing"
+    className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
+  >
+    List PG
+  </Link>
+</div>
         </div>
       </header>
 
