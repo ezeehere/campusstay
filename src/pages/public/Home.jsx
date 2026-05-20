@@ -402,17 +402,100 @@ function Home() {
 
 
 
-            <footer className="border-t border-[#E8DFD2] bg-white">
-  <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-    <p>CampusStay - Find verified PGs and rooms near campus.</p>
+            <footer className="border-t border-[#E8DFD2] bg-[#FFF8EF]">
+  <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm sm:p-8">
+      <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white shadow-sm">
+              <HomeIcon size={23} />
+            </div>
 
-    <p>
-      Designed and built by{" "}
-      <span className="font-semibold text-[#1E5B4F]">
-        Ezaz Ahmed
-      </span>
-      , JIST, Jorhat.
-    </p>
+            <div>
+              <h3 className="text-xl font-extrabold text-[#1F2933]">
+                CampusStay
+              </h3>
+              <p className="text-sm text-slate-500">
+                PGs and rooms made easy
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
+            CampusStay helps students find verified PGs and rooms near campus
+            with rent, photos, facilities, location, and direct owner contact.
+          </p>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
+            Quick links
+          </h4>
+
+          <div className="mt-4 grid gap-3 text-sm">
+            <Link
+              to="/"
+              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+            >
+              Home
+            </Link>
+
+            <Link
+              to="/submit-listing"
+              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+            >
+              List your PG
+            </Link>
+
+            <Link
+              to="/check-status"
+              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+            >
+              Check status
+            </Link>
+
+            <Link
+              to="/admin/login"
+              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+            >
+              Admin
+            </Link>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
+            Launch area
+          </h4>
+
+          <div className="mt-4 rounded-3xl bg-[#F6F1E8] p-4">
+            <p className="text-2xl font-extrabold text-[#1F2933]">JIST</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Starting with stays near Jorhat Institute of Science and
+              Technology.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 border-t border-[#E8DFD2] pt-5">
+        <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Students and parents should visit and verify the stay before making
+            any payment.
+          </p>
+
+          <p>
+            Designed and built by{" "}
+            <span className="font-bold text-[#1E5B4F]">
+              Ezaz Ahmed
+            </span>
+            , JIST, Jorhat.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </footer>
 
