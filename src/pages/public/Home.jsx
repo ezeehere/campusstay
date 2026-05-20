@@ -30,6 +30,7 @@ function Home() {
   const [selectedListing, setSelectedListing] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
 
   useEffect(() => {
@@ -138,10 +139,10 @@ function Home() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 pb-7 pt-8 sm:px-6 lg:px-8 lg:pt-12">
+      <section className="mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pt-12">
         <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <h2 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+            <h2 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               Find verified PGs and rooms near campus.
             </h2>
 
@@ -286,23 +287,35 @@ function Home() {
         className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8"
       >
         <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div>
-            <Badge>
-              <SlidersHorizontal size={14} />
-              Refine results
-            </Badge>
+  <div>
+    <button
+      onClick={() => setShowMobileFilters(!showMobileFilters)}
+      className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
+    >
+      <SlidersHorizontal size={14} />
+      {showMobileFilters ? "Hide filters" : "Filters"}
+    </button>
 
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
-              Available stays
-            </h2>
-          </div>
+    <div className="hidden lg:inline-flex">
+      <Badge>
+        <SlidersHorizontal size={14} />
+        Refine results
+      </Badge>
+    </div>
 
-          <p className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
-            Showing {filteredListings.length} of {listings.length} listings
-          </p>
-        </div>
+    <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
+      Available stays
+    </h2>
+  </div>
 
-        <div className="mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
+  <p className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+    Showing {filteredListings.length} of {listings.length} listings
+  </p>
+</div>
+
+        <div  className={`mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm ${ showMobileFilters ? "block" : "hidden"
+  } lg:block`}
+>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]">
             <select
               value={gender}
