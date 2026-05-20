@@ -123,7 +123,7 @@ function Home() {
 
   <Link
     to="/check-status"
-    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] sm:inline-block"
+    className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] inline-block"
   >
     Check status
   </Link>
