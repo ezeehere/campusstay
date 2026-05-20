@@ -116,7 +116,7 @@ function Home() {
           <div className="flex items-center gap-2">
   <Link
     to="/admin/login"
-    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] inline-block"
+    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] sm:inline-block"
   >
     Admin
   </Link>
