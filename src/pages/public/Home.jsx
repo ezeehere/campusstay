@@ -390,11 +390,18 @@ function Home() {
 
 
             <footer className="border-t border-[#E8DFD2] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>CampusStay - Find verified PGs and rooms near campus.</p>
-          <p>Students and parents should visit and verify before paying.</p>
-        </div>
-      </footer>
+  <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+    <p>CampusStay - Find verified PGs and rooms near campus.</p>
+
+    <p>
+      Designed and built by{" "}
+      <span className="font-semibold text-[#1E5B4F]">
+        Ezaz Ahmed
+      </span>
+      , JIST, Jorhat.
+    </p>
+  </div>
+</footer>
 
       {selectedListing && (
         <ListingDetailsModal
