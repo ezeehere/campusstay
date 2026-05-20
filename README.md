@@ -1,12 +1,3 @@
-Create this file in your project root:
-
-```text
-README.md
-```
-
-Paste this full content:
-
-````md
 # CampusStay
 
 CampusStay is a web app that helps students find verified PGs and rooms near campus.
