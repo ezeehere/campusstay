@@ -131,7 +131,7 @@ async function handleUpdate(listingId, updates) {
   }, [adminListings, search, activeFilter]);
 
   return (
-    <main className="min-h-screen bg-[#FFF8EF] text-slate-950">
+    <main className="min-h-screen bg-[#f6f8fb] text-slate-950">
       <header className="sticky top-0 z-30 border-b border-[#E8DFD2] bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3">

@@ -105,7 +105,7 @@ function Home() {
 
             <div>
               <h1 className="text-xl font-black tracking-tight">
-                CampusStay
+                Campus Stay
               </h1>
               <p className="text-xs text-slate-500">
                 PGs and rooms made easy
@@ -230,7 +230,7 @@ function Home() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-2xl shadow-slate-200/70">
+          <div className="hidden rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-2xl shadow-slate-200/70 lg:block">
             <div className="rounded-[1.5rem] bg-slate-950 p-5 text-white">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">Quick stay preview</p>
