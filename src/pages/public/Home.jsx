@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+
 import {
   CheckCircle2,
   Home as HomeIcon,
@@ -482,7 +483,7 @@ function Home() {
       <div className="mt-8 border-t border-[#E8DFD2] pt-5">
         <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Students and parents should visit and verify the stay before making
+            Students and parents are advised to visit and verify the stay before making
             any payment.
           </p>
 
