@@ -3,7 +3,9 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Plus,
   Send,
+  Trash2,
   UploadCloud,
 } from "lucide-react";
 
@@ -14,18 +16,24 @@ const initialFormData = {
   name: "",
   type: "PG",
   gender: "Boys",
-  rent: "",
-  deposit: "",
   area: "",
   distance: "",
   food: "Yes",
   foodDetails: "",
-  roomType: "",
   facilities: "",
   rules: "",
   ownerName: "",
   phone: "",
   mapLink: "",
+};
+
+const initialRoomOption = {
+  title: "Single Room",
+  rent: "",
+  deposit: "",
+  capacity: "1",
+  availableUnits: "",
+  note: "",
 };
 
 function generateTrackingId() {
@@ -35,6 +43,7 @@ function generateTrackingId() {
 
 function SubmitListingForm() {
   const [formData, setFormData] = useState(initialFormData);
+  const [roomOptions, setRoomOptions] = useState([{ ...initialRoomOption }]);
   const [imageFiles, setImageFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submittedInfo, setSubmittedInfo] = useState(null);
@@ -49,6 +58,46 @@ function SubmitListingForm() {
       ...previousData,
       [name]: value,
     }));
+  }
+
+  function handleRoomOptionChange(index, event) {
+    const { name, value } = event.target;
+
+    setRoomOptions((previousOptions) =>
+      previousOptions.map((room, roomIndex) =>
+        roomIndex === index
+          ? {
+              ...room,
+              [name]: value,
+            }
+          : room
+      )
+    );
+  }
+
+  function addRoomOption() {
+    setRoomOptions((previousOptions) => [
+      ...previousOptions,
+      {
+        title: "Double Sharing",
+        rent: "",
+        deposit: "",
+        capacity: "2",
+        availableUnits: "",
+        note: "",
+      },
+    ]);
+  }
+
+  function removeRoomOption(index) {
+    if (roomOptions.length === 1) {
+      alert("At least one room option is required.");
+      return;
+    }
+
+    setRoomOptions((previousOptions) =>
+      previousOptions.filter((_, roomIndex) => roomIndex !== index)
+    );
   }
 
   function handleImageChange(event) {
@@ -79,12 +128,32 @@ function SubmitListingForm() {
   async function handleSubmit(event) {
     event.preventDefault();
 
+    const cleanRoomOptions = roomOptions.map((room, index) => ({
+      id: `room-${index + 1}`,
+      title: room.title.trim(),
+      rent: Number(room.rent || 0),
+      deposit: Number(room.deposit || 0),
+      capacity: Number(room.capacity || 1),
+      availableUnits: Number(room.availableUnits || 0),
+      available: Number(room.availableUnits || 0) > 0,
+      note: room.note.trim(),
+    }));
+
+    const hasInvalidRoom = cleanRoomOptions.some(
+      (room) => !room.title || !room.rent || !room.capacity
+    );
+
+    if (hasInvalidRoom) {
+      alert("Please fill room type, rent, and capacity for every room option.");
+      return;
+    }
+
+    const startingRent = Math.min(...cleanRoomOptions.map((room) => room.rent));
+
     const trackingId = generateTrackingId();
 
     const listingData = {
       ...formData,
-      rent: Number(formData.rent),
-      deposit: Number(formData.deposit || 0),
       food: formData.food === "Yes",
       facilities: formData.facilities
         .split(",")
@@ -94,9 +163,18 @@ function SubmitListingForm() {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
+
+      roomOptions: cleanRoomOptions,
+      startingRent,
+
+      // Backward compatible fields
+      rent: startingRent,
+      deposit: cleanRoomOptions[0]?.deposit || 0,
+      roomType: cleanRoomOptions.map((room) => room.title).join(" / "),
+
       approved: false,
       verified: false,
-      available: true,
+      available: cleanRoomOptions.some((room) => room.available),
       status: "pending",
       trackingId,
       adminNote: "",
@@ -124,6 +202,7 @@ function SubmitListingForm() {
       });
 
       setFormData(initialFormData);
+      setRoomOptions([{ ...initialRoomOption }]);
       setImageFiles([]);
 
       window.scrollTo({
@@ -147,7 +226,7 @@ function SubmitListingForm() {
               <CheckCircle2 size={28} />
             </div>
 
-            <h3 className="text-2xl font-black text-emerald-950">
+            <h3 className="text-2xl font-extrabold text-emerald-950">
               Your listing is submitted and under review.
             </h3>
 
@@ -160,10 +239,10 @@ function SubmitListingForm() {
           </div>
 
           <div className="rounded-3xl bg-white p-4 shadow-sm lg:min-w-72">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-extrabold uppercase tracking-wide text-slate-400">
               Current status
             </p>
-            <p className="mt-1 text-xl font-black text-amber-700">
+            <p className="mt-1 text-xl font-extrabold text-amber-700">
               Pending Review
             </p>
           </div>
@@ -175,7 +254,7 @@ function SubmitListingForm() {
         </div>
 
         <div className="mt-4 rounded-3xl border border-emerald-200 bg-white p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-extrabold uppercase tracking-wide text-slate-400">
             Tracking link
           </p>
 
@@ -186,7 +265,7 @@ function SubmitListingForm() {
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <button
               onClick={() => copyTrackingLink(submittedInfo.trackingLink)}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
               <Copy size={16} />
               {copied ? "Copied" : "Copy link"}
@@ -257,25 +336,6 @@ function SubmitListingForm() {
         />
 
         <InputField
-          label="Monthly rent"
-          name="rent"
-          type="number"
-          value={formData.rent}
-          onChange={handleChange}
-          placeholder="Example: 4500"
-          required
-        />
-
-        <InputField
-          label="Deposit"
-          name="deposit"
-          type="number"
-          value={formData.deposit}
-          onChange={handleChange}
-          placeholder="Example: 1000"
-        />
-
-        <InputField
           label="Area"
           name="area"
           value={formData.area}
@@ -300,14 +360,6 @@ function SubmitListingForm() {
           onChange={handleChange}
           options={["Yes", "No"]}
         />
-      
-        <SelectField
-          label="Room type"
-          name="roomType"
-          value={formData.roomType}
-          onChange={handleChange}
-          options={["Shared", "Single"]}
-        />
 
         <InputField
           label="Phone / WhatsApp number"
@@ -326,6 +378,116 @@ function SubmitListingForm() {
           placeholder="Paste map link"
         />
       </div>
+
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4 sm:p-5">
+        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h3 className="text-xl font-extrabold text-[#1F2933]">
+              Room options
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Add single, double, triple, or other sharing options available in
+              this PG.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={addRoomOption}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+          >
+            <Plus size={16} />
+            Add room option
+          </button>
+        </div>
+
+        <div className="grid gap-4">
+          {roomOptions.map((room, index) => (
+            <div
+              key={index}
+              className="rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm"
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h4 className="font-bold text-[#1F2933]">
+                  Room option {index + 1}
+                </h4>
+
+                <button
+                  type="button"
+                  onClick={() => removeRoomOption(index)}
+                  className="flex items-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100"
+                >
+                  <Trash2 size={14} />
+                  Remove
+                </button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <SelectField
+                  label="Room type"
+                  name="title"
+                  value={room.title}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  options={[
+                    "Single Room",
+                    "Double Sharing",
+                    "Triple Sharing",
+                    "Four Sharing",
+                    "Dormitory",
+                    "Other",
+                  ]}
+                />
+
+                <InputField
+                  label="Monthly rent"
+                  name="rent"
+                  type="number"
+                  value={room.rent}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  placeholder="Example: 4500"
+                  required
+                />
+
+                <InputField
+                  label="Deposit"
+                  name="deposit"
+                  type="number"
+                  value={room.deposit}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  placeholder="Example: 1000"
+                />
+
+                <InputField
+                  label="Capacity"
+                  name="capacity"
+                  type="number"
+                  value={room.capacity}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  placeholder="Example: 2"
+                  required
+                />
+
+                <InputField
+                  label="Available rooms/seats"
+                  name="availableUnits"
+                  type="number"
+                  value={room.availableUnits}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  placeholder="Example: 3"
+                />
+
+                <InputField
+                  label="Note"
+                  name="note"
+                  value={room.note}
+                  onChange={(event) => handleRoomOptionChange(index, event)}
+                  placeholder="Example: Two students per room"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div>
         <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -405,7 +567,7 @@ function SubmitListingForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Send size={17} />
         {submitting ? "Submitting..." : "Submit for review"}
@@ -469,10 +631,10 @@ function SelectField({ label, name, value, onChange, options }) {
 function SuccessBox({ label, value }) {
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
-      <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+      <p className="text-xs font-extrabold uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="mt-1 break-words text-lg font-black text-slate-950">
+      <p className="mt-1 break-words text-lg font-extrabold text-slate-950">
         {value}
       </p>
     </div>

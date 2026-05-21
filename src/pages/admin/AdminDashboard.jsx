@@ -310,15 +310,24 @@ async function handleUpdate(listingId, updates) {
                           </p>
 
                           <p className="mt-2 text-lg font-black text-slate-950">
-                            ₹{listing.rent || 0}
+                            {listing.roomOptions?.length || 1} room option
+{(listing.roomOptions?.length || 1) > 1 ? "s" : ""}
                             <span className="ml-1 text-xs font-semibold text-slate-500">
                               /month
                             </span>
                           </p>
+
+                          
                         </div>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                        <InfoMini
+                            label="Room options"
+                            value={`${listing.roomOptions?.length || 1} option${
+                                (listing.roomOptions?.length || 1) > 1 ? "s" : ""
+                            }`}
+                            />
                         <InfoMini
                           label="Owner"
                           value={listing.ownerName || "Not added"}

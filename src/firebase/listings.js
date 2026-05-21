@@ -17,6 +17,12 @@ import { db } from "./config";
 const listingsCollection = collection(db, "listings");
 
 export async function addPendingListing(listingData) {
+    const roomOptions = listingData.roomOptions || [];
+
+const startingRent =
+  roomOptions.length > 0
+    ? Math.min(...roomOptions.map((room) => Number(room.rent || 0)).filter(Boolean))
+    : Number(listingData.rent || 0);
   const docRef = await addDoc(listingsCollection, {
     ...listingData,
 

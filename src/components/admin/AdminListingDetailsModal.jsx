@@ -313,6 +313,63 @@ async function handleSaveStatus() {
                 </div>
               </div>
 
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+  <h3 className="text-base font-extrabold text-slate-950">Room options</h3>
+
+  <div className="mt-3 grid gap-3">
+    {(listing.roomOptions || []).length > 0 ? (
+      listing.roomOptions.map((room) => (
+        <div
+          key={room.id || room.title}
+          className="rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4"
+        >
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div>
+              <h4 className="font-extrabold text-[#1F2933]">
+                {room.title}
+              </h4>
+
+              <p className="mt-1 text-sm text-slate-600">
+                Capacity: {room.capacity} student
+                {Number(room.capacity) > 1 ? "s" : ""}
+              </p>
+
+              {room.note && (
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {room.note}
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
+              <p className="text-lg font-extrabold text-[#1F2933]">
+                ₹{room.rent}
+              </p>
+              <p className="text-xs text-slate-500">per month</p>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+            <div className="rounded-2xl bg-white px-3 py-2">
+              Deposit: ₹{room.deposit || 0}
+            </div>
+
+            <div className="rounded-2xl bg-white px-3 py-2">
+              Available: {room.availableUnits || 0}
+            </div>
+
+            <div className="rounded-2xl bg-white px-3 py-2">
+              Status: {room.available ? "Available" : "Full"}
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className="text-sm text-slate-500">No room options added.</p>
+    )}
+  </div>
+</div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-slate-200 bg-white p-4">
                   <h3 className="text-base font-black text-slate-950">

@@ -16,6 +16,12 @@ import { createWhatsAppLink } from "../../utils/whatsapp";
 
 function ListingCard({ listing, onViewDetails }) {
   const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
+  const startingRent = listing.startingRent || listing.rent || 0;
+
+const roomSummary =
+  listing.roomOptions?.length > 0
+    ? listing.roomOptions.map((room) => room.title).join(", ")
+    : listing.roomType || "Room options";
   const coverImage =
   listing.images?.[0] ||
   "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=600&auto=format&fit=crop";
@@ -62,10 +68,11 @@ function ListingCard({ listing, onViewDetails }) {
           </div>
 
           <div className="rounded-2xl bg-white/95 px-3 py-2 text-right text-slate-950">
-            <p className="flex items-center justify-end text-sm font-black">
-              <IndianRupee size={14} />
-              {listing.rent}
-            </p>
+            <p className="flex items-center justify-end text-sm font-extrabold">
+  <IndianRupee size={14} />
+  {startingRent}
+</p>
+<p className="text-[11px] text-slate-500">starts</p>
             <p className="text-[11px] text-slate-500">month</p>
           </div>
         </div>
@@ -91,7 +98,7 @@ function ListingCard({ listing, onViewDetails }) {
                 Room type
               </p>
               <p className="mt-1 text-sm font-bold text-slate-900">
-                {listing.roomType}
+                {roomSummary}
               </p>
             </div>
 
@@ -155,6 +162,8 @@ function ListingCard({ listing, onViewDetails }) {
             <MessageCircle size={16} />
             WhatsApp
           </a>
+
+          
         </div>
       </div>
     </article>
