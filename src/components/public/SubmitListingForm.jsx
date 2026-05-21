@@ -103,8 +103,8 @@ function SubmitListingForm() {
   function handleImageChange(event) {
     const files = Array.from(event.target.files);
 
-    if (files.length > 5) {
-      alert("You can upload maximum 5 images.");
+    if (files.length > 10) {
+      alert("You can upload maximum 10 images.");
       return;
     }
 
@@ -530,7 +530,7 @@ function SubmitListingForm() {
           <UploadCloud size={28} className="text-slate-500" />
 
           <span className="mt-2 text-sm font-semibold text-slate-700">
-            Upload up to 5 images
+            Upload up to 10 images
           </span>
 
           <span className="mt-1 text-xs text-slate-500">
@@ -547,7 +547,7 @@ function SubmitListingForm() {
         </label>
 
         {imageFiles.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5">
             {imagePreviews.map((preview, index) => (
               <div
                 key={preview}
