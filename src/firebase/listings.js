@@ -10,9 +10,15 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 
 import { db } from "./config";
+
+function createStatusKey(trackingId, phone) {
+  return `${trackingId}_${phone}`.replace(/\s+/g, "");
+}
 
 const listingsCollection = collection(db, "listings");
 
@@ -48,28 +54,42 @@ const startingRent =
     
   });
 
+  const statusKey = createStatusKey(listingData.trackingId, listingData.phone);
+
+await setDoc(doc(db, "listingStatus", statusKey), {
+  listingId: docRef.id,
+  trackingId: listingData.trackingId,
+  phone: listingData.phone,
+  name: listingData.name || "",
+  area: listingData.area || "",
+  distance: listingData.distance || "",
+  type: listingData.type || "",
+  gender: listingData.gender || "",
+  startingRent,
+  approved: false,
+  available: true,
+  status: listingData.status || "pending",
+  adminNote: listingData.adminNote || "",
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+});
+
   return docRef.id;
 }
 
 export async function getListingByTrackingIdAndPhone(trackingId, phone) {
-  const statusQuery = query(
-    listingsCollection,
-    where("trackingId", "==", trackingId),
-    where("phone", "==", phone),
-    limit(1)
-  );
+  const statusKey = createStatusKey(trackingId, phone);
 
-  const snapshot = await getDocs(statusQuery);
+  const statusRef = doc(db, "listingStatus", statusKey);
+  const snapshot = await getDoc(statusRef);
 
-  if (snapshot.empty) {
+  if (!snapshot.exists()) {
     return null;
   }
 
-  const docItem = snapshot.docs[0];
-
   return {
-    id: docItem.id,
-    ...docItem.data(),
+    id: snapshot.id,
+    ...snapshot.data(),
   };
 }
 export async function getApprovedListings() {
@@ -107,6 +127,40 @@ export async function updateListing(listingId, updates) {
     ...updates,
     updatedAt: serverTimestamp(),
   });
+
+  const listingSnapshot = await getDoc(listingRef);
+
+  if (!listingSnapshot.exists()) return;
+
+  const listingData = listingSnapshot.data();
+
+  if (!listingData.trackingId || !listingData.phone) return;
+
+  const statusKey = createStatusKey(
+    listingData.trackingId,
+    listingData.phone
+  );
+
+  await setDoc(
+    doc(db, "listingStatus", statusKey),
+    {
+      listingId,
+      trackingId: listingData.trackingId,
+      phone: listingData.phone,
+      name: listingData.name || "",
+      area: listingData.area || "",
+      distance: listingData.distance || "",
+      type: listingData.type || "",
+      gender: listingData.gender || "",
+      startingRent: listingData.startingRent || listingData.rent || 0,
+      approved: listingData.approved || false,
+      available: listingData.available || false,
+      status: listingData.status || "pending",
+      adminNote: listingData.adminNote || "",
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }
 
 export async function deleteListing(listingId) {
