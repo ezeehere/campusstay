@@ -81,7 +81,7 @@ function ListingDetailsModal({ listing, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-3 py-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-slate-50 shadow-2xl">
+      <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.5rem] bg-slate-50 shadow-2xl sm:rounded-[2rem]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4">
           <div>
             <h2 className="text-2xl font-black leading-tight text-slate-950">
@@ -106,36 +106,36 @@ function ListingDetailsModal({ listing, onClose }) {
         <div className="overflow-y-auto p-4 sm:p-5">
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="overflow-hidden rounded-[1.7rem] bg-slate-200">
-                  <img
-                    src={activeImage}
-                    alt={listing.name}
-                    className="h-64 w-full object-cover sm:h-72"
-                  />
-                </div>
+              <div className="space-y-3"> 
+  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
+    <img
+      src={activeImage}
+      alt={listing.name}
+      className="max-h-full max-w-full object-contain"
+    />
+  </div>
 
-                {images.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {images.map((image, index) => (
-                      <button
-                        key={`${image}-${index}`}
-                        onClick={() => setActiveImageIndex(index)}
-                        className={`h-16 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition ${
-                          activeImageIndex === index
-                            ? "border-slate-950"
-                            : "border-transparent opacity-70 hover:opacity-100"
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`${listing.name} ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
+  {images.length > 1 && (
+    <div className="flex gap-2 overflow-x-auto pb-2">
+      {images.map((image, index) => (
+        <button
+          key={`${image}-${index}`}
+          onClick={() => setActiveImageIndex(index)}
+          className={`h-16 w-20 shrink-0 overflow-hidden rounded-2xl border-2 bg-[#F6F1E8] transition sm:h-20 sm:w-24 ${
+            activeImageIndex === index
+              ? "border-[#1E5B4F]"
+              : "border-[#E8DFD2] opacity-75 hover:opacity-100"
+          }`}
+        >
+          <img
+            src={image}
+            alt={`${listing.name} ${index + 1}`}
+            className="h-full w-full object-cover"
+          />
+        </button>
+      ))}
+    </div>
+  )}
               </div>
 
               <div className="flex flex-wrap gap-2">
