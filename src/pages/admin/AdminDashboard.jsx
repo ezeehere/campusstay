@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 
 import {
@@ -153,13 +154,23 @@ async function handleUpdate(listingId, updates) {
             </div>
           </Link>
 
-          <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#FFF8EF]"
-                >
-                <LogOut size={16} />
-                Logout
-            </button>
+          <div className="flex items-center gap-2">
+  <Link
+    to="/admin/reports"
+    className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+  >
+    <AlertTriangle size={16} />
+    Reports
+  </Link>
+
+  <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
         </div>
       </header>
 
@@ -181,6 +192,23 @@ async function handleUpdate(listingId, updates) {
                 verify them, and control what appears publicly.
               </p>
             </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              to="/admin/reports"
+              className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
+            >
+              <AlertTriangle size={16} />
+              View reports
+            </Link>
+
+            <Link
+              to="/submit-listing"
+              className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              Add listing
+            </Link>
+          </div>
 
             <div className="grid grid-cols-2 gap-3 sm:min-w-[360px]">
               <HeroMiniStat label="Total" value={totalListings} />
