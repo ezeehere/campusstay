@@ -95,6 +95,14 @@ async function handleUpdate(listingId, updates) {
       setActionLoadingId(null);
     }
   }
+
+
+  <Link
+  to="/admin/reports"
+  className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8] sm:inline-block"
+>
+  Reports
+</Link>
   async function handleLogout() {
   try {
         await logoutAdmin();
