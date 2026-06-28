@@ -79,22 +79,7 @@ function AdminDashboard() {
     }
   }
 
-  async function handleSeedDummyData() {
-    const confirmSeed = window.confirm(
-      "This will add 30 dummy PG listings. Continue?"
-    );
 
-    if (!confirmSeed) return;
-
-    try {
-      await seedDummyListings();
-      alert("Dummy listings added successfully!");
-      await loadListings();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to add dummy listings.");
-    }
-  }
   async function handleDelete(listingId) {
     const confirmDelete = confirm("Delete this listing permanently?");
 
@@ -132,28 +117,28 @@ function AdminDashboard() {
       console.error("Logout error:", error);
       alert("Could not logout.");
     }
-    async function handleCleanupDummyData() {
-      const confirmCleanup = window.confirm(
-        "This will delete demo listings, demo tracking status, saved demo listings, and demo analytics. Continue?"
+
+  }
+
+  async function handleCleanupDummyData() {
+    const confirmCleanup = window.confirm(
+      "This will delete demo listings, demo tracking status, saved demo listings, and demo analytics. Continue?"
+    );
+
+    if (!confirmCleanup) return;
+
+    try {
+      const result = await cleanupDummyData();
+
+      alert(
+        `Cleanup done!\nDeleted listings: ${result.deletedListings}\nDeleted statuses: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
       );
 
-      if (!confirmCleanup) return;
-
-      try {
-        const result = await cleanupDummyData();
-
-        alert(
-          `Cleanup done!\nDeleted listings: ${result.deletedListings}\nDeleted statuses: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
-        );
-
-        await loadListings();
-      } catch (error) {
-        console.error(error);
-        alert("Failed to cleanup dummy data.");
-      }
+      await loadListings();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to cleanup dummy data.");
     }
-
-
   }
 
   const totalListings = adminListings.length;
