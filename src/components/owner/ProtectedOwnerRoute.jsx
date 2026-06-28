@@ -29,7 +29,7 @@ function ProtectedOwnerRoute({ children }) {
   }
 
   if (!ownerUser) {
-    return <Navigate to="/owner/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

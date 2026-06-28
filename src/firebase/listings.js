@@ -219,3 +219,17 @@ export async function getOwnerListings({ ownerId, phone }) {
     return bTime - aTime;
   });
 }
+
+export async function getListingById(listingId) {
+  if (!listingId) return null;
+
+  const listingRef = doc(db, "listings", listingId);
+  const listingSnap = await getDoc(listingRef);
+
+  if (!listingSnap.exists()) return null;
+
+  return {
+    id: listingSnap.id,
+    ...listingSnap.data(),
+  };
+}

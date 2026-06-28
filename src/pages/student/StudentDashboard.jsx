@@ -12,6 +12,7 @@ import {
 
 import { logoutStudent, watchStudentAuth } from "../../firebase/studentAuth";
 import {
+  ensureStudentProfile,
   getStudentProfile,
   updateStudentProfile,
 } from "../../firebase/students";
@@ -51,7 +52,12 @@ function StudentDashboard() {
 
       setStudentUser(user);
 
-      const studentProfile = await getStudentProfile(user.uid);
+      let studentProfile = await getStudentProfile(user.uid);
+
+      if (!studentProfile) {
+        await ensureStudentProfile(user);
+        studentProfile = await getStudentProfile(user.uid);
+      }
 
       if (studentProfile) {
         setProfile(studentProfile);
@@ -101,7 +107,7 @@ function StudentDashboard() {
 
     try {
       setSaving(true);
-
+      await ensureStudentProfile(studentUser);
       await updateStudentProfile(studentUser.uid, {
         ...formData,
         budgetMin: formData.budgetMin ? Number(formData.budgetMin) : "",
@@ -122,8 +128,13 @@ function StudentDashboard() {
   }
 
   async function handleLogout() {
-    await logoutStudent();
-    navigate("/");
+    try {
+      await logoutStudent();
+      window.location.replace("/");
+    } catch (error) {
+      console.error(error);
+      alert("Logout failed.");
+    }
   }
 
   if (loading) {
@@ -207,8 +218,6 @@ function StudentDashboard() {
             icon={<HomeIcon size={19} />}
           />
         </section>
-
-        <StudentListingSection profile={profile} />
 
         <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -354,6 +363,10 @@ function StudentDashboard() {
             </form>
           )}
         </section>
+
+        <StudentListingSection profile={profile} />
+
+
       </div>
     </main>
   );

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router";
 
-import Home from "./pages/public/Home";
+import RoleRedirect from "./components/common/RoleRedirect";
 import SubmitListing from "./pages/public/SubmitListing";
 import CheckStatus from "./pages/public/CheckStatus";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -19,7 +19,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<RoleRedirect />} />
         <Route path="/submit-listing" element={<SubmitListing />} />
         <Route path="/check-status" element={<CheckStatus />} />
         <Route path="/admin/login" element={<AdminLogin />} />

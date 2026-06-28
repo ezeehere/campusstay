@@ -11,11 +11,16 @@ import {
 import { auth } from "./config";
 import { ensureOwnerProfile } from "./owners";
 
+function setOwnerRole() {
+  localStorage.setItem("campusstay_active_role", "owner");
+}
+
 export async function loginOwnerWithGoogle() {
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopup(auth, provider);
 
   await ensureOwnerProfile(result.user);
+  setOwnerRole();
 
   return result.user;
 }
@@ -31,6 +36,8 @@ export async function registerOwnerWithEmail(fullName, email, password) {
     fullName,
   });
 
+  setOwnerRole();
+
   return result.user;
 }
 
@@ -38,11 +45,13 @@ export async function loginOwnerWithEmail(email, password) {
   const result = await signInWithEmailAndPassword(auth, email, password);
 
   await ensureOwnerProfile(result.user);
+  setOwnerRole();
 
   return result.user;
 }
 
 export async function logoutOwner() {
+  localStorage.removeItem("campusstay_active_role");
   return signOut(auth);
 }
 

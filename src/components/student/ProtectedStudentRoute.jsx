@@ -29,7 +29,7 @@ function ProtectedStudentRoute({ children }) {
   }
 
   if (!studentUser) {
-    return <Navigate to="/student/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

@@ -3,7 +3,6 @@ import {
   getDoc,
   serverTimestamp,
   setDoc,
-  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "./config";
@@ -25,8 +24,8 @@ export async function ensureStudentProfile(user, extraData = {}) {
       budgetMin: "",
       budgetMax: "",
       preferredArea: "",
-      foodRequired: "",
       preferredStayType: "",
+      foodRequired: "",
       preferredRoomType: "",
       moveInTime: "",
       createdAt: serverTimestamp(),
@@ -34,15 +33,20 @@ export async function ensureStudentProfile(user, extraData = {}) {
       lastLoginAt: serverTimestamp(),
     };
 
-    await setDoc(studentRef, newProfile);
+    await setDoc(studentRef, newProfile, { merge: true });
     return newProfile;
   }
 
-  await updateDoc(studentRef, {
-    email: user.email || "",
-    lastLoginAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  await setDoc(
+    studentRef,
+    {
+      email: user.email || "",
+      fullName: studentSnap.data().fullName || user.displayName || "",
+      lastLoginAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 
   return {
     id: studentSnap.id,
@@ -69,8 +73,13 @@ export async function updateStudentProfile(uid, profileData) {
 
   const studentRef = doc(db, "students", uid);
 
-  await updateDoc(studentRef, {
-    ...profileData,
-    updatedAt: serverTimestamp(),
-  });
+  await setDoc(
+    studentRef,
+    {
+      uid,
+      ...profileData,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }

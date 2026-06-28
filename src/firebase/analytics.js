@@ -57,8 +57,15 @@ export async function trackListingInteraction(
 ) {
   if (!listing?.id) return;
 
-  await Promise.all([
-    logAnalyticsEvent(eventType, listing, extraData),
-    incrementListingAnalytics(listing.id, metricKey),
-  ]);
+  try {
+    await logAnalyticsEvent(eventType, listing, extraData);
+  } catch (error) {
+    console.warn("Analytics event log failed:", error);
+  }
+
+  try {
+    await incrementListingAnalytics(listing.id, metricKey);
+  } catch (error) {
+    console.warn("Listing analytics counter failed:", error);
+  }
 }

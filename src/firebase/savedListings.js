@@ -1,4 +1,5 @@
 import {
+  collection,
   deleteDoc,
   doc,
   getDoc,
@@ -7,7 +8,6 @@ import {
   serverTimestamp,
   setDoc,
   where,
-  collection,
 } from "firebase/firestore";
 
 import { db } from "./config";
@@ -35,22 +35,30 @@ export async function saveListing(studentId, listing) {
 
   const saveRef = doc(db, "savedListings", createSaveId(studentId, listing.id));
 
-  await setDoc(saveRef, {
-    studentId,
-    listingId: listing.id,
-    listingName: listing.name || "",
-    area: listing.area || "",
-    type: listing.type || "",
-    gender: listing.gender || "",
-    rent: listing.startingRent || listing.rent || 0,
-    image: listing.images?.[0] || "",
-    foodIncluded: listing.foodIncluded || false,
-    verified: listing.verified || false,
-    available: listing.available || false,
-    savedAt: serverTimestamp(),
-  });
+  await setDoc(
+    saveRef,
+    {
+      studentId,
+      listingId: listing.id,
+      listingName: listing.name || "",
+      area: listing.area || "",
+      type: listing.type || "",
+      gender: listing.gender || "",
+      rent: listing.startingRent || listing.rent || 0,
+      image: listing.images?.[0] || "",
+      foodIncluded: listing.foodIncluded || false,
+      verified: listing.verified || false,
+      available: listing.available || false,
+      savedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 
-  await trackListingInteraction("save", listing, "saves");
+  try {
+    await trackListingInteraction("save", listing, "saves");
+  } catch (error) {
+    console.warn("Saved listing, but analytics failed:", error);
+  }
 }
 
 export async function unsaveListing(studentId, listingId) {
@@ -62,7 +70,12 @@ export async function unsaveListing(studentId, listingId) {
   if (!saveSnap.exists()) return;
 
   await deleteDoc(saveRef);
-  await decrementListingAnalytics(listingId, "saves");
+
+  try {
+    await decrementListingAnalytics(listingId, "saves");
+  } catch (error) {
+    console.warn("Removed saved listing, but analytics failed:", error);
+  }
 }
 
 export async function toggleSaveListing(studentId, listing) {

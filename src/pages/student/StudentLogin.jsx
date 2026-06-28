@@ -12,23 +12,8 @@ function StudentLogin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const returnTo = searchParams.get("returnTo") || "/student/dashboard";
-  const action = searchParams.get("action") || "";
-  const listingId = searchParams.get("listingId") || "";
-
   function goAfterLogin() {
-    if (action || listingId) {
-      sessionStorage.setItem(
-        "campusstay_pending_student_action",
-        JSON.stringify({
-          action,
-          listingId,
-          createdAt: Date.now(),
-        })
-      );
-    }
-
-    navigate(returnTo);
+    navigate("/student/dashboard");
   }
 
   const [mode, setMode] = useState("login");
