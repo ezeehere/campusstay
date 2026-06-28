@@ -3,8 +3,6 @@ import {
     deleteDoc,
     doc,
     getDocs,
-    query,
-    where,
 } from "firebase/firestore";
 
 import { db } from "./config";
@@ -13,22 +11,31 @@ function isDemoTrackingId(value) {
     return String(value || "").startsWith("CS-DEMO-");
 }
 
+function isDemoListing(data) {
+    return (
+        isDemoTrackingId(data.trackingId) ||
+        String(data.ownerName || "").startsWith("Demo Owner") ||
+        String(data.phone || "").startsWith("900000") ||
+        String(data.name || "").includes("Green Nest PG") ||
+        String(data.name || "").includes("Campus Corner Stay") ||
+        String(data.name || "").includes("Student Comfort Home") ||
+        String(data.name || "").includes("Sunrise Girls PG") ||
+        String(data.name || "").includes("Brahmaputra Boys PG") ||
+        String(data.name || "").includes("JIST View Rooms") ||
+        String(data.name || "").includes("Study Point PG") ||
+        String(data.name || "").includes("SafeStay Hostel") ||
+        String(data.name || "").includes("Homely Nest PG") ||
+        String(data.name || "").includes("Prime Student Rooms")
+    );
+}
+
 export async function cleanupDummyData() {
     const deletedListingIds = new Set();
 
-    // 1. Delete dummy listings
     const listingsSnapshot = await getDocs(collection(db, "listings"));
 
     const listingDeletePromises = listingsSnapshot.docs
-        .filter((docItem) => {
-            const data = docItem.data();
-
-            return (
-                isDemoTrackingId(data.trackingId) ||
-                String(data.ownerName || "").startsWith("Demo Owner") ||
-                String(data.phone || "").startsWith("900000")
-            );
-        })
+        .filter((docItem) => isDemoListing(docItem.data()))
         .map(async (docItem) => {
             deletedListingIds.add(docItem.id);
             await deleteDoc(doc(db, "listings", docItem.id));
@@ -36,7 +43,6 @@ export async function cleanupDummyData() {
 
     await Promise.all(listingDeletePromises);
 
-    // 2. Delete dummy listingStatus records
     const statusSnapshot = await getDocs(collection(db, "listingStatus"));
 
     const statusDeletePromises = statusSnapshot.docs
@@ -52,7 +58,6 @@ export async function cleanupDummyData() {
 
     await Promise.all(statusDeletePromises);
 
-    // 3. Delete savedListings connected to deleted demo listings
     const savedSnapshot = await getDocs(collection(db, "savedListings"));
 
     const savedDeletePromises = savedSnapshot.docs
@@ -64,7 +69,6 @@ export async function cleanupDummyData() {
 
     await Promise.all(savedDeletePromises);
 
-    // 4. Delete analyticsEvents connected to deleted demo listings
     const analyticsSnapshot = await getDocs(collection(db, "analyticsEvents"));
 
     const analyticsDeletePromises = analyticsSnapshot.docs

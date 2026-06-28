@@ -35,6 +35,28 @@ function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
+
+  async function handleCleanupDummyData() {
+    const confirmCleanup = window.confirm(
+      "This will delete dummy demo listings, demo tracking records, saved demo listings, and demo analytics. Continue?"
+    );
+
+    if (!confirmCleanup) return;
+
+    try {
+      const result = await cleanupDummyData();
+
+      alert(
+        `Cleanup done!\n\nDeleted listings: ${result.deletedListings}\nDeleted tracking records: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
+      );
+
+      await loadListings();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to cleanup dummy data. Check console.");
+    }
+  }
+
   async function loadListings() {
     try {
       setLoading(true);
@@ -120,26 +142,7 @@ function AdminDashboard() {
 
   }
 
-  async function handleCleanupDummyData() {
-    const confirmCleanup = window.confirm(
-      "This will delete demo listings, demo tracking status, saved demo listings, and demo analytics. Continue?"
-    );
 
-    if (!confirmCleanup) return;
-
-    try {
-      const result = await cleanupDummyData();
-
-      alert(
-        `Cleanup done!\nDeleted listings: ${result.deletedListings}\nDeleted statuses: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
-      );
-
-      await loadListings();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to cleanup dummy data.");
-    }
-  }
 
   const totalListings = adminListings.length;
   const pendingListings = adminListings.filter((item) => !item.approved).length;
