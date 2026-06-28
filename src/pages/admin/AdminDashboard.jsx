@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { logoutAdmin } from "../../firebase/auth";
 import { cleanupDummyData } from "../../firebase/cleanupDummyData";
 
 import {
+  AlertTriangle,
   CheckCircle2,
   Clock,
   Eye,
@@ -14,8 +14,8 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Users,
-  AlertTriangle,
 } from "lucide-react";
 
 import {
@@ -28,34 +28,14 @@ import AdminListingDetailsModal from "../../components/admin/AdminListingDetails
 
 function AdminDashboard() {
   const navigate = useNavigate();
+
   const [adminListings, setAdminListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [selectedListing, setSelectedListing] = useState(null);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-
-
-  async function handleCleanupDummyData() {
-    const confirmCleanup = window.confirm(
-      "This will delete dummy demo listings, demo tracking records, saved demo listings, and demo analytics. Continue?"
-    );
-
-    if (!confirmCleanup) return;
-
-    try {
-      const result = await cleanupDummyData();
-
-      alert(
-        `Cleanup done!\n\nDeleted listings: ${result.deletedListings}\nDeleted tracking records: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
-      );
-
-      await loadListings();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to cleanup dummy data. Check console.");
-    }
-  }
+  const [cleanupLoading, setCleanupLoading] = useState(false);
 
   async function loadListings() {
     try {
@@ -70,10 +50,34 @@ function AdminDashboard() {
     }
   }
 
-
   useEffect(() => {
     loadListings();
   }, []);
+
+  async function handleCleanupDummyData() {
+    const confirmCleanup = window.confirm(
+      "This will delete dummy demo listings, demo tracking records, saved demo listings, and demo analytics. Continue?"
+    );
+
+    if (!confirmCleanup) return;
+
+    try {
+      setCleanupLoading(true);
+
+      const result = await cleanupDummyData();
+
+      alert(
+        `Cleanup done!\n\nDeleted listings: ${result.deletedListings}\nDeleted tracking records: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
+      );
+
+      await loadListings();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to cleanup dummy data. Check console.");
+    } finally {
+      setCleanupLoading(false);
+    }
+  }
 
   async function handleUpdate(listingId, updates) {
     try {
@@ -101,14 +105,14 @@ function AdminDashboard() {
     }
   }
 
-
   async function handleDelete(listingId) {
-    const confirmDelete = confirm("Delete this listing permanently?");
+    const confirmDelete = window.confirm("Delete this listing permanently?");
 
     if (!confirmDelete) return;
 
     try {
       setActionLoadingId(listingId);
+
       await deleteListing(listingId);
       await loadListings();
 
@@ -123,26 +127,16 @@ function AdminDashboard() {
     }
   }
 
-
-  <Link
-    to="/admin/reports"
-    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8] sm:inline-block"
-  >
-    Reports
-  </Link>
-
   async function handleLogout() {
     try {
+      localStorage.removeItem("campusstay_active_role");
       await logoutAdmin();
       navigate("/admin/login");
     } catch (error) {
       console.error("Logout error:", error);
       alert("Could not logout.");
     }
-
   }
-
-
 
   const totalListings = adminListings.length;
   const pendingListings = adminListings.filter((item) => !item.approved).length;
@@ -169,30 +163,39 @@ function AdminDashboard() {
   }, [adminListings, search, activeFilter]);
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] text-slate-950">
-      <header className="sticky top-0 z-30 border-b border-[#E8DFD2] bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#FFF8EF] text-slate-950">
+      <header className="sticky top-0 z-30 border-b border-[#E8DFD2] bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white shadow-sm">
               <HomeIcon size={22} />
             </div>
-            <button
-              onClick={handleCleanupDummyData}
-              className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
-            >
-              Remove Demo Data
-            </button>
 
             <div>
-              <h1 className="text-xl font-black tracking-tight">CampusStay</h1>
+              <h1 className="text-xl font-bold tracking-tight text-[#070B1F]">
+                CampusStay
+              </h1>
               <p className="text-xs text-slate-500">Admin dashboard</p>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleCleanupDummyData}
+              disabled={cleanupLoading}
+              className="inline-flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {cleanupLoading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Trash2 size={16} />
+              )}
+              Remove Demo Data
+            </button>
+
             <Link
               to="/admin/reports"
-              className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <AlertTriangle size={16} />
               Reports
@@ -200,16 +203,10 @@ function AdminDashboard() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <LogOut size={16} />
               Logout
-            </button>
-            <button
-              onClick={handleSeedDummyData}
-              className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
-            >
-              Add Demo Data
             </button>
           </div>
         </div>
@@ -217,41 +214,41 @@ function AdminDashboard() {
 
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="rounded-[2rem] bg-[#1E5B4F] p-6 text-white shadow-xl sm:p-8">
-          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white">
                 <Sparkles size={16} />
                 CampusStay Control Panel
               </div>
 
-              <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
                 Admin Dashboard
               </h2>
 
-              <p className="mt-3 max-w-2xl text-slate-300">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
                 Review submitted stays, check owner details, approve listings,
                 verify them, and control what appears publicly.
               </p>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  to="/admin/reports"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
+                >
+                  <AlertTriangle size={16} />
+                  View reports
+                </Link>
+
+                <Link
+                  to="/submit-listing"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+                >
+                  Add listing
+                </Link>
+              </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                to="/admin/reports"
-                className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
-              >
-                <AlertTriangle size={16} />
-                View reports
-              </Link>
-
-              <Link
-                to="/submit-listing"
-                className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-              >
-                Add listing
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:min-w-[360px]">
+            <div className="grid grid-cols-2 gap-3">
               <HeroMiniStat label="Total" value={totalListings} />
               <HeroMiniStat label="Pending" value={pendingListings} />
               <HeroMiniStat label="Approved" value={approvedListings} />
@@ -285,17 +282,15 @@ function AdminDashboard() {
             icon={<ShieldCheck size={21} />}
           />
 
-          <StatCard
-            title="Full"
-            value={fullListings}
-            icon={<Users size={21} />}
-          />
+          <StatCard title="Full" value={fullListings} icon={<Users size={21} />} />
         </div>
 
         <div className="mt-8 rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
             <div>
-              <h3 className="text-2xl font-black">Manage listings</h3>
+              <h3 className="text-2xl font-bold text-[#070B1F]">
+                Manage listings
+              </h3>
               <p className="mt-1 text-sm text-slate-500">
                 Open a listing to see all details before approving it.
               </p>
@@ -312,7 +307,7 @@ function AdminDashboard() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search listing, owner, area..."
-                  className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-11 pr-4 text-sm outline-none focus:border-slate-400 lg:w-72"
+                  className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-11 pr-4 text-sm outline-none focus:border-[#1E5B4F] lg:w-72"
                 />
               </div>
 
@@ -332,7 +327,7 @@ function AdminDashboard() {
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
                   className={`rounded-full border px-4 py-2 text-sm font-bold transition ${activeFilter === filter
-                    ? "border-slate-950 bg-[#1E5B4F] text-white"
+                    ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
                     : "border-[#E8DFD2] bg-white text-slate-600 hover:bg-[#FFF8EF]"
                     }`}
                 >
@@ -371,12 +366,12 @@ function AdminDashboard() {
                       <div className="flex gap-3">
                         <img
                           src={coverImage}
-                          alt={listing.name}
+                          alt={listing.name || "Listing"}
                           className="h-24 w-28 shrink-0 rounded-2xl object-cover"
                         />
 
                         <div className="min-w-0 flex-1">
-                          <h4 className="line-clamp-2 text-base font-black text-slate-950">
+                          <h4 className="line-clamp-2 text-base font-bold text-[#070B1F]">
                             {listing.name || "Unnamed listing"}
                           </h4>
 
@@ -385,15 +380,12 @@ function AdminDashboard() {
                             {listing.distance || "Distance not added"}
                           </p>
 
-                          <p className="mt-2 text-lg font-black text-slate-950">
-                            {listing.roomOptions?.length || 1} room option
-                            {(listing.roomOptions?.length || 1) > 1 ? "s" : ""}
+                          <p className="mt-2 text-lg font-bold text-[#070B1F]">
+                            ₹{listing.startingRent || listing.rent || 0}
                             <span className="ml-1 text-xs font-semibold text-slate-500">
                               /month
                             </span>
                           </p>
-
-
                         </div>
                       </div>
 
@@ -413,12 +405,8 @@ function AdminDashboard() {
                         />
                         <InfoMini
                           label="Stay"
-                          value={`${listing.type || "Type"} · ${listing.gender || "For"
+                          value={`${listing.type || "Type"} · ${listing.gender || "For all"
                             }`}
-                        />
-                        <InfoMini
-                          label="Deposit"
-                          value={`₹${listing.deposit || 0}`}
                         />
                       </div>
 
@@ -429,9 +417,7 @@ function AdminDashboard() {
                         />
 
                         <StatusPill
-                          label={
-                            listing.verified ? "Verified" : "Not verified"
-                          }
+                          label={listing.verified ? "Verified" : "Not verified"}
                           tone={listing.verified ? "blue" : "gray"}
                         />
 
@@ -532,17 +518,19 @@ function AdminDashboard() {
                             <div className="flex items-center gap-3">
                               <img
                                 src={coverImage}
-                                alt={listing.name}
+                                alt={listing.name || "Listing"}
                                 className="h-14 w-20 rounded-2xl object-cover"
                               />
 
                               <div>
-                                <p className="font-black text-slate-950">
+                                <p className="font-bold text-[#070B1F]">
                                   {listing.name || "Unnamed listing"}
                                 </p>
                                 <p className="mt-1 text-xs text-slate-500">
-                                  {listing.food ? "Food included" : "No food"} ·{" "}
-                                  {listing.roomType || "Room type not added"}
+                                  {listing.foodIncluded
+                                    ? "Food included"
+                                    : "No food"}{" "}
+                                  · {listing.roomType || "Room type not added"}
                                 </p>
                               </div>
                             </div>
@@ -559,7 +547,8 @@ function AdminDashboard() {
 
                           <td className="py-4 pr-4">
                             <p className="font-semibold">
-                              {listing.type} · {listing.gender}
+                              {listing.type || "Type"} ·{" "}
+                              {listing.gender || "For all"}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
                               Deposit ₹{listing.deposit || 0}
@@ -576,8 +565,8 @@ function AdminDashboard() {
                           </td>
 
                           <td className="py-4 pr-4">
-                            <p className="text-base font-black">
-                              ₹{listing.rent || 0}
+                            <p className="text-base font-bold">
+                              ₹{listing.startingRent || listing.rent || 0}
                             </p>
                             <p className="text-xs text-slate-500">per month</p>
                           </td>
@@ -585,25 +574,19 @@ function AdminDashboard() {
                           <td className="py-4 pr-4">
                             <div className="flex flex-col gap-2">
                               <StatusPill
-                                label={
-                                  listing.approved ? "Approved" : "Pending"
-                                }
+                                label={listing.approved ? "Approved" : "Pending"}
                                 tone={listing.approved ? "green" : "yellow"}
                               />
 
                               <StatusPill
                                 label={
-                                  listing.verified
-                                    ? "Verified"
-                                    : "Not verified"
+                                  listing.verified ? "Verified" : "Not verified"
                                 }
                                 tone={listing.verified ? "blue" : "gray"}
                               />
 
                               <StatusPill
-                                label={
-                                  listing.available ? "Available" : "Full"
-                                }
+                                label={listing.available ? "Available" : "Full"}
                                 tone={listing.available ? "green" : "red"}
                               />
                             </div>
@@ -626,7 +609,9 @@ function AdminDashboard() {
                                 onClick={() =>
                                   handleUpdate(listing.id, {
                                     approved: !listing.approved,
-                                    status: listing.approved ? "pending" : "approved",
+                                    status: listing.approved
+                                      ? "pending"
+                                      : "approved",
                                   })
                                 }
                                 className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
@@ -701,7 +686,7 @@ function StatCard({ title, value, icon }) {
       </div>
 
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-1 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-3xl font-bold text-[#070B1F]">{value}</p>
     </div>
   );
 }
@@ -709,10 +694,10 @@ function StatCard({ title, value, icon }) {
 function HeroMiniStat({ label, value }) {
   return (
     <div className="rounded-3xl bg-white/10 p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <p className="text-xs font-bold uppercase tracking-wide text-white/60">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-black text-white">{value}</p>
+      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }
