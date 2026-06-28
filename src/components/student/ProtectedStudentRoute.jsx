@@ -2,23 +2,15 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
 import { Loader2 } from "lucide-react";
 
-import { watchAuthState } from "../../firebase/auth";
-import { checkIsAdmin } from "../../firebase/admins";
+import { watchStudentAuth } from "../../firebase/studentAuth";
 
-function ProtectedAdminRoute({ children }) {
+function ProtectedStudentRoute({ children }) {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [adminAllowed, setAdminAllowed] = useState(false);
+  const [studentUser, setStudentUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = watchAuthState(async (user) => {
-      if (!user) {
-        setAdminAllowed(false);
-        setCheckingAuth(false);
-        return;
-      }
-
-      const isAdmin = await checkIsAdmin(user.uid);
-      setAdminAllowed(isAdmin);
+    const unsubscribe = watchStudentAuth((user) => {
+      setStudentUser(user);
       setCheckingAuth(false);
     });
 
@@ -30,17 +22,17 @@ function ProtectedAdminRoute({ children }) {
       <main className="flex min-h-screen items-center justify-center bg-[#FFF8EF] text-slate-600">
         <div className="flex items-center gap-3 rounded-3xl bg-white px-6 py-5 shadow-sm">
           <Loader2 className="animate-spin" size={22} />
-          Checking admin access...
+          Checking student login...
         </div>
       </main>
     );
   }
 
-  if (!adminAllowed) {
-    return <Navigate to="/admin/login" replace />;
+  if (!studentUser) {
+    return <Navigate to="/student/login" replace />;
   }
 
   return children;
 }
 
-export default ProtectedAdminRoute;
+export default ProtectedStudentRoute;

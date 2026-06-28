@@ -1,0 +1,479 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import {
+  BarChart3,
+  Building2,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Heart,
+  Home as HomeIcon,
+  Loader2,
+  LogOut,
+  MessageCircle,
+  Phone,
+  PlusCircle,
+  Save,
+  SearchCheck,
+} from "lucide-react";
+
+import { getOwnerListings } from "../../firebase/listings";
+import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
+import {
+  getOwnerProfile,
+  updateOwnerProfile,
+} from "../../firebase/owners";
+
+function getMetric(listing, key) {
+  return Number(listing.analytics?.[key] || listing[key] || 0);
+}
+
+function OwnerDashboard() {
+  const navigate = useNavigate();
+
+  const [ownerUser, setOwnerUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [listings, setListings] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [refreshingListings, setRefreshingListings] = useState(false);
+
+  const [profileForm, setProfileForm] = useState({
+    fullName: "",
+    phone: "",
+    businessName: "",
+    area: "",
+  });
+
+  async function loadOwnerListings(user, ownerProfile) {
+    if (!user) return;
+
+    setRefreshingListings(true);
+
+    const ownerListings = await getOwnerListings({
+      ownerId: user.uid,
+      phone: ownerProfile?.phone || "",
+    });
+
+    setListings(ownerListings);
+    setRefreshingListings(false);
+  }
+
+  useEffect(() => {
+    const unsubscribe = watchOwnerAuth(async (user) => {
+      if (!user) {
+        setOwnerUser(null);
+        setLoading(false);
+        return;
+      }
+
+      setOwnerUser(user);
+
+      const ownerProfile = await getOwnerProfile(user.uid);
+      setProfile(ownerProfile);
+
+      setProfileForm({
+        fullName: ownerProfile?.fullName || user.displayName || "",
+        phone: ownerProfile?.phone || "",
+        businessName: ownerProfile?.businessName || "",
+        area: ownerProfile?.area || "",
+      });
+
+      await loadOwnerListings(user, ownerProfile);
+
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const summary = useMemo(() => {
+    return {
+      totalListings: listings.length,
+      approved: listings.filter((item) => item.approved).length,
+      pending: listings.filter((item) => item.status === "pending").length,
+      verified: listings.filter((item) => item.verified).length,
+      views: listings.reduce((sum, item) => sum + getMetric(item, "views"), 0),
+      saves: listings.reduce((sum, item) => sum + getMetric(item, "saves"), 0),
+      calls: listings.reduce((sum, item) => sum + getMetric(item, "callClicks"), 0),
+      whatsapp: listings.reduce(
+        (sum, item) => sum + getMetric(item, "whatsappClicks"),
+        0
+      ),
+    };
+  }, [listings]);
+
+  function handleProfileChange(event) {
+    const { name, value } = event.target;
+
+    setProfileForm((previousData) => ({
+      ...previousData,
+      [name]: value,
+    }));
+  }
+
+  async function handleSaveProfile(event) {
+    event.preventDefault();
+
+    if (!ownerUser) return;
+
+    if (!profileForm.phone.trim()) {
+      alert("Please add your phone number. It helps match your PG listings.");
+      return;
+    }
+
+    try {
+      setSavingProfile(true);
+
+      await updateOwnerProfile(ownerUser.uid, {
+        fullName: profileForm.fullName.trim(),
+        phone: profileForm.phone.trim(),
+        businessName: profileForm.businessName.trim(),
+        area: profileForm.area.trim(),
+      });
+
+      const updatedProfile = await getOwnerProfile(ownerUser.uid);
+      setProfile(updatedProfile);
+
+      await loadOwnerListings(ownerUser, updatedProfile);
+
+      alert("Owner profile saved successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save owner profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function handleLogout() {
+    await logoutOwner();
+    navigate("/");
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FFF8EF] text-slate-600">
+        <div className="flex items-center gap-3 rounded-3xl bg-white px-6 py-5 shadow-sm">
+          <Loader2 className="animate-spin" size={22} />
+          Loading owner dashboard...
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#FFF8EF] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <header className="rounded-[2rem] bg-[#1E5B4F] p-6 text-white shadow-sm sm:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold">
+                <Building2 size={16} />
+                Owner Dashboard
+              </p>
+
+              <h1 className="mt-5 text-3xl font-extrabold sm:text-4xl">
+                Manage your PG and room listings
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
+                List your PG, check approval status, and track student interest
+                through views, saves, calls, and WhatsApp clicks.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+              >
+                <HomeIcon size={16} />
+                Home
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section className="mt-6 grid gap-5 md:grid-cols-2">
+          <Link
+            to="/submit-listing"
+            className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#1E5B4F] text-white">
+              <PlusCircle size={26} />
+            </div>
+
+            <h2 className="mt-5 text-2xl font-extrabold text-[#1F2933]">
+              List PG / Room
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Add your PG or room details, room options, photos, facilities,
+              food details, and owner contact.
+            </p>
+          </Link>
+
+          <Link
+            to="/check-status"
+            className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FFF4D8] text-[#8A5A00]">
+              <SearchCheck size={26} />
+            </div>
+
+            <h2 className="mt-5 text-2xl font-extrabold text-[#1F2933]">
+              Check Listing Status
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Use your Tracking ID and phone number to check whether your listing
+              is pending, approved, rejected, or needs changes.
+            </p>
+          </Link>
+        </section>
+
+        <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:p-7">
+          <div>
+            <h2 className="text-2xl font-extrabold text-[#1F2933]">
+              Owner Profile
+            </h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Add the same phone number used in your PG listings. This helps us
+              match your existing listings to this dashboard.
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSaveProfile}
+            className="mt-5 grid gap-4 md:grid-cols-2"
+          >
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Owner Name
+              </label>
+              <input
+                name="fullName"
+                value={profileForm.fullName}
+                onChange={handleProfileChange}
+                className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
+                placeholder="Owner name"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Phone Number
+              </label>
+              <input
+                name="phone"
+                value={profileForm.phone}
+                onChange={handleProfileChange}
+                className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
+                placeholder="Same phone used while listing PG"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Business / PG Name
+              </label>
+              <input
+                name="businessName"
+                value={profileForm.businessName}
+                onChange={handleProfileChange}
+                className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
+                placeholder="Optional"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Main Area
+              </label>
+              <input
+                name="area"
+                value={profileForm.area}
+                onChange={handleProfileChange}
+                className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
+                placeholder="JIST Gate, Sotai, Tarajan"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingProfile ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Save size={18} />
+                )}
+                Save Owner Profile
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard title="Total Listings" value={summary.totalListings} icon={<Building2 size={22} />} />
+          <MetricCard title="Approved" value={summary.approved} icon={<CheckCircle2 size={22} />} />
+          <MetricCard title="Pending" value={summary.pending} icon={<Clock size={22} />} />
+          <MetricCard title="Verified" value={summary.verified} icon={<CheckCircle2 size={22} />} />
+        </section>
+
+        <section className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard title="Views" value={summary.views} icon={<Eye size={22} />} />
+          <MetricCard title="Saves" value={summary.saves} icon={<Heart size={22} />} />
+          <MetricCard title="Calls" value={summary.calls} icon={<Phone size={22} />} />
+          <MetricCard title="WhatsApp" value={summary.whatsapp} icon={<MessageCircle size={22} />} />
+        </section>
+
+        <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-2xl font-extrabold text-[#1F2933]">
+                <BarChart3 size={24} />
+                Your PG Analytics
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                These numbers show how students interact with your listings.
+              </p>
+            </div>
+
+            {refreshingListings && (
+              <p className="flex items-center gap-2 text-sm font-bold text-[#1E5B4F]">
+                <Loader2 className="animate-spin" size={16} />
+                Refreshing
+              </p>
+            )}
+          </div>
+
+          {!profile?.phone ? (
+            <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-800">
+              Add your phone number in Owner Profile to match your existing PG
+              listings with this dashboard.
+            </div>
+          ) : listings.length === 0 ? (
+            <div className="mt-5 rounded-3xl bg-[#FFF8EF] p-6 text-center">
+              <h3 className="text-xl font-extrabold text-[#1F2933]">
+                No listings found yet
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+                List your PG or use the same phone number that you used while
+                submitting your PG.
+              </p>
+
+              <Link
+                to="/submit-listing"
+                className="mt-5 inline-flex rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+              >
+                List PG / Room
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-5 grid gap-5 lg:grid-cols-2">
+              {listings.map((listing) => (
+                <OwnerListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function MetricCard({ title, value, icon }) {
+  return (
+    <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F6F1E8] text-[#1E5B4F]">
+        {icon}
+      </div>
+
+      <p className="mt-4 text-sm font-bold text-slate-500">{title}</p>
+      <h3 className="mt-1 text-3xl font-extrabold text-[#1F2933]">{value}</h3>
+    </div>
+  );
+}
+
+function OwnerListingCard({ listing }) {
+  const image = listing.images?.[0] || "";
+  const status = listing.status || (listing.approved ? "approved" : "pending");
+
+  return (
+    <article className="overflow-hidden rounded-[2rem] border border-[#E8DFD2] bg-white shadow-sm">
+      <div className="grid md:grid-cols-[180px_1fr]">
+        <div className="aspect-[4/3] bg-[#F6F1E8] md:aspect-auto">
+          {image ? (
+            <img
+              src={image}
+              alt={listing.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full min-h-[160px] items-center justify-center text-sm font-bold text-slate-400">
+              No image
+            </div>
+          )}
+        </div>
+
+        <div className="p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-extrabold text-[#1F2933]">
+                {listing.name}
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                {listing.area} · {listing.type}
+              </p>
+            </div>
+
+            <span className="rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
+              {status}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <SmallMetric label="Views" value={getMetric(listing, "views")} />
+            <SmallMetric label="Saves" value={getMetric(listing, "saves")} />
+            <SmallMetric label="Calls" value={getMetric(listing, "callClicks")} />
+            <SmallMetric label="WhatsApp" value={getMetric(listing, "whatsappClicks")} />
+            <SmallMetric label="Map" value={getMetric(listing, "mapClicks")} />
+          </div>
+
+          {listing.adminNote && (
+            <div className="mt-4 rounded-2xl bg-[#FFF8EF] p-3 text-sm text-slate-600">
+              <span className="font-bold text-[#1F2933]">Admin note:</span>{" "}
+              {listing.adminNote}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SmallMetric({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-[#F6F1E8] p-3 text-center">
+      <p className="text-lg font-extrabold text-[#1F2933]">{value}</p>
+      <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+export default OwnerDashboard;

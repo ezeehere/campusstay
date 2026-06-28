@@ -13,6 +13,7 @@ import {
 
 import Badge from "../common/Badge";
 import { createWhatsAppLink } from "../../utils/whatsapp";
+import SaveListingButton from "../student/SaveListingButton";
 
 function ListingCard({ listing, onViewDetails }) {
   const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
@@ -145,6 +146,9 @@ const roomSummary =
         </button>
 
         <div className="grid grid-cols-2 gap-3">
+          <div className="absolute right-3 top-3">
+            <SaveListingButton listing={listing} showText={false} />
+          </div>
           <a
             href={`tel:${listing.phone}`}
             className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"

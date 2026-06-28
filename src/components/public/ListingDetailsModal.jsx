@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   BedDouble,
@@ -16,6 +16,10 @@ import {
 import Badge from "../common/Badge";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { submitListingReport } from "../../firebase/reports";
+import SaveListingButton from "../student/SaveListingButton";
+import { trackListingInteraction } from "../../firebase/analytics";
+import { auth } from "../../firebase/config";
+import StudentActionLoginPrompt from "../student/StudentActionLoginPrompt";
 
 function InfoBox({ icon, title, value }) {
   return (
@@ -47,6 +51,29 @@ function ListingDetailsModal({ listing, onClose }) {
   const [reporterPhone, setReporterPhone] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!listing?.id) return;
+
+    trackListingInteraction("view_details", listing, "views").catch((error) => {
+      console.error("View analytics failed:", error);
+    });
+  }, [listing?.id]);
+
+  function handleAnalyticsClick(eventType, metricKey) {
+    trackListingInteraction(eventType, listing, metricKey).catch((error) => {
+      console.error("Analytics click failed:", error);
+    });
+  }
+
+  const [loginAction, setLoginAction] = useState("");
+
+  function requireStudentLogin(action) {
+    if (auth.currentUser) return false;
+
+    setLoginAction(action);
+    return true;
+  }
 
   async function handleSubmitReport(event) {
   event.preventDefault();
@@ -428,8 +455,17 @@ function ListingDetailsModal({ listing, onClose }) {
 
         <div className="border-t border-slate-200 bg-white p-4">
           <div className="grid gap-3 sm:grid-cols-4">
+            <SaveListingButton listing={listing} />
             <a
-              href={`tel:${listing.phone}`}
+              href={auth.currentUser ? `tel:${listing.phone}` : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("call")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("call_click", "callClicks");
+              }}
               className="flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               <Phone size={16} />
@@ -437,9 +473,17 @@ function ListingDetailsModal({ listing, onClose }) {
             </a>
 
             <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
+              href={auth.currentUser ? whatsappLink : undefined}
+              target={auth.currentUser ? "_blank" : undefined}
+              rel={auth.currentUser ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("whatsapp")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("whatsapp_click", "whatsappClicks");
+              }}
               className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
             >
               <MessageCircle size={16} />
@@ -447,9 +491,17 @@ function ListingDetailsModal({ listing, onClose }) {
             </a>
 
             <a
-              href={listing.mapLink || "https://maps.google.com"}
-              target="_blank"
-              rel="noreferrer"
+              href={auth.currentUser ? (listing.mapLink || "https://maps.google.com") : undefined}
+              target={auth.currentUser ? "_blank" : undefined}
+              rel={auth.currentUser ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("map")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("map_click", "mapClicks");
+              }}
               className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
             >
               <MapPin size={16} />
@@ -464,6 +516,14 @@ function ListingDetailsModal({ listing, onClose }) {
 </button>
           </div>
         </div>
+
+        {loginAction && (
+          <StudentActionLoginPrompt
+            listing={listing}
+            action={loginAction}
+            onClose={() => setLoginAction("")}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import {
   CheckCircle2,
@@ -32,6 +32,11 @@ function Home() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  function handleViewListing(listing) {
+    setSelectedListing(listing);
+  }
 
 
   useEffect(() => {
@@ -50,6 +55,18 @@ function Home() {
 
   loadApprovedListings();
 }, []);
+
+  useEffect(() => {
+    const openListingId = searchParams.get("openListing");
+
+    if (!openListingId || listings.length === 0) return;
+
+    const matchedListing = listings.find((listing) => listing.id === openListingId);
+
+    if (matchedListing) {
+      setSelectedListing(matchedListing);
+    }
+  }, [searchParams, listings]);
 
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
@@ -116,27 +133,41 @@ function Home() {
           </div>
 
           <div className="flex items-center gap-2">
-  <Link
-    to="/admin/login"
-    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] sm:inline-block"
-  >
-    Admin
-  </Link>
+            <a
+              href="#listings"
+              className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Find PG
+            </a>
 
-  <Link
-    to="/check-status"
-    className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-[#1F2933] transition hover:bg-[#F6F1E8] inline-block"
-  >
-    Status
-  </Link>
+            <Link
+              to="/submit-listing"
+              className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
+            >
+              List PG
+            </Link>
 
-  <Link
-    to="/submit-listing"
-    className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
-  >
-    List PG
-  </Link>
-</div>
+            <Link
+              to="/check-status"
+              className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Status
+            </Link>
+
+            <Link
+              to="/student/login"
+              className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Student
+            </Link>
+
+            <Link
+              to="/owner/login"
+              className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Owner
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -387,7 +418,7 @@ function Home() {
                 <ListingCard
                   key={listing.id}
                   listing={listing}
-                  onViewDetails={setSelectedListing}
+                  onViewDetails={handleViewListing}
                 />
               ))}
             </div>

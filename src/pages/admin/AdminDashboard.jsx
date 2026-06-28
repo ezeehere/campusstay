@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Link} from "react-router";
 import { logoutAdmin } from "../../firebase/auth";
+import { seedDummyListings } from "../../firebase/seedDummyListings";
 import {
   CheckCircle2,
   Clock,
@@ -45,6 +46,7 @@ function AdminDashboard() {
       setLoading(false);
     }
   }
+  
 
   useEffect(() => {
     loadListings();
@@ -76,6 +78,22 @@ async function handleUpdate(listingId, updates) {
   }
 }
 
+  async function handleSeedDummyData() {
+  const confirmSeed = window.confirm(
+    "This will add 30 dummy PG listings. Continue?"
+  );
+
+  if (!confirmSeed) return;
+
+  try {
+    await seedDummyListings();
+    alert("Dummy listings added successfully!");
+    await loadListings();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add dummy listings.");
+  }
+}
   async function handleDelete(listingId) {
     const confirmDelete = confirm("Delete this listing permanently?");
 
@@ -169,6 +187,12 @@ async function handleUpdate(listingId, updates) {
           >
             <LogOut size={16} />
             Logout
+          </button>
+          <button
+            onClick={handleSeedDummyData}
+            className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
+          >
+            Add Demo Data
           </button>
         </div>
         </div>

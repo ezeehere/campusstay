@@ -7,6 +7,13 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import AdminReports from "./pages/admin/AdminReports";
+import ProtectedStudentRoute from "./components/student/ProtectedStudentRoute";
+import StudentLogin from "./pages/student/StudentLogin";
+import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentSavedListings from "./pages/student/StudentSavedListings";
+import ProtectedOwnerRoute from "./components/owner/ProtectedOwnerRoute";
+import OwnerLogin from "./pages/owner/OwnerLogin";
+import OwnerDashboard from "./pages/owner/OwnerDashboard";
 
 function App() {
   return (
@@ -16,6 +23,36 @@ function App() {
         <Route path="/submit-listing" element={<SubmitListing />} />
         <Route path="/check-status" element={<CheckStatus />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+
+        <Route path="/student/login" element={<StudentLogin />} />
+
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedStudentRoute>
+              <StudentDashboard />
+            </ProtectedStudentRoute>
+          }
+        />
+        <Route
+          path="/student/saved"
+          element={
+            <ProtectedStudentRoute>
+              <StudentSavedListings />
+            </ProtectedStudentRoute>
+          }
+        />
+
+        <Route path="/owner/login" element={<OwnerLogin />} />
+
+        <Route
+          path="/owner/dashboard"
+          element={
+            <ProtectedOwnerRoute>
+              <OwnerDashboard />
+            </ProtectedOwnerRoute>
+          }
+        />
 
         <Route
           path="/admin/reports"

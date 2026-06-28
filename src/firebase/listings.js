@@ -31,6 +31,15 @@ const startingRent =
     : Number(listingData.rent || 0);
   const docRef = await addDoc(listingsCollection, {
     ...listingData,
+    ownerId: listingData.ownerId || "",
+    ownerEmail: listingData.ownerEmail || "",
+    analytics: listingData.analytics || {
+      views: 0,
+      saves: 0,
+      callClicks: 0,
+      whatsappClicks: 0,
+      mapClicks: 0,
+    },
 
     nearbyCollege: "JIST",
 
@@ -166,4 +175,47 @@ export async function updateListing(listingId, updates) {
 export async function deleteListing(listingId) {
   const listingRef = doc(db, "listings", listingId);
   await deleteDoc(listingRef);
+}
+
+export async function getOwnerListings({ ownerId, phone }) {
+  const listingMap = new Map();
+
+  if (ownerId) {
+    const ownerQuery = query(
+      listingsCollection,
+      where("ownerId", "==", ownerId)
+    );
+
+    const ownerSnapshot = await getDocs(ownerQuery);
+
+    ownerSnapshot.docs.forEach((docItem) => {
+      listingMap.set(docItem.id, {
+        id: docItem.id,
+        ...docItem.data(),
+      });
+    });
+  }
+
+  if (phone) {
+    const phoneQuery = query(
+      listingsCollection,
+      where("phone", "==", phone),
+      where("approved", "==", true)
+    );
+
+    const phoneSnapshot = await getDocs(phoneQuery);
+
+    phoneSnapshot.docs.forEach((docItem) => {
+      listingMap.set(docItem.id, {
+        id: docItem.id,
+        ...docItem.data(),
+      });
+    });
+  }
+
+  return Array.from(listingMap.values()).sort((a, b) => {
+    const aTime = a.createdAt?.seconds || 0;
+    const bTime = b.createdAt?.seconds || 0;
+    return bTime - aTime;
+  });
 }

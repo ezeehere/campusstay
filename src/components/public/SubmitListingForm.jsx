@@ -11,6 +11,7 @@ import {
 
 import { addPendingListing } from "../../firebase/listings";
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
+import { auth } from "../../firebase/config";
 
 const initialFormData = {
   name: "",
@@ -154,6 +155,8 @@ function SubmitListingForm() {
 
     const listingData = {
       ...formData,
+      ownerId: auth.currentUser?.uid || "",
+      ownerEmail: auth.currentUser?.email || "",
       food: formData.food === "Yes",
       facilities: formData.facilities
         .split(",")
