@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Link } from "react-router";
 import { logoutAdmin } from "../../firebase/auth";
+import { cleanupDummyData } from "../../firebase/cleanupDummyData";
 
 import {
   CheckCircle2,
@@ -122,6 +123,7 @@ function AdminDashboard() {
   >
     Reports
   </Link>
+
   async function handleLogout() {
     try {
       await logoutAdmin();
@@ -130,6 +132,28 @@ function AdminDashboard() {
       console.error("Logout error:", error);
       alert("Could not logout.");
     }
+    async function handleCleanupDummyData() {
+      const confirmCleanup = window.confirm(
+        "This will delete demo listings, demo tracking status, saved demo listings, and demo analytics. Continue?"
+      );
+
+      if (!confirmCleanup) return;
+
+      try {
+        const result = await cleanupDummyData();
+
+        alert(
+          `Cleanup done!\nDeleted listings: ${result.deletedListings}\nDeleted statuses: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
+        );
+
+        await loadListings();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to cleanup dummy data.");
+      }
+    }
+
+
   }
 
   const totalListings = adminListings.length;
@@ -164,6 +188,12 @@ function AdminDashboard() {
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white shadow-sm">
               <HomeIcon size={22} />
             </div>
+            <button
+              onClick={handleCleanupDummyData}
+              className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
+            >
+              Remove Demo Data
+            </button>
 
             <div>
               <h1 className="text-xl font-black tracking-tight">CampusStay</h1>
