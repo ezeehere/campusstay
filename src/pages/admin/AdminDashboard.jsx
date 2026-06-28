@@ -200,6 +200,13 @@ function AdminDashboard() {
               <AlertTriangle size={16} />
               Reports
             </Link>
+            <Link
+              to="/admin/customers"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              <Users size={16} />
+              Customers
+            </Link>
 
             <button
               onClick={handleLogout}

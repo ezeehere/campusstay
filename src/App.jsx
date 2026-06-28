@@ -14,6 +14,7 @@ import StudentSavedListings from "./pages/student/StudentSavedListings";
 import ProtectedOwnerRoute from "./components/owner/ProtectedOwnerRoute";
 import OwnerLogin from "./pages/owner/OwnerLogin";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
+import AdminCustomers from "./pages/admin/AdminCustomers";
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
           element={
             <ProtectedAdminRoute>
               <AdminReports />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/customers"
+          element={
+            <ProtectedAdminRoute>
+              <AdminCustomers />
             </ProtectedAdminRoute>
           }
         />
