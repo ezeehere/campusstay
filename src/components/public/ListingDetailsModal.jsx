@@ -76,35 +76,35 @@ function ListingDetailsModal({ listing, onClose }) {
   }
 
   async function handleSubmitReport(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!reportMessage.trim()) {
-    alert("Please explain the issue.");
-    return;
+    if (!reportMessage.trim()) {
+      alert("Please explain the issue.");
+      return;
+    }
+
+    try {
+      setReportSubmitting(true);
+
+      await submitListingReport({
+        listingId: listing.id,
+        listingName: listing.name || "",
+        ownerPhone: listing.phone || "",
+        reason: reportReason,
+        message: reportMessage.trim(),
+        reporterPhone: reporterPhone.trim(),
+      });
+
+      setReportSuccess(true);
+      setReportMessage("");
+      setReporterPhone("");
+    } catch (error) {
+      console.error("Report submit error:", error);
+      alert("Could not submit report. Please try again.");
+    } finally {
+      setReportSubmitting(false);
+    }
   }
-
-  try {
-    setReportSubmitting(true);
-
-    await submitListingReport({
-      listingId: listing.id,
-      listingName: listing.name || "",
-      ownerPhone: listing.phone || "",
-      reason: reportReason,
-      message: reportMessage.trim(),
-      reporterPhone: reporterPhone.trim(),
-    });
-
-    setReportSuccess(true);
-    setReportMessage("");
-    setReporterPhone("");
-  } catch (error) {
-    console.error("Report submit error:", error);
-    alert("Could not submit report. Please try again.");
-  } finally {
-    setReportSubmitting(false);
-  }
-}
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-3 py-4 backdrop-blur-sm">
@@ -133,36 +133,35 @@ function ListingDetailsModal({ listing, onClose }) {
         <div className="overflow-y-auto p-4 sm:p-5">
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
-              <div className="space-y-3"> 
-  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
-    <img
-      src={activeImage}
-      alt={listing.name}
-      className="max-h-full max-w-full object-contain"
-    />
-  </div>
+              <div className="space-y-3">
+                <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
+                  <img
+                    src={activeImage}
+                    alt={listing.name}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
 
-  {images.length > 1 && (
-    <div className="flex gap-2 overflow-x-auto pb-2">
-      {images.map((image, index) => (
-        <button
-          key={`${image}-${index}`}
-          onClick={() => setActiveImageIndex(index)}
-          className={`h-16 w-20 shrink-0 overflow-hidden rounded-2xl border-2 bg-[#F6F1E8] transition sm:h-20 sm:w-24 ${
-            activeImageIndex === index
-              ? "border-[#1E5B4F]"
-              : "border-[#E8DFD2] opacity-75 hover:opacity-100"
-          }`}
-        >
-          <img
-            src={image}
-            alt={`${listing.name} ${index + 1}`}
-            className="h-full w-full object-cover"
-          />
-        </button>
-      ))}
-    </div>
-  )}
+                {images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {images.map((image, index) => (
+                      <button
+                        key={`${image}-${index}`}
+                        onClick={() => setActiveImageIndex(index)}
+                        className={`h-16 w-20 shrink-0 overflow-hidden rounded-2xl border-2 bg-[#F6F1E8] transition sm:h-20 sm:w-24 ${activeImageIndex === index
+                            ? "border-[#1E5B4F]"
+                            : "border-[#E8DFD2] opacity-75 hover:opacity-100"
+                          }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${listing.name} ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -239,57 +238,57 @@ function ListingDetailsModal({ listing, onClose }) {
               </div>
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
-  <h3 className="text-base font-extrabold text-slate-950">Room options</h3>
+                <h3 className="text-base font-extrabold text-slate-950">Room options</h3>
 
-  <div className="mt-3 grid gap-3">
-    {(listing.roomOptions || []).length > 0 ? (
-      listing.roomOptions.map((room) => (
-        <div
-          key={room.id || room.title}
-          className="rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4"
-        >
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-            <div>
-              <h4 className="font-extrabold text-[#1F2933]">
-                {room.title}
-              </h4>
+                <div className="mt-3 grid gap-3">
+                  {(listing.roomOptions || []).length > 0 ? (
+                    listing.roomOptions.map((room) => (
+                      <div
+                        key={room.id || room.title}
+                        className="rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4"
+                      >
+                        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                          <div>
+                            <h4 className="font-extrabold text-[#1F2933]">
+                              {room.title}
+                            </h4>
 
-              <p className="mt-1 text-sm text-slate-600">
-                Capacity: {room.capacity} student
-                {Number(room.capacity) > 1 ? "s" : ""}
-              </p>
+                            <p className="mt-1 text-sm text-slate-600">
+                              Capacity: {room.capacity} student
+                              {Number(room.capacity) > 1 ? "s" : ""}
+                            </p>
 
-              {room.note && (
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {room.note}
-                </p>
-              )}
-            </div>
+                            {room.note && (
+                              <p className="mt-2 text-sm leading-6 text-slate-600">
+                                {room.note}
+                              </p>
+                            )}
+                          </div>
 
-            <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
-              <p className="text-lg font-extrabold text-[#1F2933]">
-                ₹{room.rent}
-              </p>
-              <p className="text-xs text-slate-500">per month</p>
-            </div>
-          </div>
+                          <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
+                            <p className="text-lg font-extrabold text-[#1F2933]">
+                              ₹{room.rent}
+                            </p>
+                            <p className="text-xs text-slate-500">per month</p>
+                          </div>
+                        </div>
 
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-            <div className="rounded-2xl bg-white px-3 py-2">
-              Deposit: ₹{room.deposit || 0}
-            </div>
+                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                          <div className="rounded-2xl bg-white px-3 py-2">
+                            Deposit: ₹{room.deposit || 0}
+                          </div>
 
-            <div className="rounded-2xl bg-white px-3 py-2">
-              Available: {room.availableUnits || 0}
-            </div>
-          </div>
-        </div>
-      ))
-    ) : (
-      <p className="text-sm text-slate-500">No room options added.</p>
-    )}
-  </div>
-</div>
+                          <div className="rounded-2xl bg-white px-3 py-2">
+                            Available: {room.availableUnits || 0}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500">No room options added.</p>
+                  )}
+                </div>
+              </div>
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
                 <h3 className="text-base font-black text-slate-950">
@@ -347,111 +346,111 @@ function ListingDetailsModal({ listing, onClose }) {
 
 
         {showReportForm && (
-  <div className="border-t border-slate-200 bg-white p-4">
-    <div className="rounded-3xl border border-red-200 bg-red-50 p-4">
-      {reportSuccess ? (
-        <div>
-          <h3 className="text-lg font-extrabold text-red-900">
-            Report submitted
-          </h3>
+          <div className="border-t border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-4">
+              {reportSuccess ? (
+                <div>
+                  <h3 className="text-lg font-extrabold text-red-900">
+                    Report submitted
+                  </h3>
 
-          <p className="mt-2 text-sm leading-6 text-red-700">
-            Thanks for reporting this listing. The admin will check it.
-          </p>
+                  <p className="mt-2 text-sm leading-6 text-red-700">
+                    Thanks for reporting this listing. The admin will check it.
+                  </p>
 
-          <button
-            onClick={() => {
-              setShowReportForm(false);
-              setReportSuccess(false);
-            }}
-            className="mt-4 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
-          >
-            Close report
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmitReport}>
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-            <div>
-              <h3 className="text-lg font-extrabold text-red-900">
-                Report wrong information
-              </h3>
+                  <button
+                    onClick={() => {
+                      setShowReportForm(false);
+                      setReportSuccess(false);
+                    }}
+                    className="mt-4 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                  >
+                    Close report
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitReport}>
+                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                    <div>
+                      <h3 className="text-lg font-extrabold text-red-900">
+                        Report wrong information
+                      </h3>
 
-              <p className="mt-1 text-sm leading-6 text-red-700">
-                Tell us what is wrong with this listing so the admin can review
-                it.
-              </p>
+                      <p className="mt-1 text-sm leading-6 text-red-700">
+                        Tell us what is wrong with this listing so the admin can review
+                        it.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowReportForm(false)}
+                      className="rounded-2xl bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-red-900">
+                        Reason
+                      </label>
+
+                      <select
+                        value={reportReason}
+                        onChange={(event) => setReportReason(event.target.value)}
+                        className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
+                      >
+                        <option>Wrong information</option>
+                        <option>Wrong phone number</option>
+                        <option>Fake listing</option>
+                        <option>Rent is different</option>
+                        <option>Location is wrong</option>
+                        <option>Already full</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-red-900">
+                        Your phone number optional
+                      </label>
+
+                      <input
+                        value={reporterPhone}
+                        onChange={(event) => setReporterPhone(event.target.value)}
+                        placeholder="Only if admin needs to contact you"
+                        className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-2 block text-sm font-bold text-red-900">
+                      Explain the issue
+                    </label>
+
+                    <textarea
+                      value={reportMessage}
+                      onChange={(event) => setReportMessage(event.target.value)}
+                      rows="4"
+                      placeholder="Example: The owner said rent is ₹6000 but listing shows ₹4500."
+                      className="w-full rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm outline-none"
+                    />
+                  </div>
+
+                  <button
+                    disabled={reportSubmitting}
+                    className="mt-4 rounded-2xl bg-red-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {reportSubmitting ? "Submitting..." : "Submit report"}
+                  </button>
+                </form>
+              )}
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowReportForm(false)}
-              className="rounded-2xl bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
-            >
-              Cancel
-            </button>
           </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-bold text-red-900">
-                Reason
-              </label>
-
-              <select
-                value={reportReason}
-                onChange={(event) => setReportReason(event.target.value)}
-                className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
-              >
-                <option>Wrong information</option>
-                <option>Wrong phone number</option>
-                <option>Fake listing</option>
-                <option>Rent is different</option>
-                <option>Location is wrong</option>
-                <option>Already full</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold text-red-900">
-                Your phone number optional
-              </label>
-
-              <input
-                value={reporterPhone}
-                onChange={(event) => setReporterPhone(event.target.value)}
-                placeholder="Only if admin needs to contact you"
-                className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <label className="mb-2 block text-sm font-bold text-red-900">
-              Explain the issue
-            </label>
-
-            <textarea
-              value={reportMessage}
-              onChange={(event) => setReportMessage(event.target.value)}
-              rows="4"
-              placeholder="Example: The owner said rent is ₹6000 but listing shows ₹4500."
-              className="w-full rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm outline-none"
-            />
-          </div>
-
-          <button
-            disabled={reportSubmitting}
-            className="mt-4 rounded-2xl bg-red-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {reportSubmitting ? "Submitting..." : "Submit report"}
-          </button>
-        </form>
-      )}
-    </div>
-  </div>
-)}
+        )}
 
         <div className="border-t border-slate-200 bg-white p-4">
           <div className="grid gap-3 sm:grid-cols-4">
@@ -509,11 +508,11 @@ function ListingDetailsModal({ listing, onClose }) {
             </a>
 
             <button
-  onClick={() => setShowReportForm(true)}
-  className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100"
->
-  Report issue
-</button>
+              onClick={() => setShowReportForm(true)}
+              className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+            >
+              Report issue
+            </button>
           </div>
         </div>
 
