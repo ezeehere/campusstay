@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Link} from "react-router";
+import { Link } from "react-router";
 import { logoutAdmin } from "../../firebase/auth";
-import { seedDummyListings } from "../../firebase/seedDummyListings";
+
 import {
   CheckCircle2,
   Clock,
@@ -46,54 +46,54 @@ function AdminDashboard() {
       setLoading(false);
     }
   }
-  
+
 
   useEffect(() => {
     loadListings();
   }, []);
 
-async function handleUpdate(listingId, updates) {
-  try {
-    setActionLoadingId(listingId);
+  async function handleUpdate(listingId, updates) {
+    try {
+      setActionLoadingId(listingId);
 
-    await updateListing(listingId, updates);
+      await updateListing(listingId, updates);
 
-    setSelectedListing((previousListing) => {
-      if (!previousListing || previousListing.id !== listingId) {
-        return previousListing;
-      }
+      setSelectedListing((previousListing) => {
+        if (!previousListing || previousListing.id !== listingId) {
+          return previousListing;
+        }
 
-      return {
-        ...previousListing,
-        ...updates,
-      };
-    });
+        return {
+          ...previousListing,
+          ...updates,
+        };
+      });
 
-    await loadListings();
-  } catch (error) {
-    console.error("Error updating listing:", error);
-    alert("Could not update listing.");
-  } finally {
-    setActionLoadingId(null);
+      await loadListings();
+    } catch (error) {
+      console.error("Error updating listing:", error);
+      alert("Could not update listing.");
+    } finally {
+      setActionLoadingId(null);
+    }
   }
-}
 
   async function handleSeedDummyData() {
-  const confirmSeed = window.confirm(
-    "This will add 30 dummy PG listings. Continue?"
-  );
+    const confirmSeed = window.confirm(
+      "This will add 30 dummy PG listings. Continue?"
+    );
 
-  if (!confirmSeed) return;
+    if (!confirmSeed) return;
 
-  try {
-    await seedDummyListings();
-    alert("Dummy listings added successfully!");
-    await loadListings();
-  } catch (error) {
-    console.error(error);
-    alert("Failed to add dummy listings.");
+    try {
+      await seedDummyListings();
+      alert("Dummy listings added successfully!");
+      await loadListings();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add dummy listings.");
+    }
   }
-}
   async function handleDelete(listingId) {
     const confirmDelete = confirm("Delete this listing permanently?");
 
@@ -117,20 +117,20 @@ async function handleUpdate(listingId, updates) {
 
 
   <Link
-  to="/admin/reports"
-  className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8] sm:inline-block"
->
-  Reports
-</Link>
+    to="/admin/reports"
+    className="hidden rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8] sm:inline-block"
+  >
+    Reports
+  </Link>
   async function handleLogout() {
-  try {
-        await logoutAdmin();
-        navigate("/admin/login");
+    try {
+      await logoutAdmin();
+      navigate("/admin/login");
     } catch (error) {
-        console.error("Logout error:", error);
-        alert("Could not logout.");
+      console.error("Logout error:", error);
+      alert("Could not logout.");
     }
-    }
+  }
 
   const totalListings = adminListings.length;
   const pendingListings = adminListings.filter((item) => !item.approved).length;
@@ -140,9 +140,8 @@ async function handleUpdate(listingId, updates) {
 
   const filteredListings = useMemo(() => {
     return adminListings.filter((listing) => {
-      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${
-        listing.area || ""
-      } ${listing.phone || ""}`.toLowerCase();
+      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${listing.area || ""
+        } ${listing.phone || ""}`.toLowerCase();
 
       const matchesSearch = searchText.includes(search.toLowerCase());
 
@@ -173,28 +172,28 @@ async function handleUpdate(listingId, updates) {
           </Link>
 
           <div className="flex items-center gap-2">
-  <Link
-    to="/admin/reports"
-    className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
-  >
-    <AlertTriangle size={16} />
-    Reports
-  </Link>
+            <Link
+              to="/admin/reports"
+              className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              <AlertTriangle size={16} />
+              Reports
+            </Link>
 
-  <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-          <button
-            onClick={handleSeedDummyData}
-            className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
-          >
-            Add Demo Data
-          </button>
-        </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+            <button
+              onClick={handleSeedDummyData}
+              className="rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#123C35]"
+            >
+              Add Demo Data
+            </button>
+          </div>
         </div>
       </header>
 
@@ -218,21 +217,21 @@ async function handleUpdate(listingId, updates) {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              to="/admin/reports"
-              className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
-            >
-              <AlertTriangle size={16} />
-              View reports
-            </Link>
+              <Link
+                to="/admin/reports"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
+              >
+                <AlertTriangle size={16} />
+                View reports
+              </Link>
 
-            <Link
-              to="/submit-listing"
-              className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-            >
-              Add listing
-            </Link>
-          </div>
+              <Link
+                to="/submit-listing"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+              >
+                Add listing
+              </Link>
+            </div>
 
             <div className="grid grid-cols-2 gap-3 sm:min-w-[360px]">
               <HeroMiniStat label="Total" value={totalListings} />
@@ -314,11 +313,10 @@ async function handleUpdate(listingId, updates) {
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
-                    activeFilter === filter
-                      ? "border-slate-950 bg-[#1E5B4F] text-white"
-                      : "border-[#E8DFD2] bg-white text-slate-600 hover:bg-[#FFF8EF]"
-                  }`}
+                  className={`rounded-full border px-4 py-2 text-sm font-bold transition ${activeFilter === filter
+                    ? "border-slate-950 bg-[#1E5B4F] text-white"
+                    : "border-[#E8DFD2] bg-white text-slate-600 hover:bg-[#FFF8EF]"
+                    }`}
                 >
                   {filter}
                 </button>
@@ -371,23 +369,22 @@ async function handleUpdate(listingId, updates) {
 
                           <p className="mt-2 text-lg font-black text-slate-950">
                             {listing.roomOptions?.length || 1} room option
-{(listing.roomOptions?.length || 1) > 1 ? "s" : ""}
+                            {(listing.roomOptions?.length || 1) > 1 ? "s" : ""}
                             <span className="ml-1 text-xs font-semibold text-slate-500">
                               /month
                             </span>
                           </p>
 
-                          
+
                         </div>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                         <InfoMini
-                            label="Room options"
-                            value={`${listing.roomOptions?.length || 1} option${
-                                (listing.roomOptions?.length || 1) > 1 ? "s" : ""
+                          label="Room options"
+                          value={`${listing.roomOptions?.length || 1} option${(listing.roomOptions?.length || 1) > 1 ? "s" : ""
                             }`}
-                            />
+                        />
                         <InfoMini
                           label="Owner"
                           value={listing.ownerName || "Not added"}
@@ -398,9 +395,8 @@ async function handleUpdate(listingId, updates) {
                         />
                         <InfoMini
                           label="Stay"
-                          value={`${listing.type || "Type"} · ${
-                            listing.gender || "For"
-                          }`}
+                          value={`${listing.type || "Type"} · ${listing.gender || "For"
+                            }`}
                         />
                         <InfoMini
                           label="Deposit"
@@ -439,8 +435,8 @@ async function handleUpdate(listingId, updates) {
                           disabled={isActionLoading}
                           onClick={() =>
                             handleUpdate(listing.id, {
-                            approved: !listing.approved,
-                            status: listing.approved ? "pending" : "approved",
+                              approved: !listing.approved,
+                              status: listing.approved ? "pending" : "approved",
                             })
                           }
                           className="rounded-2xl bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
@@ -669,11 +665,11 @@ async function handleUpdate(listingId, updates) {
 
       {selectedListing && (
         <AdminListingDetailsModal
-            listing={selectedListing}
-            onClose={() => setSelectedListing(null)}
-            onUpdate={handleUpdate}
-            saving={actionLoadingId === selectedListing.id}
-         />
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          onUpdate={handleUpdate}
+          saving={actionLoadingId === selectedListing.id}
+        />
       )}
     </main>
   );

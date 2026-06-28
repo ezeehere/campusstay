@@ -466,10 +466,10 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("call_click", "callClicks");
               }}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
               <Phone size={16} />
-              Call
+              Call Owner
             </a>
 
             <a
@@ -484,14 +484,14 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("whatsapp_click", "whatsappClicks");
               }}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <MessageCircle size={16} />
               WhatsApp
             </a>
 
             <a
-              href={auth.currentUser ? (listing.mapLink || "https://maps.google.com") : undefined}
+              href={auth.currentUser ? listing.mapLink : undefined}
               target={auth.currentUser ? "_blank" : undefined}
               rel={auth.currentUser ? "noreferrer" : undefined}
               onClick={(event) => {
@@ -502,10 +502,10 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("map_click", "mapClicks");
               }}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <MapPin size={16} />
-              Map
+              Open Map
             </a>
 
             <button

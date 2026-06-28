@@ -1,173 +1,74 @@
-import {
-  AlertTriangle,
-  BedDouble,
-  Home as HomeIcon,
-  IndianRupee,
-  MapPin,
-  MessageCircle,
-  Phone,
-  ShieldCheck,
-  Utensils,
-  CalendarDays,
-} from "lucide-react";
-
 import Badge from "../common/Badge";
-import { createWhatsAppLink } from "../../utils/whatsapp";
 import SaveListingButton from "../student/SaveListingButton";
 
 function ListingCard({ listing, onViewDetails }) {
-  const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
-  const startingRent = listing.startingRent || listing.rent || 0;
-
-const roomSummary =
-  listing.roomOptions?.length > 0
-    ? listing.roomOptions.map((room) => room.title).join(", ")
-    : listing.roomType || "Room options";
-  const coverImage =
-  listing.images?.[0] ||
-  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=600&auto=format&fit=crop";
+  const image = listing.images?.[0] || "";
+  const rent = listing.startingRent || listing.rent || 0;
 
   return (
-    <article className="overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative h-44 overflow-hidden bg-slate-100">
-        <img
-            src={coverImage}
+    <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md sm:rounded-[2rem]">
+      <div className="relative aspect-[4/3] bg-[#F6F1E8]">
+        {image ? (
+          <img
+            src={image}
             alt={listing.name}
             className="h-full w-full object-cover"
-        />
-
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/70 to-transparent" />
-
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          {listing.verified ? (
-            <Badge type="verified">
-              <ShieldCheck size={13} />
-              Verified
-            </Badge>
-          ) : (
-            <Badge type="warning">
-              <AlertTriangle size={13} />
-              Not verified
-            </Badge>
-          )}
-
-          {listing.available ? (
-            <Badge type="dark">Available</Badge>
-          ) : (
-            <Badge>Full</Badge>
-          )}
-        </div>
-
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
-          <div>
-            <p className="text-xs font-medium text-white/80">
-              {listing.type} for {listing.gender}
-            </p>
-            <h3 className="line-clamp-1 text-lg font-black">
-              {listing.name}
-            </h3>
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-400">
+            No image
           </div>
+        )}
 
-          <div className="rounded-2xl bg-white/95 px-3 py-2 text-right text-slate-950">
-            <p className="flex items-center justify-end text-sm font-extrabold">
-  <IndianRupee size={14} />
-  {startingRent}
-</p>
-<p className="text-[11px] text-slate-500">starts</p>
-            <p className="text-[11px] text-slate-500">month</p>
-          </div>
-        </div>
+        {listing.verified && (
+          <span className="absolute left-3 top-3 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            Verified
+          </span>
+        )}
       </div>
 
-      <div className="p-5">
-        <div className="mb-4 grid gap-3">
-          <p className="flex items-start gap-2 text-sm text-slate-600">
-            <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
-            <span>
-              <span className="font-semibold text-slate-800">
-                {listing.area}
-              </span>
-              <span className="text-slate-400"> · </span>
-              {listing.distance}
-            </span>
-          </p>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                <BedDouble size={14} />
-                Room type
-              </p>
-              <p className="mt-1 text-sm font-bold text-slate-900">
-                {roomSummary}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <p className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                <Utensils size={14} />
-                Food
-              </p>
-              <p className="mt-1 text-sm font-bold text-slate-900">
-                {listing.food ? "Included" : "Not included"}
-              </p>
-            </div>
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="line-clamp-1 text-lg font-extrabold text-[#1F2933]">
+              {listing.name}
+            </h3>
+            <p className="mt-1 line-clamp-1 text-sm text-slate-500">
+              {listing.area} · {listing.distance}
+            </p>
           </div>
+
+          <span className="shrink-0 rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
+            ₹{rent}
+          </span>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          <Badge type="soft">
-            <HomeIcon size={13} />
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
             {listing.type}
-          </Badge>
+          </span>
 
-          <Badge>{listing.gender}</Badge>
+          <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
+            {listing.gender}
+          </span>
 
-          {listing.facilities.slice(0, 3).map((item) => (
-            <span
-              key={item}
-              className="rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600"
-            >
-              {item}
+          {listing.food && (
+            <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
+              Food Included
             </span>
-          ))}
+          )}
         </div>
 
-        <div className="mb-5 flex items-center gap-2 text-xs text-slate-500">
-          <CalendarDays size={14} />
-          Last updated: {listing.lastUpdated}
-        </div>
-
-        <button
-          onClick={() => onViewDetails(listing)}
-          className="mb-3 w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          View full details
-        </button>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="absolute right-3 top-3">
-            <SaveListingButton listing={listing} showText={false} />
-          </div>
-          <a
-            href={`tel:${listing.phone}`}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onViewDetails}
+            className="rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
           >
-            <Phone size={16} />
-            Call
-          </a>
+            View details
+          </button>
 
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
-          >
-            <MessageCircle size={16} />
-            WhatsApp
-          </a>
-
-          
+          <SaveListingButton listing={listing} />
         </div>
       </div>
     </article>
