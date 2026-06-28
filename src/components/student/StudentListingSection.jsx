@@ -1,19 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Heart,
-  Loader2,
-  MapPin,
-  Phone,
-  Sparkles,
-  Utensils,
-} from "lucide-react";
+import { Loader2, MapPin, Phone, Sparkles, Utensils } from "lucide-react";
 
+import { trackListingInteraction } from "../../firebase/analytics";
 import { getApprovedListings } from "../../firebase/listings";
 import { getSavedListings } from "../../firebase/savedListings";
 import { watchStudentAuth } from "../../firebase/studentAuth";
 import ListingDetailsModal from "../public/ListingDetailsModal";
 import SaveListingButton from "./SaveListingButton";
-import { trackListingInteraction } from "../../firebase/analytics";
 
 function getListingRent(listing) {
   return Number(listing.startingRent || listing.rent || 0);
@@ -36,7 +29,10 @@ function getRecommendationScore(listing, profile) {
   }
 
   if (profile?.preferredStayType && profile.preferredStayType !== "Both") {
-    if (String(listing.type || "").toLowerCase() === profile.preferredStayType.toLowerCase()) {
+    if (
+      String(listing.type || "").toLowerCase() ===
+      profile.preferredStayType.toLowerCase()
+    ) {
       score += 2;
     }
   }
@@ -54,10 +50,7 @@ function getRecommendationScore(listing, profile) {
   if (budgetMin && rent >= budgetMin) score += 1;
   if (budgetMax && rent <= budgetMax) score += 2;
 
-  if (profile?.foodRequired === "Yes" && listing.foodIncluded) {
-    score += 2;
-  }
-
+  if (profile?.foodRequired === "Yes" && listing.foodIncluded) score += 2;
   if (listing.verified) score += 1;
   if (listing.available) score += 1;
 
@@ -106,9 +99,9 @@ function StudentListingSection({ profile }) {
 
   if (loading) {
     return (
-      <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="animate-spin" size={20} />
+      <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <Loader2 className="animate-spin" size={19} />
           Loading PG and room suggestions...
         </div>
       </section>
@@ -117,15 +110,15 @@ function StudentListingSection({ profile }) {
 
   return (
     <>
-      <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:p-7">
+      <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 text-2xl font-extrabold text-[#1F2933]">
-              <Sparkles size={24} />
+            <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
+              <Sparkles size={21} />
               Recommended for you
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Based on your area, budget, stay type, food, and gender preferences.
+            <p className="mt-1 text-sm text-slate-500">
+              Based on your budget, area, food, gender, and stay type.
             </p>
           </div>
 
@@ -135,11 +128,11 @@ function StudentListingSection({ profile }) {
         </div>
 
         {recommendedListings.length === 0 ? (
-          <div className="mt-5 rounded-3xl bg-[#FFF8EF] p-5 text-sm text-slate-500">
-            No strong recommendations yet. Update your preferences or browse all listings below.
+          <div className="mt-4 rounded-3xl bg-[#FFF8EF] p-4 text-sm text-slate-500">
+            No strong recommendations yet. Update preferences or browse all listings.
           </div>
         ) : (
-          <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recommendedListings.map((listing) => (
               <StudentListingCard
                 key={listing.id}
@@ -152,14 +145,14 @@ function StudentListingSection({ profile }) {
         )}
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:p-7">
+      <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-extrabold text-[#1F2933]">
-              All PGs and Rooms
+            <h2 className="text-xl font-bold text-[#1F2933]">
+              All PGs and rooms
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Browse all approved listings available on CampusStay.
+            <p className="mt-1 text-sm text-slate-500">
+              Browse all approved listings on CampusStay.
             </p>
           </div>
 
@@ -168,7 +161,7 @@ function StudentListingSection({ profile }) {
           </p>
         </div>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => (
             <StudentListingCard
               key={listing.id}
@@ -195,8 +188,8 @@ function StudentListingCard({ listing, onView }) {
   const rent = getListingRent(listing);
 
   return (
-    <article className="overflow-hidden rounded-[2rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="relative aspect-[4/3] bg-[#F6F1E8]">
+    <article className="overflow-hidden rounded-[1.4rem] border border-[#E8DFD2] bg-white shadow-sm">
+      <div className="relative aspect-[16/10] bg-[#F6F1E8]">
         {image ? (
           <img
             src={image}
@@ -220,24 +213,24 @@ function StudentListingCard({ listing, onView }) {
         )}
       </div>
 
-      <div className="p-5">
+      <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-extrabold text-[#1F2933]">
+            <h3 className="line-clamp-1 text-base font-bold text-[#1F2933]">
               {listing.name}
             </h3>
             <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
               <MapPin size={14} />
-              {listing.area}
+              <span className="line-clamp-1">{listing.area}</span>
             </p>
           </div>
 
-          <span className="rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
+          <span className="shrink-0 rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
             ₹{rent}
           </span>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
             {listing.type}
           </span>
@@ -252,7 +245,7 @@ function StudentListingCard({ listing, onView }) {
           </span>
         </div>
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={onView}
@@ -266,11 +259,13 @@ function StudentListingCard({ listing, onView }) {
               href={`tel:${listing.phone}`}
               onClick={(event) => {
                 event.stopPropagation();
-                trackListingInteraction("call_click", listing, "callClicks").catch(
-                  (error) => {
-                    console.error("Call analytics failed:", error);
-                  }
-                );
+                trackListingInteraction(
+                  "call_click",
+                  listing,
+                  "callClicks"
+                ).catch((error) => {
+                  console.error("Call analytics failed:", error);
+                });
               }}
               className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
             >

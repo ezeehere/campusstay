@@ -56,9 +56,9 @@ function StudentSavedListings() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FFF8EF] text-slate-600">
-        <div className="flex items-center gap-3 rounded-3xl bg-white px-6 py-5 shadow-sm">
-          <Loader2 className="animate-spin" size={22} />
+      <main className="cs-page flex min-h-screen items-center justify-center px-3 py-4 text-slate-600">
+        <div className="flex items-center gap-3 rounded-3xl bg-white px-5 py-4 shadow-sm">
+          <Loader2 className="animate-spin" size={20} />
           Loading saved listings...
         </div>
       </main>
@@ -66,9 +66,9 @@ function StudentSavedListings() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF8EF] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <main className="cs-page min-h-screen px-3 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl overflow-x-hidden">
+        <header className="flex flex-col gap-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:rounded-[2rem] sm:p-6">
           <div>
             <Link
               to="/student/dashboard"
@@ -78,8 +78,8 @@ function StudentSavedListings() {
               Back to dashboard
             </Link>
 
-            <h1 className="mt-3 flex items-center gap-2 text-3xl font-extrabold text-[#1F2933]">
-              <Heart size={28} />
+            <h1 className="mt-3 flex items-center gap-2 text-2xl font-bold text-[#1F2933]">
+              <Heart size={24} />
               Saved PGs and Rooms
             </h1>
 
@@ -98,12 +98,12 @@ function StudentSavedListings() {
         </header>
 
         {savedListings.length === 0 ? (
-          <section className="mt-6 rounded-[2rem] border border-[#E8DFD2] bg-white p-8 text-center shadow-sm">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#F6F1E8] text-[#1E5B4F]">
-              <Heart size={28} />
+          <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-6 text-center shadow-sm sm:rounded-[2rem] sm:p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F6F1E8] text-[#1E5B4F]">
+              <Heart size={24} />
             </div>
 
-            <h2 className="mt-5 text-2xl font-extrabold text-[#1F2933]">
+            <h2 className="mt-4 text-xl font-bold text-[#1F2933]">
               No saved listings yet
             </h2>
 
@@ -119,7 +119,7 @@ function StudentSavedListings() {
             </Link>
           </section>
         ) : (
-          <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {savedListings.map((item) => (
               <article
                 key={item.id}

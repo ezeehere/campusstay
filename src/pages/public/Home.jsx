@@ -40,21 +40,21 @@ function Home() {
 
 
   useEffect(() => {
-  async function loadApprovedListings() {
-    try {
-      setLoading(true);
-      const data = await getApprovedListings();
-      setListings(data);
-    } catch (error) {
-      console.error("Error loading approved listings:", error);
-      alert("Could not load listings.");
-    } finally {
-      setLoading(false);
+    async function loadApprovedListings() {
+      try {
+        setLoading(true);
+        const data = await getApprovedListings();
+        setListings(data);
+      } catch (error) {
+        console.error("Error loading approved listings:", error);
+        alert("Could not load listings.");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  loadApprovedListings();
-}, []);
+    loadApprovedListings();
+  }, []);
 
   useEffect(() => {
     const openListingId = searchParams.get("openListing");
@@ -70,8 +70,7 @@ function Home() {
 
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
-      const searchableText = `${listing.name || ""} ${listing.area || ""} ${
-          listing.gender || ""
+      const searchableText = `${listing.name || ""} ${listing.area || ""} ${listing.gender || ""
         } ${listing.type || ""}`;
 
       const matchesSearch = searchableText
@@ -107,23 +106,22 @@ function Home() {
   ]);
 
   const quickFilterClass = (active) =>
-    `rounded-full border px-4 py-2 text-sm font-semibold transition ${
-      active
-        ? "border-slate-950 bg-slate-950 text-white"
-        : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#FFF8EF]"
+    `rounded-full border px-4 py-2 text-sm font-semibold transition ${active
+      ? "border-slate-950 bg-slate-950 text-white"
+      : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#FFF8EF]"
     }`;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#FFF8EF] via-white to-[#F6F1E8] text-slate-950">
       <header className="sticky top-0 z-45 border-b border-[#E8DFD2] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#070B1F] text-white">
-              <HomeIcon size={20} />
+          <Link to="/" className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#070B1F] text-white sm:h-10 sm:w-10">
+              <HomeIcon size={18} />
             </div>
 
-            <div>
-              <h1 className="text-lg font-extrabold leading-none text-[#070B1F] sm:text-xl">
+            <div className="min-w-0">
+              <h1 className="truncate text-[1.35rem] font-bold leading-none text-[#070B1F] sm:text-xl">
                 CampusStay
               </h1>
               <p className="mt-1 hidden text-xs text-slate-500 sm:block">
@@ -132,7 +130,7 @@ function Home() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               to="/student/login"
               className="rounded-2xl border border-[#E8DFD2] bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-[#F6F1E8] sm:px-4 sm:text-sm"
@@ -318,40 +316,40 @@ function Home() {
           </div>
         </div>
       </section>
-            <section
+      <section
         id="available-stays"
         className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8"
       >
         <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-  <div>
-    <button
-      onClick={() => setShowMobileFilters(!showMobileFilters)}
-      className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
-    >
-      <SlidersHorizontal size={14} />
-      {showMobileFilters ? "Hide filters" : "Filters"}
-    </button>
+          <div>
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
+            >
+              <SlidersHorizontal size={14} />
+              {showMobileFilters ? "Hide filters" : "Filters"}
+            </button>
 
-    <div className="hidden lg:inline-flex">
-      <Badge>
-        <SlidersHorizontal size={14} />
-        Refine results
-      </Badge>
-    </div>
+            <div className="hidden lg:inline-flex">
+              <Badge>
+                <SlidersHorizontal size={14} />
+                Refine results
+              </Badge>
+            </div>
 
-    <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
-      Available stays
-    </h2>
-  </div>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Available stays
+            </h2>
+          </div>
 
-  <p className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
-    Showing {filteredListings.length} of {listings.length} listings
-  </p>
-</div>
+          <p className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+            Showing {filteredListings.length} of {listings.length} listings
+          </p>
+        </div>
 
-        <div  className={`mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm ${ showMobileFilters ? "block" : "hidden"
-  } lg:block`}
->
+        <div className={`mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm ${showMobileFilters ? "block" : "hidden"
+          } lg:block`}
+        >
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]">
             <select
               value={gender}
@@ -410,130 +408,130 @@ function Home() {
         </div>
 
         {loading ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <h3 className="text-xl font-bold">Loading listings...</h3>
-              <p className="mt-2 text-slate-500">
-                Please wait while we fetch approved stays.
-              </p>
-            </div>
-          ) : filteredListings.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onViewDetails={() => handleViewListing(listing)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <h3 className="text-xl font-bold">No listing found</h3>
-              <p className="mt-2 text-slate-500">
-                Try changing the filters or search text.
-              </p>
-            </div>
-          )}
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <h3 className="text-xl font-bold">Loading listings...</h3>
+            <p className="mt-2 text-slate-500">
+              Please wait while we fetch approved stays.
+            </p>
+          </div>
+        ) : filteredListings.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onViewDetails={() => handleViewListing(listing)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <h3 className="text-xl font-bold">No listing found</h3>
+            <p className="mt-2 text-slate-500">
+              Try changing the filters or search text.
+            </p>
+          </div>
+        )}
       </section>
 
 
 
-            <footer className="border-t border-[#E8DFD2] bg-[#FFF8EF]">
-  <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-    <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm sm:p-8">
-      <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white shadow-sm">
-              <HomeIcon size={23} />
+      <footer className="border-t border-[#E8DFD2] bg-[#FFF8EF]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm sm:p-8">
+            <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white shadow-sm">
+                    <HomeIcon size={23} />
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-extrabold text-[#1F2933]">
+                      CampusStay
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      PGs and rooms made easy
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
+                  CampusStay helps students find verified PGs and rooms near campus
+                  with rent, photos, facilities, location, and direct owner contact.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
+                  Quick links
+                </h4>
+
+                <div className="mt-4 grid gap-3 text-sm">
+                  <Link
+                    to="/"
+                    className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+                  >
+                    Home
+                  </Link>
+
+                  <Link
+                    to="/submit-listing"
+                    className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+                  >
+                    List your PG
+                  </Link>
+
+                  <Link
+                    to="/check-status"
+                    className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+                  >
+                    Check status
+                  </Link>
+
+                  <Link
+                    to="/admin/login"
+                    className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
+                  >
+                    Admin
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
+                  Launch area
+                </h4>
+
+                <div className="mt-4 rounded-3xl bg-[#F6F1E8] p-4">
+                  <p className="text-2xl font-extrabold text-[#1F2933]">JIST</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Starting with stays near Jorhat Institute of Science and
+                    Technology.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <h3 className="text-xl font-extrabold text-[#1F2933]">
-                CampusStay
-              </h3>
-              <p className="text-sm text-slate-500">
-                PGs and rooms made easy
-              </p>
+            <div className="mt-8 border-t border-[#E8DFD2] pt-5">
+              <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  Students and parents are advised to visit and verify the stay before making
+                  any payment.
+                </p>
+
+                <p>
+                  Designed and built by{" "}
+                  <span className="font-bold text-[#1E5B4F]">
+                    Ezaz Ahmed
+                  </span>
+                  , JIST, Jorhat.
+                </p>
+              </div>
             </div>
           </div>
-
-          <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-            CampusStay helps students find verified PGs and rooms near campus
-            with rent, photos, facilities, location, and direct owner contact.
-          </p>
         </div>
-
-        <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
-            Quick links
-          </h4>
-
-          <div className="mt-4 grid gap-3 text-sm">
-            <Link
-              to="/"
-              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
-            >
-              Home
-            </Link>
-
-            <Link
-              to="/submit-listing"
-              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
-            >
-              List your PG
-            </Link>
-
-            <Link
-              to="/check-status"
-              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
-            >
-              Check status
-            </Link>
-
-            <Link
-              to="/admin/login"
-              className="w-fit font-medium text-slate-600 transition hover:text-[#1E5B4F]"
-            >
-              Admin
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-[#1E5B4F]">
-            Launch area
-          </h4>
-
-          <div className="mt-4 rounded-3xl bg-[#F6F1E8] p-4">
-            <p className="text-2xl font-extrabold text-[#1F2933]">JIST</p>
-            <p className="mt-1 text-sm text-slate-600">
-              Starting with stays near Jorhat Institute of Science and
-              Technology.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 border-t border-[#E8DFD2] pt-5">
-        <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            Students and parents are advised to visit and verify the stay before making
-            any payment.
-          </p>
-
-          <p>
-            Designed and built by{" "}
-            <span className="font-bold text-[#1E5B4F]">
-              Ezaz Ahmed
-            </span>
-            , JIST, Jorhat.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
+      </footer>
 
       {selectedListing && (
         <ListingDetailsModal

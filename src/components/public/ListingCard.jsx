@@ -105,9 +105,16 @@ function ListingCard({ listing, onViewDetails }) {
                 Room type
               </p>
             </div>
-            <p className="mt-2 line-clamp-3 text-[15px] font-semibold leading-6 text-[#1F2933]">
-              {roomTypeText}
-            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {getRoomTypeTags(roomTypeText).map((roomType) => (
+                <span
+                  key={roomType}
+                  className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm"
+                >
+                  {roomType}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="rounded-[1.5rem] bg-[#F8F8F8] p-4">
@@ -158,6 +165,16 @@ function ListingCard({ listing, onViewDetails }) {
       </div>
     </article>
   );
+}
+
+function getRoomTypeTags(roomTypeText) {
+  if (!roomTypeText) return ["Room details"];
+
+  return String(roomTypeText)
+    .split(/,|\/|-/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 4);
 }
 
 function formatListingDate(timestamp) {
