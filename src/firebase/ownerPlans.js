@@ -12,44 +12,11 @@ import {
 
 import { db } from "./config";
 
-export async function getOwnerPlan(ownerId) {
-  if (!ownerId) {
-    return {
-      ownerId: "",
-      plan: "free",
-      active: false,
-      leadAccess: false,
-    };
-  }
+function cleanId(value) {
+  return String(value || "").trim();
+}
 
-  // Main method: document ID should be owner UID.
-  const directPlanRef = doc(db, "ownerPlans", ownerId);
-  const directPlanSnap = await getDoc(directPlanRef);
-
-  if (directPlanSnap.exists()) {
-    return {
-      id: directPlanSnap.id,
-      ...directPlanSnap.data(),
-    };
-  }
-
-  // Backup method: find by ownerId field.
-  const planQuery = query(
-    collection(db, "ownerPlans"),
-    where("ownerId", "==", ownerId)
-  );
-
-  const planSnapshot = await getDocs(planQuery);
-
-  if (!planSnapshot.empty) {
-    const planDoc = planSnapshot.docs[0];
-
-    return {
-      id: planDoc.id,
-      ...planDoc.data(),
-    };
-  }
-
+function getFreePlan(ownerId) {
   return {
     ownerId,
     plan: "free",
@@ -58,8 +25,82 @@ export async function getOwnerPlan(ownerId) {
   };
 }
 
+export async function getOwnerPlan(ownerId) {
+  const cleanOwnerId = cleanId(ownerId);
+
+  if (!cleanOwnerId) {
+    return getFreePlan("");
+  }
+
+  console.log("Trying to load owner plan for:", cleanOwnerId);
+
+  // Method 1: direct document read
+  const directPlanRef = doc(db, "ownerPlans", cleanOwnerId);
+  const directPlanSnap = await getDoc(directPlanRef);
+
+  console.log("Direct owner plan exists:", directPlanSnap.exists());
+
+  if (directPlanSnap.exists()) {
+    const plan = {
+      id: directPlanSnap.id,
+      ...directPlanSnap.data(),
+    };
+
+    console.log("Direct owner plan data:", plan);
+    return plan;
+  }
+
+  // Method 2: query by ownerId field
+  const planQuery = query(
+    collection(db, "ownerPlans"),
+    where("ownerId", "==", cleanOwnerId)
+  );
+
+  const planSnapshot = await getDocs(planQuery);
+
+  console.log("Owner plan query count:", planSnapshot.size);
+
+  if (!planSnapshot.empty) {
+    const planDoc = planSnapshot.docs[0];
+
+    const plan = {
+      id: planDoc.id,
+      ...planDoc.data(),
+    };
+
+    console.log("Queried owner plan data:", plan);
+    return plan;
+  }
+
+  // Method 3: scan all plans temporarily for debugging
+  const allPlansSnapshot = await getDocs(collection(db, "ownerPlans"));
+
+  const allPlans = allPlansSnapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data(),
+  }));
+
+  console.log("All ownerPlans visible to app:", allPlans);
+
+  const matchedPlan = allPlans.find((plan) => {
+    return (
+      cleanId(plan.id) === cleanOwnerId ||
+      cleanId(plan.ownerId) === cleanOwnerId
+    );
+  });
+
+  if (matchedPlan) {
+    console.log("Matched owner plan from scan:", matchedPlan);
+    return matchedPlan;
+  }
+
+  console.log("No owner plan found. Returning free plan.");
+
+  return getFreePlan(cleanOwnerId);
+}
+
 export async function requestLeadAccess(ownerData) {
-  const ownerId = ownerData?.ownerId;
+  const ownerId = cleanId(ownerData?.ownerId);
 
   if (!ownerId) {
     throw new Error("Owner ID missing.");
@@ -98,16 +139,18 @@ export async function requestLeadAccess(ownerData) {
 }
 
 export async function activateOwnerLeadAccess(ownerId) {
-  if (!ownerId) {
+  const cleanOwnerId = cleanId(ownerId);
+
+  if (!cleanOwnerId) {
     throw new Error("Owner ID missing.");
   }
 
-  const planRef = doc(db, "ownerPlans", ownerId);
+  const planRef = doc(db, "ownerPlans", cleanOwnerId);
 
   await setDoc(
     planRef,
     {
-      ownerId,
+      ownerId: cleanOwnerId,
       plan: "lead_access",
       active: true,
       leadAccess: true,
