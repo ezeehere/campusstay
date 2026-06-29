@@ -20,7 +20,10 @@ import {
   Users,
 } from "lucide-react";
 
-import { getOwnerListings } from "../../firebase/listings";
+import {
+  getOwnerListings,
+  updateListingAvailability,
+} from "../../firebase/listings";
 import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
 import { requestLeadAccess } from "../../firebase/ownerPlans";
@@ -103,8 +106,10 @@ function OwnerDashboard() {
     area: "",
   });
 
+  const [availabilityLoadingId, setAvailabilityLoadingId] = useState("");
+
   async function loadOwnerListings(user, ownerProfile) {
-    if (!user) return;
+    if (!user) return [];
 
     setRefreshingListings(true);
 
@@ -115,6 +120,8 @@ function OwnerDashboard() {
 
     setListings(ownerListings);
     setRefreshingListings(false);
+
+    return ownerListings;
   }
 
   useEffect(() => {
@@ -141,10 +148,19 @@ function OwnerDashboard() {
 
       setOwnerPlan(loadedPlan);
 
-      await loadOwnerListings(user, ownerProfile);
+      const ownerListings = await loadOwnerListings(user, ownerProfile);
       await loadCallbackLeads(user, ownerProfile, loadedPlan);
 
       setLoading(false);
+
+      const alreadyRedirected = sessionStorage.getItem(
+        "campusstay_owner_first_listing_redirected"
+      );
+
+      if (ownerListings.length === 0 && !alreadyRedirected) {
+        sessionStorage.setItem("campusstay_owner_first_listing_redirected", "true");
+        navigate("/submit-listing?ownerFirst=true", { replace: true });
+      }
     });
 
     return () => unsubscribe();
@@ -281,6 +297,25 @@ function OwnerDashboard() {
     }
   }
 
+  async function handleUpdateAvailability(listingId, updatedRoomOptions) {
+    if (!listingId) return;
+
+    try {
+      setAvailabilityLoadingId(listingId);
+
+      await updateListingAvailability(listingId, updatedRoomOptions);
+
+      await loadOwnerListings(ownerUser, profile);
+
+      alert("Availability updated.");
+    } catch (error) {
+      console.error(error);
+      alert("Could not update availability.");
+    } finally {
+      setAvailabilityLoadingId("");
+    }
+  }
+
   async function handleLogout() {
     await logoutOwner();
     navigate("/");
@@ -356,8 +391,8 @@ function OwnerDashboard() {
             </p>
           </Link>
 
-          <Link
-            to="/check-status"
+          <a
+            href="#my-listings"
             className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md sm:p-5"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF4D8] text-[#8A5A00]">
@@ -365,13 +400,13 @@ function OwnerDashboard() {
             </div>
 
             <h2 className="mt-4 text-xl font-bold text-[#1F2933]">
-              Check Status
+              My Listing Status
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Check whether your listing is pending, approved, rejected, or needs changes.
+              See your own PG approval status, admin notes, and live seat availability.
             </p>
-          </Link>
+          </a>
         </section>
 
         <LeadAccessCard
@@ -522,15 +557,18 @@ function OwnerDashboard() {
               />
             </section>
 
-            <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+            <section
+              id="my-listings"
+              className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6"
+            >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
                     <BarChart3 size={21} />
-                    Your PG analytics
+                    My Listing Status & Live Availability
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Student views, saves, calls, WhatsApp clicks, map opens, and callback interest.
+                    Track approval status, admin notes, student interest, and update seats left in real time.
                   </p>
                 </div>
 
@@ -544,7 +582,12 @@ function OwnerDashboard() {
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 {listings.map((listing) => (
-                  <OwnerListingCard key={listing.id} listing={listing} />
+                  <OwnerListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onUpdateAvailability={handleUpdateAvailability}
+                    updatingAvailability={availabilityLoadingId === listing.id}
+                  />
                 ))}
               </div>
             </section>
@@ -707,12 +750,73 @@ function MetricCard({ title, value, icon }) {
   );
 }
 
-function OwnerListingCard({ listing }) {
+function OwnerListingCard({
+  listing,
+  onUpdateAvailability,
+  updatingAvailability,
+}) {
   const image = listing.images?.[0] || "";
   const status = listing.status || (listing.approved ? "approved" : "pending");
   const imageCount = getImageCount(listing);
   const nearbyText = getNearbyText(listing);
   const facilities = getFacilities(listing).slice(0, 4);
+
+  const roomOptions =
+    listing.roomOptions?.length > 0
+      ? listing.roomOptions
+      : [
+          {
+            id: "room-1",
+            title: listing.roomType || "Room",
+            rent: listing.rent || listing.startingRent || 0,
+            deposit: listing.deposit || 0,
+            capacity: 1,
+            availableUnits: listing.available ? 1 : 0,
+            available: listing.available,
+          },
+        ];
+
+  function updateRoom(roomId, nextAvailableUnits) {
+    const updatedRoomOptions = roomOptions.map((room) => {
+      if ((room.id || room.title) !== roomId) return room;
+
+      const cleanUnits = Math.max(Number(nextAvailableUnits || 0), 0);
+
+      return {
+        ...room,
+        availableUnits: cleanUnits,
+        available: cleanUnits > 0,
+      };
+    });
+
+    onUpdateAvailability(listing.id, updatedRoomOptions);
+  }
+
+  function markAllFull() {
+    const updatedRoomOptions = roomOptions.map((room) => ({
+      ...room,
+      availableUnits: 0,
+      available: false,
+    }));
+
+    onUpdateAvailability(listing.id, updatedRoomOptions);
+  }
+
+  function markAvailable() {
+    const updatedRoomOptions = roomOptions.map((room, index) => {
+      if (index !== 0) return room;
+
+      const currentUnits = Number(room.availableUnits || 0);
+
+      return {
+        ...room,
+        availableUnits: currentUnits > 0 ? currentUnits : 1,
+        available: true,
+      };
+    });
+
+    onUpdateAvailability(listing.id, updatedRoomOptions);
+  }
 
   return (
     <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm">
@@ -779,6 +883,13 @@ function OwnerListingCard({ listing }) {
             </div>
           )}
 
+          {listing.adminNote && (
+            <div className="mt-3 rounded-2xl bg-[#FFF8EF] p-3 text-sm leading-6 text-slate-600">
+              <span className="font-bold text-[#1F2933]">Admin note:</span>{" "}
+              {listing.adminNote}
+            </div>
+          )}
+
           {facilities.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {facilities.map((facility) => (
@@ -791,6 +902,108 @@ function OwnerListingCard({ listing }) {
               ))}
             </div>
           )}
+
+          <div className="mt-4 rounded-3xl border border-[#DDECE7] bg-[#F1FAF7] p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="text-sm font-black text-[#123C35]">
+                  Live seat availability
+                </h4>
+                <p className="mt-1 text-xs text-slate-600">
+                  Update seats left. Students will see availability immediately.
+                </p>
+              </div>
+
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
+                  listing.available
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
+                {listing.available ? "Available" : "Fully booked"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3">
+              {roomOptions.map((room) => {
+                const roomId = room.id || room.title;
+                const availableUnits = Number(room.availableUnits || 0);
+
+                return (
+                  <div
+                    key={roomId}
+                    className="rounded-2xl bg-white p-3 shadow-sm"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-bold text-[#1F2933]">
+                          {room.title || "Room"}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          ₹{room.rent || 0}/month · Capacity{" "}
+                          {room.capacity || 1}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={updatingAvailability}
+                          onClick={() =>
+                            updateRoom(roomId, availableUnits - 1)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DFD2] bg-white text-lg font-black text-slate-700 disabled:opacity-50"
+                        >
+                          -
+                        </button>
+
+                        <div className="min-w-20 rounded-xl bg-[#F6F1E8] px-3 py-2 text-center">
+                          <p className="text-lg font-black text-[#1F2933]">
+                            {availableUnits}
+                          </p>
+                          <p className="text-[10px] font-bold uppercase text-slate-500">
+                            left
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={updatingAvailability}
+                          onClick={() =>
+                            updateRoom(roomId, availableUnits + 1)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DFD2] bg-white text-lg font-black text-slate-700 disabled:opacity-50"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                disabled={updatingAvailability}
+                onClick={markAllFull}
+                className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+              >
+                Mark fully booked
+              </button>
+
+              <button
+                type="button"
+                disabled={updatingAvailability}
+                onClick={markAvailable}
+                className="rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:opacity-50"
+              >
+                {updatingAvailability ? "Updating..." : "Mark available"}
+              </button>
+            </div>
+          </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             <SmallMetric label="Views" value={getMetric(listing, "views")} />
@@ -807,20 +1020,13 @@ function OwnerListingCard({ listing }) {
             />
           </div>
 
-          {listing.adminNote && (
-            <div className="mt-4 rounded-2xl bg-[#FFF8EF] p-3 text-sm leading-6 text-slate-600">
-              <span className="font-bold text-[#1F2933]">Admin note:</span>{" "}
-              {listing.adminNote}
-            </div>
-          )}
-
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <Link
-              to="/check-status"
+            <a
+              href="#my-listings"
               className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
-              Check listing status
-            </Link>
+              View listing status
+            </a>
 
             <Link
               to="/submit-listing"

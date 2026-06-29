@@ -260,3 +260,62 @@ export async function getListingById(listingId) {
     ...listingSnap.data(),
   };
 }
+
+export async function updateListingAvailability(listingId, roomOptions) {
+  if (!listingId) {
+    throw new Error("Listing ID is required.");
+  }
+
+  const cleanedRoomOptions = (roomOptions || []).map((room, index) => {
+    const availableUnits = Math.max(Number(room.availableUnits || 0), 0);
+
+    return {
+      ...room,
+      id: room.id || `room-${index + 1}`,
+      availableUnits,
+      available: availableUnits > 0,
+    };
+  });
+
+  const hasAvailableRoom = cleanedRoomOptions.some(
+    (room) => Number(room.availableUnits || 0) > 0
+  );
+
+  const listingRef = doc(db, "listings", listingId);
+
+  await updateDoc(listingRef, {
+    roomOptions: cleanedRoomOptions,
+    available: hasAvailableRoom,
+    availabilityUpdatedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastUpdated: new Date().toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  });
+
+  const listingSnapshot = await getDoc(listingRef);
+
+  if (!listingSnapshot.exists()) return;
+
+  const listingData = listingSnapshot.data();
+
+  if (!listingData.trackingId || !listingData.phone) return;
+
+  const statusKey = createStatusKey(
+    listingData.trackingId,
+    listingData.phone
+  );
+
+  await setDoc(
+    doc(db, "listingStatus", statusKey),
+    {
+      available: hasAvailableRoom,
+      roomOptions: cleanedRoomOptions,
+      availabilityUpdatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}

@@ -239,7 +239,26 @@ service cloud.firestore {
         && request.resource.data.verified == false
         && request.resource.data.available == true;
 
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "analytics",
+            "updatedAt"
+          ])
+        )
+        || (
+          isSignedIn()
+          && resource.data.ownerId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "roomOptions",
+            "available",
+            "availabilityUpdatedAt",
+            "updatedAt",
+            "lastUpdated"
+          ])
+        );
     }
 
     match /admins/{adminId} {

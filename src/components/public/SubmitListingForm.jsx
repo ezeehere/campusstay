@@ -66,7 +66,7 @@ function generateTrackingId() {
   return `CS-${randomPart}`;
 }
 
-function SubmitListingForm() {
+function SubmitListingForm({ ownerMode = false }) {
   const [formData, setFormData] = useState(initialFormData);
   const [roomOptions, setRoomOptions] = useState([{ ...initialRoomOption }]);
   const [imageFiles, setImageFiles] = useState([]);
@@ -374,7 +374,7 @@ function SubmitListingForm() {
             {submittedInfo.trackingLink}
           </p>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className={`mt-4 grid gap-3 ${ownerMode ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
             <button
               type="button"
               onClick={() => copyTrackingLink(submittedInfo.trackingLink)}
@@ -391,6 +391,15 @@ function SubmitListingForm() {
               <ExternalLink size={16} />
               Check status
             </a>
+
+            {ownerMode && (
+              <a
+                href="/owner/dashboard"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+              >
+                Go to Owner Dashboard
+              </a>
+            )}
 
             <button
               type="button"
