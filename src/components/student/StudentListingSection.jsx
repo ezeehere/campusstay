@@ -95,6 +95,33 @@ function getTotalSeatsLeft(listing) {
   );
 }
 
+function getAvailableFromText(listing) {
+  if (listing.moveInNote) return listing.moveInNote;
+  if (!listing.availableFrom) return "Ask";
+
+  try {
+    return new Date(listing.availableFrom).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch {
+    return listing.availableFrom;
+  }
+}
+
+function CompactInfo({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-[#F6F1E8] px-2.5 py-2">
+      <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 line-clamp-1 text-xs font-black text-[#1F2933]">
+        {value || "Ask"}
+      </p>
+    </div>
+  );
+}
+
 function getEstimatedFirstMonthCost(listing) {
   const rent = Number(listing.startingRent || listing.rent || 0);
   const deposit = Number(listing.deposit || 0);
@@ -554,41 +581,7 @@ function StudentListingSection({ profile }) {
     </>
   );
 }
-function getTotalSeatsLeft(listing) {
-  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
 
-  return listing.roomOptions.reduce(
-    (sum, room) => sum + Number(room.availableUnits || 0),
-    0
-  );
-}
-
-function getAvailableFromText(listing) {
-  if (listing.moveInNote) return listing.moveInNote;
-  if (!listing.availableFrom) return "Ask";
-
-  try {
-    return new Date(listing.availableFrom).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-    });
-  } catch {
-    return listing.availableFrom;
-  }
-}
-
-function CompactInfo({ label, value }) {
-  return (
-    <div className="rounded-2xl bg-[#F6F1E8] px-2.5 py-2">
-      <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 line-clamp-1 text-xs font-black text-[#1F2933]">
-        {value || "Ask"}
-      </p>
-    </div>
-  );
-}
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <label className="block">
