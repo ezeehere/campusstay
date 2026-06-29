@@ -7,21 +7,45 @@ import {
   Send,
   Trash2,
   UploadCloud,
+  X,
 } from "lucide-react";
 
 import { addPendingListing } from "../../firebase/listings";
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
 import { auth } from "../../firebase/config";
 
+const NEARBY_INSTITUTIONS = [
+  "JIST",
+  "JEC",
+  "Kaziranga ITI",
+  "Ayush Pharmacy",
+];
+
+const PREDEFINED_FACILITIES = [
+  "Wi-Fi",
+  "Food",
+  "Attached Bathroom",
+  "Parking",
+  "Laundry",
+  "Drinking Water",
+  "Power Backup",
+  "Study Table",
+  "CCTV",
+];
+
+const MIN_IMAGES = 3;
+const MAX_IMAGES = 8;
+
 const initialFormData = {
   name: "",
   type: "PG",
   gender: "Boys",
   area: "",
-  distance: "",
+  nearbyInstitutions: [],
   food: "Yes",
   foodDetails: "",
-  facilities: "",
+  facilities: [],
+  customFacility: "",
   rules: "",
   ownerName: "",
   phone: "",
@@ -58,6 +82,59 @@ function SubmitListingForm() {
     setFormData((previousData) => ({
       ...previousData,
       [name]: value,
+    }));
+  }
+
+  function toggleNearbyInstitution(institution) {
+    setFormData((previousData) => {
+      const selected = previousData.nearbyInstitutions.includes(institution);
+
+      return {
+        ...previousData,
+        nearbyInstitutions: selected
+          ? previousData.nearbyInstitutions.filter((item) => item !== institution)
+          : [...previousData.nearbyInstitutions, institution],
+      };
+    });
+  }
+
+  function toggleFacility(facility) {
+    setFormData((previousData) => {
+      const selected = previousData.facilities.includes(facility);
+
+      return {
+        ...previousData,
+        facilities: selected
+          ? previousData.facilities.filter((item) => item !== facility)
+          : [...previousData.facilities, facility],
+      };
+    });
+  }
+
+  function addCustomFacility() {
+    const cleanFacility = formData.customFacility.trim();
+
+    if (!cleanFacility) return;
+
+    if (formData.facilities.includes(cleanFacility)) {
+      setFormData((previousData) => ({
+        ...previousData,
+        customFacility: "",
+      }));
+      return;
+    }
+
+    setFormData((previousData) => ({
+      ...previousData,
+      facilities: [...previousData.facilities, cleanFacility],
+      customFacility: "",
+    }));
+  }
+
+  function removeFacility(facility) {
+    setFormData((previousData) => ({
+      ...previousData,
+      facilities: previousData.facilities.filter((item) => item !== facility),
     }));
   }
 
@@ -104,12 +181,18 @@ function SubmitListingForm() {
   function handleImageChange(event) {
     const files = Array.from(event.target.files);
 
-    if (files.length > 10) {
-      alert("You can upload maximum 10 images.");
+    if (files.length > MAX_IMAGES) {
+      alert(`You can upload maximum ${MAX_IMAGES} images.`);
       return;
     }
 
     setImageFiles(files);
+  }
+
+  function removeImage(index) {
+    setImageFiles((previousFiles) =>
+      previousFiles.filter((_, fileIndex) => fileIndex !== index)
+    );
   }
 
   async function copyTrackingLink(link) {
@@ -128,6 +211,21 @@ function SubmitListingForm() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (formData.nearbyInstitutions.length === 0) {
+      alert("Please select at least one nearby institution.");
+      return;
+    }
+
+    if (imageFiles.length < MIN_IMAGES) {
+      alert(`Please upload at least ${MIN_IMAGES} clear photos.`);
+      return;
+    }
+
+    if (!formData.facilities.length) {
+      alert("Please select at least one facility.");
+      return;
+    }
 
     const cleanRoomOptions = roomOptions.map((room, index) => ({
       id: `room-${index + 1}`,
@@ -150,27 +248,38 @@ function SubmitListingForm() {
     }
 
     const startingRent = Math.min(...cleanRoomOptions.map((room) => room.rent));
-
     const trackingId = generateTrackingId();
 
     const listingData = {
-      ...formData,
-      ownerId: auth.currentUser?.uid || "",
-      ownerEmail: auth.currentUser?.email || "",
+      name: formData.name.trim(),
+      type: formData.type,
+      gender: formData.gender,
+      area: formData.area.trim(),
+
+      nearbyInstitutions: formData.nearbyInstitutions,
+      nearbyCollege: formData.nearbyInstitutions[0] || "",
+      nearbyInstitutionText: formData.nearbyInstitutions.join(", "),
+
       food: formData.food === "Yes",
-      facilities: formData.facilities
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      foodIncluded: formData.food === "Yes",
+      foodDetails: formData.foodDetails.trim(),
+
+      facilities: formData.facilities,
       rules: formData.rules
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
 
+      ownerName: formData.ownerName.trim(),
+      phone: formData.phone.trim(),
+      mapLink: formData.mapLink.trim(),
+
+      ownerId: auth.currentUser?.uid || "",
+      ownerEmail: auth.currentUser?.email || "",
+
       roomOptions: cleanRoomOptions,
       startingRent,
 
-      // Backward compatible fields
       rent: startingRent,
       deposit: cleanRoomOptions[0]?.deposit || 0,
       roomType: cleanRoomOptions.map((room) => room.title).join(" / "),
@@ -267,6 +376,7 @@ function SubmitListingForm() {
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <button
+              type="button"
               onClick={() => copyTrackingLink(submittedInfo.trackingLink)}
               className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
@@ -283,6 +393,7 @@ function SubmitListingForm() {
             </a>
 
             <button
+              type="button"
               onClick={() => setSubmittedInfo(null)}
               className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50"
             >
@@ -303,84 +414,118 @@ function SubmitListingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 grid gap-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <InputField
-          label="PG/Room name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Example: Green View Boys PG"
-          required
-        />
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="text-xl font-extrabold text-[#1F2933]">
+          Basic listing details
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Add clear details so students can trust your PG or room.
+        </p>
 
-        <InputField
-          label="Owner name"
-          name="ownerName"
-          value={formData.ownerName}
-          onChange={handleChange}
-          placeholder="Owner name"
-          required
-        />
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <InputField
+            label="PG / Room name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Example: Green View Boys PG"
+            required
+          />
 
-        <SelectField
-          label="Type"
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          options={["PG", "Room", "Hostel"]}
-        />
+          <InputField
+            label="Owner name"
+            name="ownerName"
+            value={formData.ownerName}
+            onChange={handleChange}
+            placeholder="Owner name"
+            required
+          />
 
-        <SelectField
-          label="For"
-          name="gender"
-          value={formData.gender}
-          onChange={handleChange}
-          options={["Boys", "Girls", "Co-ed"]}
-        />
+          <SelectField
+            label="Type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            options={["PG", "Room", "Hostel"]}
+            required
+          />
 
-        <InputField
-          label="Area"
-          name="area"
-          value={formData.area}
-          onChange={handleChange}
-          placeholder="Example: Sotai"
-          required
-        />
+          <SelectField
+            label="For"
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            options={["Boys", "Girls", "Co-ed"]}
+            required
+          />
 
-        <InputField
-          label="Distance from JIST"
-          name="distance"
-          value={formData.distance}
-          onChange={handleChange}
-          placeholder="Example: 1.2 km from JIST"
-          required
-        />
+          <InputField
+            label="Area / Locality"
+            name="area"
+            value={formData.area}
+            onChange={handleChange}
+            placeholder="Example: Sotai, JIST Gate, Tarajan"
+            required
+          />
 
-        <SelectField
-          label="Food available?"
-          name="food"
-          value={formData.food}
-          onChange={handleChange}
-          options={["Yes", "No"]}
-        />
+          <InputField
+            label="Phone / WhatsApp number"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="10 digit number"
+            required
+          />
 
-        <InputField
-          label="Phone / WhatsApp number"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          placeholder="10 digit number"
-          required
-        />
+          <SelectField
+            label="Food available?"
+            name="food"
+            value={formData.food}
+            onChange={handleChange}
+            options={["Yes", "No"]}
+            required
+          />
 
-        <InputField
-          label="Google Maps link"
-          name="mapLink"
-          value={formData.mapLink}
-          onChange={handleChange}
-          placeholder="Paste map link"
-        />
-      </div>
+          <InputField
+            label="Google Maps link"
+            name="mapLink"
+            value={formData.mapLink}
+            onChange={handleChange}
+            placeholder="Paste map link"
+          />
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Nearby institution <span className="text-red-600">*</span>
+            </label>
+
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {NEARBY_INSTITUTIONS.map((institution) => {
+                const selected =
+                  formData.nearbyInstitutions.includes(institution);
+
+                return (
+                  <button
+                    key={institution}
+                    type="button"
+                    onClick={() => toggleNearbyInstitution(institution)}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selected
+                      ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                      : "border-[#E8DFD2] bg-[#FFF8EF] text-slate-700 hover:bg-[#F6F1E8]"
+                      }`}
+                  >
+                    {institution}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mt-2 text-xs text-slate-500">
+              Select one or more institutions this stay is useful for.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <section className="rounded-[2rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4 sm:p-5">
         <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
@@ -389,8 +534,7 @@ function SubmitListingForm() {
               Room options
             </h3>
             <p className="mt-1 text-sm text-slate-600">
-              Add single, double, triple, or other sharing options available in
-              this PG.
+              Add single, double, triple, or other sharing options available.
             </p>
           </div>
 
@@ -439,6 +583,7 @@ function SubmitListingForm() {
                     "Dormitory",
                     "Other",
                   ]}
+                  required
                 />
 
                 <InputField
@@ -452,7 +597,7 @@ function SubmitListingForm() {
                 />
 
                 <InputField
-                  label="Advance"
+                  label="Advance / Deposit"
                   name="deposit"
                   type="number"
                   value={room.deposit}
@@ -471,7 +616,7 @@ function SubmitListingForm() {
                 />
 
                 <InputField
-                  label="Available rooms/seats"
+                  label="Available rooms / seats"
                   name="availableUnits"
                   type="number"
                   value={room.availableUnits}
@@ -492,52 +637,116 @@ function SubmitListingForm() {
         </div>
       </section>
 
-      <div>
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="text-xl font-extrabold text-[#1F2933]">
+          Food and facilities
+        </h3>
+
+        <div className="mt-4">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Food details
+          </label>
+          <textarea
+            name="foodDetails"
+            value={formData.foodDetails}
+            onChange={handleChange}
+            placeholder={
+              formData.food === "Yes"
+                ? "Example: Breakfast and dinner included"
+                : "Example: No food provided"
+            }
+            rows="3"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-400"
+          />
+        </div>
+
+        <div className="mt-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Facilities <span className="text-red-600">*</span>
+          </label>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {PREDEFINED_FACILITIES.map((facility) => {
+              const selected = formData.facilities.includes(facility);
+
+              return (
+                <button
+                  key={facility}
+                  type="button"
+                  onClick={() => toggleFacility(facility)}
+                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${selected
+                    ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                    : "border-[#E8DFD2] bg-[#FFF8EF] text-slate-700 hover:bg-[#F6F1E8]"
+                    }`}
+                >
+                  {facility}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input
+              name="customFacility"
+              value={formData.customFacility}
+              onChange={handleChange}
+              placeholder="Add custom facility e.g. Geyser, Balcony"
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none focus:border-slate-400"
+            />
+
+            <button
+              type="button"
+              onClick={addCustomFacility}
+              className="rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+            >
+              Add facility
+            </button>
+          </div>
+
+          {formData.facilities.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {formData.facilities.map((facility) => (
+                <button
+                  key={facility}
+                  type="button"
+                  onClick={() => removeFacility(facility)}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#F6F1E8] px-3 py-1.5 text-xs font-bold text-slate-700"
+                >
+                  {facility}
+                  <X size={12} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5">
+          <InputField
+            label="Rules"
+            name="rules"
+            value={formData.rules}
+            onChange={handleChange}
+            placeholder="Example: Entry before 9 PM, No smoking, ID proof required"
+            helper="Separate each rule using comma."
+          />
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
         <label className="mb-2 block text-sm font-semibold text-slate-700">
-          Food details
-        </label>
-        <textarea
-          name="foodDetails"
-          value={formData.foodDetails}
-          onChange={handleChange}
-          placeholder="Example: Breakfast and dinner included"
-          rows="3"
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-slate-400"
-        />
-      </div>
-
-      <InputField
-        label="Facilities"
-        name="facilities"
-        value={formData.facilities}
-        onChange={handleChange}
-        placeholder="Example: WiFi, Bed, Table, Water, Parking"
-        helper="Separate each facility using comma."
-      />
-
-      <InputField
-        label="Rules"
-        name="rules"
-        value={formData.rules}
-        onChange={handleChange}
-        placeholder="Example: Entry before 9 PM, No smoking, ID proof required"
-        helper="Separate each rule using comma."
-      />
-
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-700">
-          Upload images
+          Upload images <span className="text-red-600">*</span>
         </label>
 
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition hover:bg-slate-100">
           <UploadCloud size={28} className="text-slate-500" />
 
           <span className="mt-2 text-sm font-semibold text-slate-700">
-            Upload up to 10 images
+            Upload 3 to 8 images
           </span>
 
           <span className="mt-1 text-xs text-slate-500">
-            Room, outside view, bathroom, food area, common area
+            At least 3 clear photos are required: room, outside/building, and
+            bathroom/common area.
           </span>
 
           <input
@@ -549,23 +758,38 @@ function SubmitListingForm() {
           />
         </label>
 
+        <p
+          className={`mt-2 text-sm font-bold ${imageFiles.length >= MIN_IMAGES ? "text-[#1E5B4F]" : "text-red-600"
+            }`}
+        >
+          {imageFiles.length}/{MIN_IMAGES} required photos uploaded
+        </p>
+
         {imageFiles.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {imagePreviews.map((preview, index) => (
               <div
                 key={preview}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
               >
                 <img
                   src={preview}
                   alt={`Selected upload ${index + 1}`}
-                  className="h-24 w-full object-cover"
+                  className="h-28 w-full object-cover"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm"
+                >
+                  <X size={15} />
+                </button>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       <button
         type="submit"
@@ -593,6 +817,7 @@ function InputField({
     <div>
       <label className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
+        {required && <span className="ml-1 text-red-600">*</span>}
       </label>
 
       <input
@@ -610,17 +835,26 @@ function InputField({
   );
 }
 
-function SelectField({ label, name, value, onChange, options }) {
+function SelectField({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  required = false,
+}) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
+        {required && <span className="ml-1 text-red-600">*</span>}
       </label>
 
       <select
         name={name}
         value={value}
         onChange={onChange}
+        required={required}
         className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none"
       >
         {options.map((option) => (
