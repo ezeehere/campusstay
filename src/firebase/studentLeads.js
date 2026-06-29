@@ -84,7 +84,12 @@ export async function createStudentLead(listing) {
 }
 
 export async function getOwnerCallbackLeads(ownerId) {
-    if (!ownerId) return [];
+    console.log("LOADING CALLBACK LEADS FOR OWNER:", ownerId);
+
+    if (!ownerId) {
+        console.log("No ownerId provided.");
+        return [];
+    }
 
     const ownerQuery = query(
         collection(db, "studentLeads"),
@@ -93,14 +98,18 @@ export async function getOwnerCallbackLeads(ownerId) {
 
     const ownerSnapshot = await getDocs(ownerQuery);
 
-    return ownerSnapshot.docs
-        .map((docItem) => ({
-            id: docItem.id,
-            ...docItem.data(),
-        }))
-        .sort((a, b) => {
-            const aTime = a.createdAt?.seconds || 0;
-            const bTime = b.createdAt?.seconds || 0;
-            return bTime - aTime;
-        });
+    console.log("OWNER CALLBACK LEADS COUNT:", ownerSnapshot.size);
+
+    const leads = ownerSnapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
+    }));
+
+    console.log("OWNER CALLBACK LEADS DATA:", leads);
+
+    return leads.sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return bTime - aTime;
+    });
 }
