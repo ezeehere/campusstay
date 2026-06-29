@@ -38,6 +38,7 @@ function InfoBox({ icon, title, value }) {
 
 function ListingDetailsModal({ listing, onClose }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const imageCount = Array.isArray(listing?.images) ? listing.images.length : 0;
 
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportReason, setReportReason] = useState("Wrong information");
@@ -56,6 +57,18 @@ function ListingDetailsModal({ listing, onClose }) {
     setCallbackSent(false);
     setLoginAction("");
   }, [listing?.id]);
+
+  useEffect(() => {
+    if (imageCount <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveImageIndex((previousIndex) =>
+        previousIndex + 1 >= imageCount ? 0 : previousIndex + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [imageCount, listing?.id]);
 
   useEffect(() => {
     if (!listing?.id) return;
@@ -184,16 +197,22 @@ function ListingDetailsModal({ listing, onClose }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto p-4 sm:p-5">
+        <div className="overflow-y-auto p-4 pb-28 sm:p-5">
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
               <div className="space-y-3">
-                <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
+                <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
                   <img
                     src={activeImage}
                     alt={listing.name}
                     className="max-h-full max-w-full object-contain"
                   />
+
+                  {images.length > 1 && (
+                    <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-bold text-white">
+                      {activeImageIndex + 1}/{images.length}
+                    </div>
+                  )}
                 </div>
 
                 {images.length > 1 && (
@@ -260,48 +279,6 @@ function ListingDetailsModal({ listing, onClose }) {
                     <IndianRupee size={20} />
                     {listing.deposit || 0}
                   </p>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-[#DDECE7] bg-[#F1FAF7] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
-                    <Phone size={18} />
-                  </div>
-
-                  <div>
-                    <h3 className="text-base font-black text-[#123C35]">
-                      Want the owner to contact you?
-                    </h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Request a callback and your contact details will be shared
-                      with this PG/room owner for this listing only.
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={handleRequestCallback}
-                      disabled={callbackLoading || callbackSent}
-                      className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {callbackLoading ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Sending request...
-                        </>
-                      ) : callbackSent ? (
-                        <>
-                          <CheckCircle2 size={16} />
-                          Callback requested
-                        </>
-                      ) : (
-                        <>
-                          <Phone size={16} />
-                          Request owner callback
-                        </>
-                      )}
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -557,8 +534,92 @@ function ListingDetailsModal({ listing, onClose }) {
           </div>
         )}
 
-        <div className="border-t border-slate-200 bg-white p-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 p-3 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:p-4">
+          {/* Mobile compact action bar */}
+          <div className="grid grid-cols-3 gap-2 sm:hidden">
+            <a
+              href={auth.currentUser ? `tel:${listing.phone}` : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("call")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("call_click", "callClicks");
+              }}
+              className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-3 text-xs font-black text-white"
+            >
+              <Phone size={17} />
+              Call
+            </a>
+
+            <a
+              href={auth.currentUser ? whatsappLink : undefined}
+              target={auth.currentUser ? "_blank" : undefined}
+              rel={auth.currentUser ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("whatsapp")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("whatsapp_click", "whatsappClicks");
+              }}
+              className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-3 text-xs font-black text-slate-700"
+            >
+              <MessageCircle size={17} />
+              WhatsApp
+            </a>
+
+            <button
+              type="button"
+              onClick={handleRequestCallback}
+              disabled={callbackLoading || callbackSent}
+              className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#DDECE7] bg-[#F1FAF7] px-2 py-3 text-xs font-black text-[#1E5B4F] disabled:opacity-60"
+            >
+              {callbackLoading ? (
+                <Loader2 size={17} className="animate-spin" />
+              ) : callbackSent ? (
+                <CheckCircle2 size={17} />
+              ) : (
+                <Phone size={17} />
+              )}
+              {callbackSent ? "Requested" : "Callback"}
+            </button>
+          </div>
+
+          {/* Mobile secondary actions */}
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:hidden">
+            <SaveListingButton listing={listing} showText={false} />
+
+            <a
+              href={auth.currentUser ? listing.mapLink : undefined}
+              target={auth.currentUser ? "_blank" : undefined}
+              rel={auth.currentUser ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (requireStudentLogin("map")) {
+                  event.preventDefault();
+                  return;
+                }
+
+                handleAnalyticsClick("map_click", "mapClicks");
+              }}
+              className="inline-flex items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2.5 text-xs font-bold text-slate-700"
+            >
+              <MapPin size={15} />
+              Map
+            </a>
+
+            <button
+              onClick={() => setShowReportForm(true)}
+              className="rounded-2xl bg-red-50 px-2 py-2.5 text-xs font-bold text-red-700"
+            >
+              Report
+            </button>
+          </div>
+
+          {/* Desktop action grid */}
+          <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3">
             <SaveListingButton listing={listing} />
 
             <a

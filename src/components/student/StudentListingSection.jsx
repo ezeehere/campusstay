@@ -557,7 +557,25 @@ function FilterSelect({ label, value, onChange, options }) {
 }
 
 function StudentListingCard({ listing, onView }) {
-  const image = listing.images?.[0] || "";
+  const images = Array.isArray(listing.images) ? listing.images : [];
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const image = images[activeImageIndex] || "";
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [listing.id]);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveImageIndex((previousIndex) =>
+        previousIndex + 1 >= images.length ? 0 : previousIndex + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [images.length]);
   const rent = getListingRent(listing);
   const nearbyText = getNearbyText(listing);
 
@@ -573,6 +591,21 @@ function StudentListingCard({ listing, onView }) {
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-400">
             No image
+          </div>
+        )}
+
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+            {images.map((_, index) => (
+              <span
+                key={index}
+                className={`h-1.5 rounded-full transition-all ${
+                  activeImageIndex === index
+                    ? "w-5 bg-white"
+                    : "w-1.5 bg-white/70"
+                }`}
+              />
+            ))}
           </div>
         )}
 
