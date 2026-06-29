@@ -25,9 +25,36 @@ import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
 import { getOwnerPlan, requestLeadAccess } from "../../firebase/ownerPlans";
 import { getOwnerCallbackLeads } from "../../firebase/studentLeads";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
+}
+
+async function getOwnerPlanDirect(ownerId) {
+  const planRef = doc(db, "ownerPlans", ownerId);
+  const planSnap = await getDoc(planRef);
+
+  console.log("DIRECT OWNER PLAN EXISTS:", planSnap.exists());
+
+  if (!planSnap.exists()) {
+    return {
+      ownerId,
+      plan: "free",
+      active: false,
+      leadAccess: false,
+    };
+  }
+
+  const plan = {
+    id: planSnap.id,
+    ...planSnap.data(),
+  };
+
+  console.log("DIRECT OWNER PLAN DATA:", plan);
+
+  return plan;
 }
 
 function OwnerDashboard() {
@@ -95,7 +122,7 @@ function OwnerDashboard() {
       };
 
       try {
-        loadedPlan = await getOwnerPlan(user.uid);
+        loadedPlan = await getOwnerPlanDirect(user.uid);
         console.log("OWNER UID:", user.uid);
         console.log("LOADED OWNER PLAN:", loadedPlan);
         setOwnerPlan(loadedPlan);

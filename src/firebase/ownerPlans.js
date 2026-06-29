@@ -1,3 +1,5 @@
+console.log("OWNER PLANS FILE VERSION: 29-JUNE-FIX");
+
 import {
   addDoc,
   collection,
