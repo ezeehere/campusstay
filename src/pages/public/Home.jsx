@@ -316,28 +316,7 @@ function Home() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-              <a
-                href="#available-stays"
-                className="inline-flex items-center justify-center rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
-              >
-                Find PG
-              </a>
 
-              <Link
-                to="/submit-listing"
-                className="inline-flex items-center justify-center rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
-              >
-                List PG
-              </Link>
-
-              <Link
-                to="/check-status"
-                className="col-span-2 inline-flex items-center justify-center rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8] sm:col-span-1"
-              >
-                Check Status
-              </Link>
-            </div>
 
             <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-2xl">
               <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
