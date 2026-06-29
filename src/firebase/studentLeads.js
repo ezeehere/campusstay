@@ -83,28 +83,24 @@ export async function createStudentLead(listing) {
     };
 }
 
-export async function getOwnerCallbackLeads(ownerId, ownerPhone) {
-    const leadsMap = new Map();
+export async function getOwnerCallbackLeads(ownerId) {
+    if (!ownerId) return [];
 
-    if (ownerId) {
-        const ownerQuery = query(
-            collection(db, "studentLeads"),
-            where("ownerId", "==", ownerId)
-        );
+    const ownerQuery = query(
+        collection(db, "studentLeads"),
+        where("ownerId", "==", ownerId)
+    );
 
-        const ownerSnapshot = await getDocs(ownerQuery);
+    const ownerSnapshot = await getDocs(ownerQuery);
 
-        ownerSnapshot.docs.forEach((docItem) => {
-            leadsMap.set(docItem.id, {
-                id: docItem.id,
-                ...docItem.data(),
-            });
+    return ownerSnapshot.docs
+        .map((docItem) => ({
+            id: docItem.id,
+            ...docItem.data(),
+        }))
+        .sort((a, b) => {
+            const aTime = a.createdAt?.seconds || 0;
+            const bTime = b.createdAt?.seconds || 0;
+            return bTime - aTime;
         });
-    }
-
-    return Array.from(leadsMap.values()).sort((a, b) => {
-        const aTime = a.createdAt?.seconds || 0;
-        const bTime = b.createdAt?.seconds || 0;
-        return bTime - aTime;
-    });
 }
