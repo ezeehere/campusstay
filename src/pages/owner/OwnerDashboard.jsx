@@ -8,18 +8,22 @@ import {
   Eye,
   Heart,
   Home as HomeIcon,
+  IndianRupee,
   Loader2,
+  Lock,
   LogOut,
   MessageCircle,
   Phone,
   PlusCircle,
   Save,
   SearchCheck,
+  Users,
 } from "lucide-react";
 
 import { getOwnerListings } from "../../firebase/listings";
 import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
+import { getOwnerPlan, requestLeadAccess } from "../../firebase/ownerPlans";
 
 function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
@@ -30,11 +34,14 @@ function OwnerDashboard() {
 
   const [ownerUser, setOwnerUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [ownerPlan, setOwnerPlan] = useState(null);
   const [listings, setListings] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [refreshingListings, setRefreshingListings] = useState(false);
+  const [leadRequestLoading, setLeadRequestLoading] = useState(false);
+  const [leadAccessRequested, setLeadAccessRequested] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     fullName: "",
@@ -77,6 +84,19 @@ function OwnerDashboard() {
         area: ownerProfile?.area || "",
       });
 
+      try {
+        const plan = await getOwnerPlan(user.uid);
+        setOwnerPlan(plan);
+      } catch (error) {
+        console.warn("Could not load owner plan:", error);
+        setOwnerPlan({
+          ownerId: user.uid,
+          plan: "free",
+          active: false,
+          leadAccess: false,
+        });
+      }
+
       await loadOwnerListings(user, ownerProfile);
 
       setLoading(false);
@@ -99,6 +119,10 @@ function OwnerDashboard() {
       ),
       whatsapp: listings.reduce(
         (sum, item) => sum + getMetric(item, "whatsappClicks"),
+        0
+      ),
+      callbacks: listings.reduce(
+        (sum, item) => sum + getMetric(item, "callbackRequests"),
         0
       ),
     };
@@ -147,6 +171,42 @@ function OwnerDashboard() {
     }
   }
 
+  async function handleRequestLeadAccess() {
+    if (!ownerUser) return;
+
+    const ownerPhone = profile?.phone || profileForm.phone;
+
+    if (!ownerPhone?.trim()) {
+      alert("Please save your owner phone number first.");
+      return;
+    }
+
+    try {
+      setLeadRequestLoading(true);
+
+      const result = await requestLeadAccess({
+        ownerId: ownerUser.uid,
+        ownerName: profile?.fullName || profileForm.fullName || ownerUser.displayName || "",
+        ownerEmail: ownerUser.email || "",
+        ownerPhone: ownerPhone.trim(),
+      });
+
+      setLeadAccessRequested(true);
+
+      if (result.alreadyExists) {
+        alert("Your lead access request is already pending.");
+        return;
+      }
+
+      alert("Lead access request sent to admin.");
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Could not request lead access.");
+    } finally {
+      setLeadRequestLoading(false);
+    }
+  }
+
   async function handleLogout() {
     await logoutOwner();
     navigate("/");
@@ -179,7 +239,8 @@ function OwnerDashboard() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-                List PGs, check approval status, and see student interest.
+                List PGs, check approval status, see student interest, and unlock
+                interested student leads.
               </p>
             </div>
 
@@ -238,6 +299,14 @@ function OwnerDashboard() {
             </p>
           </Link>
         </section>
+
+        <LeadAccessCard
+          ownerPlan={ownerPlan}
+          summary={summary}
+          requested={leadAccessRequested}
+          loading={leadRequestLoading}
+          onRequest={handleRequestLeadAccess}
+        />
 
         <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
           <div>
@@ -314,7 +383,7 @@ function OwnerDashboard() {
 
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
               List your PG or room to start getting student views, saves, calls,
-              and WhatsApp clicks.
+              WhatsApp clicks, and callback requests.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -335,7 +404,7 @@ function OwnerDashboard() {
           </section>
         ) : (
           <>
-            <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
               <MetricCard
                 title="Listings"
                 value={summary.totalListings}
@@ -355,6 +424,11 @@ function OwnerDashboard() {
                 title="Verified"
                 value={summary.verified}
                 icon={<CheckCircle2 size={20} />}
+              />
+              <MetricCard
+                title="Callbacks"
+                value={summary.callbacks}
+                icon={<Users size={20} />}
               />
             </section>
 
@@ -377,7 +451,7 @@ function OwnerDashboard() {
                     Your PG analytics
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Student views, saves, calls, and WhatsApp clicks.
+                    Student views, saves, calls, WhatsApp clicks, map opens, and callback interest.
                   </p>
                 </div>
 
@@ -399,6 +473,122 @@ function OwnerDashboard() {
         )}
       </div>
     </main>
+  );
+}
+
+function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
+  const hasLeadAccess = ownerPlan?.active === true && ownerPlan?.leadAccess === true;
+
+  return (
+    <section className="mt-4 overflow-hidden rounded-[1.5rem] border border-[#DDECE7] bg-white shadow-sm sm:rounded-[2rem]">
+      <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="bg-[#F1FAF7] p-4 sm:p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
+              {hasLeadAccess ? <CheckCircle2 size={22} /> : <Lock size={22} />}
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#1E5B4F]">
+                Monetization Feature
+              </p>
+
+              <h2 className="mt-2 text-xl font-bold text-[#123C35]">
+                Interested Student Leads
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Students can request a callback from your PG listing. Lead access
+                unlocks student contact details only for callback requests.
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-white p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Callback requests
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-[#1F2933]">
+                    {summary.callbacks}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-white p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Current plan
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-[#1F2933]">
+                    {hasLeadAccess ? "Lead Access" : "Free"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6">
+          <div className="rounded-[1.3rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4">
+            <div className="flex items-center gap-2 text-[#1F2933]">
+              <IndianRupee size={19} />
+              <h3 className="text-lg font-bold">Lead Access Plan</h3>
+            </div>
+
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Free owners can see views, saves, calls, and WhatsApp clicks.
+              Paid owners can access interested students who requested callback.
+            </p>
+
+            <div className="mt-4 grid gap-2 text-sm">
+              <FeatureLine text="View student callback interest" active />
+              <FeatureLine text="Contact details only after student request" active />
+              <FeatureLine text="Admin approval before access" active />
+            </div>
+
+            {hasLeadAccess ? (
+              <button
+                disabled
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white opacity-90"
+              >
+                <CheckCircle2 size={17} />
+                Lead access active
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onRequest}
+                disabled={loading || requested}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <Loader2 size={17} className="animate-spin" />
+                ) : requested ? (
+                  <CheckCircle2 size={17} />
+                ) : (
+                  <Lock size={17} />
+                )}
+
+                {loading
+                  ? "Sending request..."
+                  : requested
+                    ? "Request sent to admin"
+                    : "Request Lead Access"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureLine({ text, active }) {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
+      <CheckCircle2
+        size={16}
+        className={active ? "text-[#1E5B4F]" : "text-slate-300"}
+      />
+      <span className="font-semibold text-slate-700">{text}</span>
+    </div>
   );
 }
 
@@ -475,7 +665,7 @@ function OwnerListingCard({ listing }) {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             <SmallMetric label="Views" value={getMetric(listing, "views")} />
             <SmallMetric label="Saves" value={getMetric(listing, "saves")} />
             <SmallMetric label="Calls" value={getMetric(listing, "callClicks")} />
@@ -484,6 +674,10 @@ function OwnerListingCard({ listing }) {
               value={getMetric(listing, "whatsappClicks")}
             />
             <SmallMetric label="Map" value={getMetric(listing, "mapClicks")} />
+            <SmallMetric
+              label="Callbacks"
+              value={getMetric(listing, "callbackRequests")}
+            />
           </div>
 
           {listing.adminNote && (
