@@ -149,8 +149,8 @@ function ListingDetailsModal({ listing, onClose }) {
                         key={`${image}-${index}`}
                         onClick={() => setActiveImageIndex(index)}
                         className={`h-16 w-20 shrink-0 overflow-hidden rounded-2xl border-2 bg-[#F6F1E8] transition sm:h-20 sm:w-24 ${activeImageIndex === index
-                            ? "border-[#1E5B4F]"
-                            : "border-[#E8DFD2] opacity-75 hover:opacity-100"
+                          ? "border-[#1E5B4F]"
+                          : "border-[#E8DFD2] opacity-75 hover:opacity-100"
                           }`}
                       >
                         <img
@@ -200,7 +200,7 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 <div className="rounded-3xl bg-white p-4 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Deposit
+                    Advance
                   </p>
                   <p className="mt-2 flex items-center text-2xl font-black text-slate-950">
                     <IndianRupee size={20} />

@@ -18,6 +18,7 @@ function StudentActionLoginPrompt({ listing, action = "continue", onClose }) {
     whatsapp: "message the owner",
     map: "open the location",
     review: "write a review",
+    callback: "request owner callback",
     continue: "continue",
   };
 
