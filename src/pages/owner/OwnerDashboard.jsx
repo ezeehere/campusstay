@@ -310,7 +310,7 @@ function OwnerDashboard() {
       alert("Availability updated.");
     } catch (error) {
       console.error(error);
-      alert("Could not update availability.");
+      alert(error.code || error.message || "Could not update availability.");
     } finally {
       setAvailabilityLoadingId("");
     }
@@ -765,16 +765,16 @@ function OwnerListingCard({
     listing.roomOptions?.length > 0
       ? listing.roomOptions
       : [
-          {
-            id: "room-1",
-            title: listing.roomType || "Room",
-            rent: listing.rent || listing.startingRent || 0,
-            deposit: listing.deposit || 0,
-            capacity: 1,
-            availableUnits: listing.available ? 1 : 0,
-            available: listing.available,
-          },
-        ];
+        {
+          id: "room-1",
+          title: listing.roomType || "Room",
+          rent: listing.rent || listing.startingRent || 0,
+          deposit: listing.deposit || 0,
+          capacity: 1,
+          availableUnits: listing.available ? 1 : 0,
+          available: listing.available,
+        },
+      ];
 
   function updateRoom(roomId, nextAvailableUnits) {
     const updatedRoomOptions = roomOptions.map((room) => {
@@ -835,11 +835,10 @@ function OwnerListingCard({
           )}
 
           <span
-            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${
-              imageCount >= 3
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-red-50 text-red-700"
-            }`}
+            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${imageCount >= 3
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+              }`}
           >
             {imageCount} photos
           </span>
@@ -863,15 +862,14 @@ function OwnerListingCard({
             </div>
 
             <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                status === "approved"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : status === "needs_changes"
-                    ? "bg-orange-50 text-orange-700"
-                    : status === "rejected"
-                      ? "bg-red-50 text-red-700"
-                      : "bg-[#FFF4D8] text-[#8A5A00]"
-              }`}
+              className={`rounded-full px-3 py-1 text-xs font-bold ${status === "approved"
+                ? "bg-emerald-50 text-emerald-700"
+                : status === "needs_changes"
+                  ? "bg-orange-50 text-orange-700"
+                  : status === "rejected"
+                    ? "bg-red-50 text-red-700"
+                    : "bg-[#FFF4D8] text-[#8A5A00]"
+                }`}
             >
               {status.replace("_", " ")}
             </span>
@@ -915,11 +913,10 @@ function OwnerListingCard({
               </div>
 
               <span
-                className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
-                  listing.available
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-700"
-                }`}
+                className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${listing.available
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-red-50 text-red-700"
+                  }`}
               >
                 {listing.available ? "Available" : "Fully booked"}
               </span>

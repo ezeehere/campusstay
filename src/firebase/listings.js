@@ -227,7 +227,7 @@ export async function getOwnerListings({ ownerId, phone }) {
     const phoneQuery = query(
       listingsCollection,
       where("phone", "==", phone),
-      where("approved", "==", true)
+
     );
 
     const phoneSnapshot = await getDocs(phoneQuery);
