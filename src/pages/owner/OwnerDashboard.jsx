@@ -96,6 +96,8 @@ function OwnerDashboard() {
 
       try {
         loadedPlan = await getOwnerPlan(user.uid);
+        console.log("OWNER UID:", user.uid);
+        console.log("LOADED OWNER PLAN:", loadedPlan);
         setOwnerPlan(loadedPlan);
       } catch (error) {
         console.warn("Could not load owner plan:", error);
