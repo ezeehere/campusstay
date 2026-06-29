@@ -196,7 +196,10 @@ function OwnerDashboard() {
     try {
       setLoadingCallbackLeads(true);
 
-      const leads = await getOwnerCallbackLeads(user.uid);
+      const leads = await getOwnerCallbackLeads(
+        user.uid,
+        ownerProfile?.phone || profileForm.phone || ""
+      );
 
       setCallbackLeads(leads);
     } catch (error) {

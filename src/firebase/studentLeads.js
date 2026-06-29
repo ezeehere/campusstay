@@ -83,33 +83,57 @@ export async function createStudentLead(listing) {
     };
 }
 
-export async function getOwnerCallbackLeads(ownerId) {
-    console.log("LOADING CALLBACK LEADS FOR OWNER:", ownerId);
+export async function getOwnerCallbackLeads(ownerId, ownerPhone = "") {
+    const leadsMap = new Map();
 
-    if (!ownerId) {
-        console.log("No ownerId provided.");
-        return [];
+    console.log("LOADING CALLBACK LEADS FOR:", {
+        ownerId,
+        ownerPhone,
+    });
+
+    if (ownerId) {
+        const ownerQuery = query(
+            collection(db, "studentLeads"),
+            where("ownerId", "==", ownerId)
+        );
+
+        const ownerSnapshot = await getDocs(ownerQuery);
+
+        console.log("OWNER ID LEADS COUNT:", ownerSnapshot.size);
+
+        ownerSnapshot.docs.forEach((docItem) => {
+            leadsMap.set(docItem.id, {
+                id: docItem.id,
+                ...docItem.data(),
+            });
+        });
     }
 
-    const ownerQuery = query(
-        collection(db, "studentLeads"),
-        where("ownerId", "==", ownerId)
-    );
+    if (ownerPhone) {
+        const phoneQuery = query(
+            collection(db, "studentLeads"),
+            where("ownerPhone", "==", ownerPhone)
+        );
 
-    const ownerSnapshot = await getDocs(ownerQuery);
+        const phoneSnapshot = await getDocs(phoneQuery);
 
-    console.log("OWNER CALLBACK LEADS COUNT:", ownerSnapshot.size);
+        console.log("OWNER PHONE LEADS COUNT:", phoneSnapshot.size);
 
-    const leads = ownerSnapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data(),
-    }));
+        phoneSnapshot.docs.forEach((docItem) => {
+            leadsMap.set(docItem.id, {
+                id: docItem.id,
+                ...docItem.data(),
+            });
+        });
+    }
 
-    console.log("OWNER CALLBACK LEADS DATA:", leads);
-
-    return leads.sort((a, b) => {
+    const leads = Array.from(leadsMap.values()).sort((a, b) => {
         const aTime = a.createdAt?.seconds || 0;
         const bTime = b.createdAt?.seconds || 0;
         return bTime - aTime;
     });
+
+    console.log("FINAL CALLBACK LEADS:", leads);
+
+    return leads;
 }
