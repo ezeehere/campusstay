@@ -26,6 +26,41 @@ import {
 
 import AdminListingDetailsModal from "../../components/admin/AdminListingDetailsModal";
 
+function getNearbyInstitutions(listing) {
+  if (
+    Array.isArray(listing?.nearbyInstitutions) &&
+    listing.nearbyInstitutions.length > 0
+  ) {
+    return listing.nearbyInstitutions;
+  }
+
+  if (listing?.nearbyCollege) {
+    return [listing.nearbyCollege];
+  }
+
+  if (listing?.nearbyInstitutionText) {
+    return String(listing.nearbyInstitutionText)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getNearbyText(listing) {
+  const institutions = getNearbyInstitutions(listing);
+  return institutions.length > 0 ? institutions.join(", ") : "Nearby not selected";
+}
+
+function getImageCount(listing) {
+  return Array.isArray(listing?.images) ? listing.images.length : 0;
+}
+
+function isFoodIncluded(listing) {
+  return listing.foodIncluded === true || listing.food === true;
+}
+
 function AdminDashboard() {
   const navigate = useNavigate();
 
@@ -146,8 +181,11 @@ function AdminDashboard() {
 
   const filteredListings = useMemo(() => {
     return adminListings.filter((listing) => {
-      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${listing.area || ""
-        } ${listing.phone || ""}`.toLowerCase();
+      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${
+        listing.area || ""
+      } ${listing.phone || ""} ${getNearbyText(listing)} ${
+        listing.trackingId || ""
+      } ${(listing.facilities || []).join(" ")}`.toLowerCase();
 
       const matchesSearch = searchText.includes(search.toLowerCase());
 
@@ -383,8 +421,7 @@ function AdminDashboard() {
                           </h4>
 
                           <p className="mt-1 text-sm text-slate-500">
-                            {listing.area || "Area not added"} ·{" "}
-                            {listing.distance || "Distance not added"}
+                            {listing.area || "Area not added"} · Near {getNearbyText(listing)}
                           </p>
 
                           <p className="mt-2 text-lg font-bold text-[#070B1F]">
@@ -414,6 +451,14 @@ function AdminDashboard() {
                           label="Stay"
                           value={`${listing.type || "Type"} · ${listing.gender || "For all"
                             }`}
+                        />
+                        <InfoMini
+                          label="Photos"
+                          value={`${getImageCount(listing)} uploaded`}
+                        />
+                        <InfoMini
+                          label="Nearby"
+                          value={getNearbyText(listing)}
                         />
                       </div>
 
@@ -533,12 +578,11 @@ function AdminDashboard() {
                                 <p className="font-bold text-[#070B1F]">
                                   {listing.name || "Unnamed listing"}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-500">
-                                  {listing.foodIncluded
-                                    ? "Food included"
-                                    : "No food"}{" "}
-                                  · {listing.roomType || "Room type not added"}
-                                </p>
+                                 <p className="mt-1 text-xs text-slate-500">
+                                   {isFoodIncluded(listing) ? "Food included" : "No food"} ·{" "}
+                                   {getImageCount(listing)} photos ·{" "}
+                                   {listing.roomType || "Room type not added"}
+                                 </p>
                               </div>
                             </div>
                           </td>
@@ -566,9 +610,9 @@ function AdminDashboard() {
                             <p className="font-semibold">
                               {listing.area || "Not added"}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {listing.distance || "Distance not added"}
-                            </p>
+                             <p className="mt-1 text-xs text-slate-500">
+                               Near {getNearbyText(listing)}
+                             </p>
                           </td>
 
                           <td className="py-4 pr-4">
