@@ -34,7 +34,7 @@ const PREDEFINED_FACILITIES = [
 ];
 
 const MIN_IMAGES = 3;
-const MAX_IMAGES = 8;
+const MAX_IMAGES = 15;
 
 const initialFormData = {
   name: "",
@@ -750,7 +750,7 @@ function SubmitListingForm({ ownerMode = false }) {
           <UploadCloud size={28} className="text-slate-500" />
 
           <span className="mt-2 text-sm font-semibold text-slate-700">
-            Upload 3 to 8 images
+            Upload 3 to 15 images
           </span>
 
           <span className="mt-1 text-xs text-slate-500">
