@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Home as HomeIcon, Loader2, Lock } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 import { loginAdmin } from "../../firebase/auth";
 
@@ -11,13 +13,32 @@ function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const activeRole = localStorage.getItem("campusstay_active_role");
+
+      if (activeRole === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (activeRole === "student") {
+        navigate("/student/dashboard", { replace: true });
+      } else if (activeRole === "owner") {
+        navigate("/owner/dashboard", { replace: true });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
     try {
       setLoginLoading(true);
       await loginAdmin(email, password);
-      navigate("/admin/dashboard");
+      localStorage.setItem("campusstay_active_role", "admin");
+      navigate("/admin/dashboard", { replace: true });
     } catch (error) {
       console.error("Admin login error:", error);
       alert("Login failed. Check your email and password.");

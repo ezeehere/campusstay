@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Home as HomeIcon, Loader2, LogIn, UserPlus } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 import {
   loginStudentWithEmail,
@@ -13,8 +15,26 @@ function StudentLogin() {
   const [searchParams] = useSearchParams();
 
   function goAfterLogin() {
-    navigate("/student/dashboard");
+    navigate("/student/dashboard", { replace: true });
   }
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const activeRole = localStorage.getItem("campusstay_active_role");
+
+      if (activeRole === "student") {
+        navigate("/student/dashboard", { replace: true });
+      } else if (activeRole === "owner") {
+        navigate("/owner/dashboard", { replace: true });
+      } else if (activeRole === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const [mode, setMode] = useState("login");
   const [fullName, setFullName] = useState("");

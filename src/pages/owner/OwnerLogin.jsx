@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Building2, Home as HomeIcon, Loader2, LogIn, UserPlus } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 import {
   loginOwnerWithEmail,
@@ -10,6 +12,24 @@ import {
 
 function OwnerLogin() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const activeRole = localStorage.getItem("campusstay_active_role");
+
+      if (activeRole === "owner") {
+        navigate("/owner/dashboard", { replace: true });
+      } else if (activeRole === "student") {
+        navigate("/student/dashboard", { replace: true });
+      } else if (activeRole === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const [mode, setMode] = useState("login");
   const [fullName, setFullName] = useState("");
@@ -24,7 +44,7 @@ function OwnerLogin() {
       setLoading(true);
       setErrorMessage("");
       await loginOwnerWithGoogle();
-      navigate("/owner/dashboard");
+      navigate("/owner/dashboard", { replace: true });
     } catch (error) {
       console.error(error);
       setErrorMessage("Google login failed. Please try again.");
@@ -56,7 +76,7 @@ function OwnerLogin() {
         await loginOwnerWithEmail(email.trim(), password);
       }
 
-      navigate("/owner/dashboard");
+      navigate("/owner/dashboard", { replace: true });
     } catch (error) {
       console.error(error);
       setErrorMessage(
