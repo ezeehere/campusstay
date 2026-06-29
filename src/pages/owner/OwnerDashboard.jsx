@@ -609,41 +609,6 @@ function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
               {hasLeadAccess ? <CheckCircle2 size={22} /> : <Lock size={22} />}
             </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#1E5B4F]">
-                Additional Feature
-              </p>
-
-              <h2 className="mt-2 text-xl font-bold text-[#123C35]">
-                Interested Student Leads
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Students can request a callback from your PG listing. Lead access
-                unlocks student contact details only for callback requests.
-              </p>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-white p-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Callback requests
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-[#1F2933]">
-                    {summary.callbacks}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-white p-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Current plan
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-[#1F2933]">
-                    {hasLeadAccess ? "Lead Access" : "Free"}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -702,6 +667,17 @@ function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
   );
 }
 
+function FeatureLine({ text, active }) {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
+      <CheckCircle2
+        size={16}
+        className={active ? "text-[#1E5B4F]" : "text-slate-300"}
+      />
+      <span className="font-semibold text-slate-700">{text}</span>
+    </div>
+  );
+}
 
 function OwnerInput({ label, name, value, onChange, placeholder }) {
   return (
@@ -735,18 +711,6 @@ function MetricCard({ title, value, icon }) {
           {icon}
         </div>
       </div>
-    </div>
-  );
-}
-
-function FeatureLine({ text, active }) {
-  return (
-    <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
-      <CheckCircle2
-        size={16}
-        className={active ? "text-[#1E5B4F]" : "text-slate-300"}
-      />
-      <span className="font-semibold text-slate-700">{text}</span>
     </div>
   );
 }

@@ -373,7 +373,7 @@ function ListingDetailsModal({ listing, onClose }) {
 
                         <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
                           <div className="rounded-2xl bg-white px-3 py-2">
-                            Deposit: ₹{room.deposit || 0}
+                            Advance: ₹{room.deposit || 0}
                           </div>
 
                           <div className="rounded-2xl bg-white px-3 py-2">

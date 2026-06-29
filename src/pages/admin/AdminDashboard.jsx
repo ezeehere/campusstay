@@ -602,7 +602,7 @@ function AdminDashboard() {
                               {listing.gender || "For all"}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              Deposit ₹{listing.deposit || 0}
+                              Advance ₹{listing.deposit || 0}
                             </p>
                           </td>
 
