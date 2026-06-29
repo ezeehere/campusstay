@@ -242,11 +242,24 @@ function Home() {
               Find verified PGs and rooms near your campus.
             </h1>
 
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Search PGs and rooms near JIST, JEC, Kaziranga ITI, and Ayush
-              Pharmacy with rent, photos, food details, room options, and owner
-              contact.
-            </p>
+            <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-2xl">
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
+                <p className="text-xl font-extrabold text-[#070B1F]">
+                  {listings.length || "20"}+
+                </p>
+                <p className="mt-1 text-xs text-slate-500">Listed stays</p>
+              </div>
+
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
+                <p className="text-xl font-extrabold text-[#070B1F]">4</p>
+                <p className="mt-1 text-xs text-slate-500">Institutions</p>
+              </div>
+
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
+                <p className="text-xl font-extrabold text-[#070B1F]">Free</p>
+                <p className="mt-1 text-xs text-slate-500">For students</p>
+              </div>
+            </div>
 
             <div className="mt-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
               <div className="relative">
@@ -316,31 +329,6 @@ function Home() {
               </div>
             </div>
 
-
-
-            <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-2xl">
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">
-                  {listings.length || "20"}+
-                </p>
-                <p className="mt-1 text-xs text-slate-500">Listed stays</p>
-              </div>
-
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">4</p>
-                <p className="mt-1 text-xs text-slate-500">Institutions</p>
-              </div>
-
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">Free</p>
-                <p className="mt-1 text-xs text-slate-500">For students</p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-3xl border border-[#E8DFD2] bg-white/80 p-4 text-sm leading-6 text-slate-600 shadow-sm">
-              Students are already exploring PGs near JIST, JEC, Kaziranga ITI,
-              and Ayush Pharmacy. More verified stays are being added.
-            </div>
           </div>
 
           <div className="hidden lg:block">
