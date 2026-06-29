@@ -45,6 +45,45 @@ const statusContent = {
   },
 };
 
+function getNearbyInstitutions(listing) {
+  if (
+    Array.isArray(listing?.nearbyInstitutions) &&
+    listing.nearbyInstitutions.length > 0
+  ) {
+    return listing.nearbyInstitutions;
+  }
+
+  if (listing?.nearbyCollege) {
+    return [listing.nearbyCollege];
+  }
+
+  if (listing?.nearbyInstitutionText) {
+    return String(listing.nearbyInstitutionText)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getNearbyText(listing) {
+  const institutions = getNearbyInstitutions(listing);
+  return institutions.length > 0 ? institutions.join(", ") : "Not selected";
+}
+
+function getImageCount(listing) {
+  return Array.isArray(listing?.images) ? listing.images.length : 0;
+}
+
+function isFoodIncluded(listing) {
+  return listing?.foodIncluded === true || listing?.food === true;
+}
+
+function getFacilities(listing) {
+  return Array.isArray(listing?.facilities) ? listing.facilities : [];
+}
+
 function CheckStatus() {
   const [searchParams] = useSearchParams();
   const [trackingId, setTrackingId] = useState("");
@@ -54,48 +93,48 @@ function CheckStatus() {
   const [loading, setLoading] = useState(false);
 
   async function checkListingStatus(trackingValue, phoneValue) {
-  try {
-    setLoading(true);
-    setNotFound(false);
-    setListing(null);
+    try {
+      setLoading(true);
+      setNotFound(false);
+      setListing(null);
 
-    const cleanedTrackingId = trackingValue.trim().toUpperCase();
-    const cleanedPhone = phoneValue.trim();
+      const cleanedTrackingId = trackingValue.trim().toUpperCase();
+      const cleanedPhone = phoneValue.trim();
 
-    const data = await getListingByTrackingIdAndPhone(
-      cleanedTrackingId,
-      cleanedPhone
-    );
+      const data = await getListingByTrackingIdAndPhone(
+        cleanedTrackingId,
+        cleanedPhone
+      );
 
-    if (!data) {
-      setNotFound(true);
-      return;
+      if (!data) {
+        setNotFound(true);
+        return;
+      }
+
+      setListing(data);
+    } catch (error) {
+      console.error("Status check error:", error);
+      alert("Could not check status. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setListing(data);
-  } catch (error) {
-    console.error("Status check error:", error);
-    alert("Could not check status. Please try again.");
-  } finally {
-    setLoading(false);
   }
-}
 
   async function handleCheckStatus(event) {
-  event.preventDefault();
-  await checkListingStatus(trackingId, phone);
-}
-
-useEffect(() => {
-  const trackingFromUrl = searchParams.get("trackingId") || "";
-  const phoneFromUrl = searchParams.get("phone") || "";
-
-  if (trackingFromUrl && phoneFromUrl) {
-    setTrackingId(trackingFromUrl);
-    setPhone(phoneFromUrl);
-    checkListingStatus(trackingFromUrl, phoneFromUrl);
+    event.preventDefault();
+    await checkListingStatus(trackingId, phone);
   }
-}, [searchParams]);
+
+  useEffect(() => {
+    const trackingFromUrl = searchParams.get("trackingId") || "";
+    const phoneFromUrl = searchParams.get("phone") || "";
+
+    if (trackingFromUrl && phoneFromUrl) {
+      setTrackingId(trackingFromUrl);
+      setPhone(phoneFromUrl);
+      checkListingStatus(trackingFromUrl, phoneFromUrl);
+    }
+  }, [searchParams]);
 
   const currentStatus = listing?.status || "pending";
   const statusInfo = statusContent[currentStatus] || statusContent.pending;
@@ -231,8 +270,7 @@ useEffect(() => {
 
                   <p className="mt-2 flex items-center gap-1 text-sm text-slate-500">
                     <MapPin size={15} />
-                    {listing.area || "Area not added"} ·{" "}
-                    {listing.distance || "Distance not added"}
+                    {listing.area || "Area not added"} · Near {getNearbyText(listing)}
                   </p>
 
                   <p className="mt-4 rounded-3xl bg-white p-4 text-sm leading-6 text-slate-600">
@@ -241,21 +279,75 @@ useEffect(() => {
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <SmallBox label="Tracking ID" value={listing.trackingId} />
+
                     <SmallBox
                       label="Rent"
-                      value={`₹${listing.rent || 0}/month`}
+                      value={`₹${listing.startingRent || listing.rent || 0}/month`}
                     />
+
                     <SmallBox
                       label="For"
-                      value={`${listing.type || "Stay"} · ${
-                        listing.gender || "Not added"
-                      }`}
+                      value={`${listing.type || "Stay"} · ${listing.gender || "Not added"}`}
                     />
+
+                    <SmallBox
+                      label="Nearby Institution"
+                      value={getNearbyText(listing)}
+                    />
+
+                    <SmallBox
+                      label="Photos Uploaded"
+                      value={`${getImageCount(listing)} photo${getImageCount(listing) === 1 ? "" : "s"}`}
+                    />
+
+                    <SmallBox
+                      label="Food"
+                      value={isFoodIncluded(listing) ? "Food included" : "Food not included"}
+                    />
+
                     <SmallBox
                       label="Availability"
                       value={listing.available ? "Available" : "Full"}
                     />
+
+                    <SmallBox
+                      label="Room Type"
+                      value={listing.roomType || "Not added"}
+                    />
                   </div>
+                  <div className="mt-4 rounded-3xl bg-white p-4">
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+                      Facilities
+                    </p>
+
+                    {getFacilities(listing).length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {getFacilities(listing).map((facility) => (
+                          <span
+                            key={facility}
+                            className="rounded-full bg-[#F6F1E8] px-3 py-1.5 text-xs font-bold text-slate-700"
+                          >
+                            {facility}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm font-semibold text-slate-500">
+                        No facilities added.
+                      </p>
+                    )}
+                  </div>
+                  {getImageCount(listing) < 3 && (
+                    <div className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-4">
+                      <p className="text-sm font-bold text-orange-800">
+                        Photo requirement not complete
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-orange-700">
+                        At least 3 clear photos are recommended before approval: room, outside/building,
+                        and bathroom/common area.
+                      </p>
+                    </div>
+                  )}
 
                   {listing.adminNote && (
                     <div className="mt-4 rounded-3xl border border-amber-200 bg-amber-50 p-4">
@@ -292,8 +384,9 @@ useEffect(() => {
                   {!listing.approved && (
                     <div className="mt-4 rounded-3xl border border-[#E8DFD2] bg-white p-4">
                       <p className="text-sm leading-6 text-slate-600">
-                        Your listing is not public yet. Once the admin approves
-                        it, students will be able to see it on CampusStay.
+                        Your listing is not public yet. Once the admin approves it,
+                        students will be able to see it on CampusStay. If admin requested
+                        changes, update the details and submit again or contact support.
                       </p>
                     </div>
                   )}

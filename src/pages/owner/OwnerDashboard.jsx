@@ -30,6 +30,45 @@ function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
 }
 
+function getNearbyInstitutions(listing) {
+  if (
+    Array.isArray(listing?.nearbyInstitutions) &&
+    listing.nearbyInstitutions.length > 0
+  ) {
+    return listing.nearbyInstitutions;
+  }
+
+  if (listing?.nearbyCollege) {
+    return [listing.nearbyCollege];
+  }
+
+  if (listing?.nearbyInstitutionText) {
+    return String(listing.nearbyInstitutionText)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getNearbyText(listing) {
+  const institutions = getNearbyInstitutions(listing);
+  return institutions.length > 0 ? institutions.join(", ") : "Nearby not selected";
+}
+
+function getImageCount(listing) {
+  return Array.isArray(listing?.images) ? listing.images.length : 0;
+}
+
+function isFoodIncluded(listing) {
+  return listing?.foodIncluded === true || listing?.food === true;
+}
+
+function getFacilities(listing) {
+  return Array.isArray(listing?.facilities) ? listing.facilities : [];
+}
+
 function buildOwnerPlanFromProfile(user, ownerProfile) {
   const hasLeadAccess = ownerProfile?.leadAccess === true;
 
@@ -99,9 +138,6 @@ function OwnerDashboard() {
       });
 
       const loadedPlan = buildOwnerPlanFromProfile(user, ownerProfile);
-
-      console.log("OWNER UID:", user.uid);
-      console.log("OWNER PROFILE PLAN:", loadedPlan);
 
       setOwnerPlan(loadedPlan);
 
@@ -284,11 +320,11 @@ function OwnerDashboard() {
 
             <div className="grid grid-cols-2 gap-2 sm:flex">
               <Link
-                to="/"
+                to="/check-status"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/20"
               >
-                <HomeIcon size={16} />
-                Home
+                <SearchCheck size={16} />
+                Check Status
               </Link>
 
               <button
@@ -357,7 +393,7 @@ function OwnerDashboard() {
               Owner profile
             </h2>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Add the same phone number used in your PG listing to match older listings.
+              Add the phone number used in your PG listings. This helps CampusStay connect older listings and callback leads to your owner account.
             </p>
           </div>
 
@@ -674,11 +710,14 @@ function MetricCard({ title, value, icon }) {
 function OwnerListingCard({ listing }) {
   const image = listing.images?.[0] || "";
   const status = listing.status || (listing.approved ? "approved" : "pending");
+  const imageCount = getImageCount(listing);
+  const nearbyText = getNearbyText(listing);
+  const facilities = getFacilities(listing).slice(0, 4);
 
   return (
     <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm">
-      <div className="grid gap-0 md:grid-cols-[160px_1fr]">
-        <div className="aspect-[16/10] bg-[#F6F1E8] md:aspect-auto">
+      <div className="grid gap-0 md:grid-cols-[170px_1fr]">
+        <div className="relative aspect-[16/10] bg-[#F6F1E8] md:aspect-auto">
           {image ? (
             <img
               src={image}
@@ -686,27 +725,72 @@ function OwnerListingCard({ listing }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full min-h-[140px] items-center justify-center text-sm font-bold text-slate-400">
+            <div className="flex h-full min-h-[150px] items-center justify-center text-sm font-bold text-slate-400">
               No image
             </div>
           )}
+
+          <span
+            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${
+              imageCount >= 3
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {imageCount} photos
+          </span>
         </div>
 
         <div className="p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <h3 className="line-clamp-1 text-base font-bold text-[#1F2933]">
-                {listing.name}
+                {listing.name || "Unnamed listing"}
               </h3>
+
               <p className="mt-1 text-sm text-slate-500">
-                {listing.area} · {listing.type}
+                {listing.area || "Area not added"} · Near {nearbyText}
+              </p>
+
+              <p className="mt-1 text-sm font-semibold text-slate-700">
+                {listing.type || "Stay"} · {listing.gender || "For all"} ·{" "}
+                {isFoodIncluded(listing) ? "Food included" : "No food"}
               </p>
             </div>
 
-            <span className="rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
-              {status}
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                status === "approved"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : status === "needs_changes"
+                    ? "bg-orange-50 text-orange-700"
+                    : status === "rejected"
+                      ? "bg-red-50 text-red-700"
+                      : "bg-[#FFF4D8] text-[#8A5A00]"
+              }`}
+            >
+              {status.replace("_", " ")}
             </span>
           </div>
+
+          {imageCount < 3 && (
+            <div className="mt-3 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700">
+              Add at least 3 clear photos to improve approval and student trust.
+            </div>
+          )}
+
+          {facilities.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {facilities.map((facility) => (
+                <span
+                  key={facility}
+                  className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600"
+                >
+                  {facility}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             <SmallMetric label="Views" value={getMetric(listing, "views")} />
@@ -729,6 +813,22 @@ function OwnerListingCard({ listing }) {
               {listing.adminNote}
             </div>
           )}
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <Link
+              to="/check-status"
+              className="rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Check listing status
+            </Link>
+
+            <Link
+              to="/submit-listing"
+              className="rounded-2xl bg-[#1E5B4F] px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-[#123C35]"
+            >
+              Add another listing
+            </Link>
+          </div>
         </div>
       </div>
     </article>

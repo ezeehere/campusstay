@@ -86,11 +86,6 @@ export async function createStudentLead(listing) {
 export async function getOwnerCallbackLeads(ownerId, ownerPhone = "") {
     const leadsMap = new Map();
 
-    console.log("LOADING CALLBACK LEADS FOR:", {
-        ownerId,
-        ownerPhone,
-    });
-
     if (ownerId) {
         const ownerQuery = query(
             collection(db, "studentLeads"),
@@ -98,8 +93,6 @@ export async function getOwnerCallbackLeads(ownerId, ownerPhone = "") {
         );
 
         const ownerSnapshot = await getDocs(ownerQuery);
-
-        console.log("OWNER ID LEADS COUNT:", ownerSnapshot.size);
 
         ownerSnapshot.docs.forEach((docItem) => {
             leadsMap.set(docItem.id, {
@@ -117,8 +110,6 @@ export async function getOwnerCallbackLeads(ownerId, ownerPhone = "") {
 
         const phoneSnapshot = await getDocs(phoneQuery);
 
-        console.log("OWNER PHONE LEADS COUNT:", phoneSnapshot.size);
-
         phoneSnapshot.docs.forEach((docItem) => {
             leadsMap.set(docItem.id, {
                 id: docItem.id,
@@ -132,8 +123,6 @@ export async function getOwnerCallbackLeads(ownerId, ownerPhone = "") {
         const bTime = b.createdAt?.seconds || 0;
         return bTime - aTime;
     });
-
-    console.log("FINAL CALLBACK LEADS:", leads);
 
     return leads;
 }

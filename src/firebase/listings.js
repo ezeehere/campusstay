@@ -96,15 +96,33 @@ export async function getListingByTrackingIdAndPhone(trackingId, phone) {
   const statusKey = createStatusKey(trackingId, phone);
 
   const statusRef = doc(db, "listingStatus", statusKey);
-  const snapshot = await getDoc(statusRef);
+  const statusSnapshot = await getDoc(statusRef);
 
-  if (!snapshot.exists()) {
+  if (!statusSnapshot.exists()) {
     return null;
   }
 
+  const statusData = statusSnapshot.data();
+
+  let fullListingData = {};
+
+  if (statusData.listingId) {
+    const listingRef = doc(db, "listings", statusData.listingId);
+    const listingSnapshot = await getDoc(listingRef);
+
+    if (listingSnapshot.exists()) {
+      fullListingData = {
+        id: listingSnapshot.id,
+        ...listingSnapshot.data(),
+      };
+    }
+  }
+
   return {
-    id: snapshot.id,
-    ...snapshot.data(),
+    ...fullListingData,
+    ...statusData,
+    id: statusData.listingId || fullListingData.id || statusSnapshot.id,
+    statusDocId: statusSnapshot.id,
   };
 }
 export async function getApprovedListings() {

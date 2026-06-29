@@ -1,5 +1,3 @@
-console.log("OWNER PLANS FILE VERSION: 29-JUNE-FIX");
-
 import {
   addDoc,
   collection,
@@ -9,6 +7,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 
@@ -146,6 +145,16 @@ export async function activateOwnerLeadAccess(ownerId) {
   if (!cleanOwnerId) {
     throw new Error("Owner ID missing.");
   }
+
+  const ownerRef = doc(db, "owners", cleanOwnerId);
+
+  await updateDoc(ownerRef, {
+    leadAccess: true,
+    plan: "lead_access",
+    active: true,
+    leadAccessActivatedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 
   const planRef = doc(db, "ownerPlans", cleanOwnerId);
 
