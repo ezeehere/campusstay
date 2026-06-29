@@ -284,13 +284,11 @@ function StudentListingSection({ profile }) {
     const filtered = listings.filter((listing) => {
       const nearbyText = getNearbyText(listing);
 
-      const searchableText = `${listing.name || ""} ${listing.area || ""} ${
-        listing.gender || ""
-      } ${listing.type || ""} ${nearbyText} ${(listing.facilities || []).join(
-        " "
-      )} ${(listing.nearbyEssentials || []).join(" ")} ${
-        listing.otherCharges || ""
-      } ${listing.moveInNote || ""}`.toLowerCase();
+      const searchableText = `${listing.name || ""} ${listing.area || ""} ${listing.gender || ""
+        } ${listing.type || ""} ${nearbyText} ${(listing.facilities || []).join(
+          " "
+        )} ${(listing.nearbyEssentials || []).join(" ")} ${listing.otherCharges || ""
+        } ${listing.moveInNote || ""}`.toLowerCase();
 
       const matchesSearch =
         !cleanSearch || searchableText.includes(cleanSearch);
@@ -556,7 +554,41 @@ function StudentListingSection({ profile }) {
     </>
   );
 }
+function getTotalSeatsLeft(listing) {
+  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
 
+  return listing.roomOptions.reduce(
+    (sum, room) => sum + Number(room.availableUnits || 0),
+    0
+  );
+}
+
+function getAvailableFromText(listing) {
+  if (listing.moveInNote) return listing.moveInNote;
+  if (!listing.availableFrom) return "Ask";
+
+  try {
+    return new Date(listing.availableFrom).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch {
+    return listing.availableFrom;
+  }
+}
+
+function CompactInfo({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-[#F6F1E8] px-2.5 py-2">
+      <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 line-clamp-1 text-xs font-black text-[#1F2933]">
+        {value || "Ask"}
+      </p>
+    </div>
+  );
+}
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <label className="block">
@@ -582,7 +614,13 @@ function FilterSelect({ label, value, onChange, options }) {
 function StudentListingCard({ listing, onView }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+
   const image = images[activeImageIndex] || "";
+  const rent = getListingRent(listing);
+  const nearbyText = getNearbyText(listing);
+  const seatsLeft = getTotalSeatsLeft(listing);
+  const foodIncluded = isFoodIncluded(listing);
+  const availableFromText = getAvailableFromText(listing);
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -599,14 +637,10 @@ function StudentListingCard({ listing, onView }) {
 
     return () => clearInterval(timer);
   }, [images.length]);
-  const rent = getListingRent(listing);
-  const nearbyText = getNearbyText(listing);
-  const seatsLeft = getTotalSeatsLeft(listing);
-  const firstMonthCost = getEstimatedFirstMonthCost(listing);
 
   return (
-    <article className="overflow-hidden rounded-[1.4rem] border border-[#E8DFD2] bg-white shadow-sm">
-      <div className="relative aspect-[16/10] bg-[#F6F1E8]">
+    <article className="overflow-hidden rounded-[1.4rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative h-40 bg-[#F6F1E8]">
         {image ? (
           <img
             src={image}
@@ -619,93 +653,98 @@ function StudentListingCard({ listing, onView }) {
           </div>
         )}
 
-        {images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-            {images.map((_, index) => (
-              <span
-                key={index}
-                className={`h-1.5 rounded-full transition-all ${
-                  activeImageIndex === index
-                    ? "w-5 bg-white"
-                    : "w-1.5 bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
-        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
         <div className="absolute right-3 top-3">
           <SaveListingButton listing={listing} showText={false} />
         </div>
 
-        {listing.verified && (
-          <span className="absolute left-3 top-3 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-            Verified
+        <div className="absolute left-3 top-3 flex gap-1.5">
+          {listing.verified && (
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+              Verified
+            </span>
+          )}
+
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-black ${listing.available
+              ? "bg-[#1E5B4F] text-white"
+              : "bg-red-50 text-red-700"
+              }`}
+          >
+            {listing.available ? "Available" : "Full"}
           </span>
+        </div>
+
+        <div className="absolute bottom-3 left-3 right-24">
+          <p className="text-[11px] font-semibold text-white/80">
+            {listing.type || "Stay"} {listing.gender ? `for ${listing.gender}` : ""}
+          </p>
+
+          <h3 className="mt-0.5 line-clamp-1 text-lg font-black text-white">
+            {listing.name || "Unnamed stay"}
+          </h3>
+        </div>
+
+        <div className="absolute bottom-3 right-3 rounded-2xl bg-white/95 px-3 py-2 text-right shadow-sm">
+          <p className="text-[10px] font-bold uppercase text-slate-500">
+            rent
+          </p>
+          <p className="text-lg font-black leading-none text-[#1F2933]">
+            ₹{rent}
+          </p>
+        </div>
+
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+            {images.map((_, index) => (
+              <span
+                key={index}
+                className={`h-1.5 rounded-full transition-all ${activeImageIndex === index
+                  ? "w-5 bg-white"
+                  : "w-1.5 bg-white/70"
+                  }`}
+              />
+            ))}
+          </div>
         )}
       </div>
 
       <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="line-clamp-1 text-base font-bold text-[#1F2933]">
-              {listing.name}
-            </h3>
+        <p className="flex items-start gap-1.5 text-sm text-slate-500">
+          <MapPin size={14} className="mt-0.5 shrink-0" />
+          <span className="line-clamp-2">
+            <span className="font-bold text-slate-700">
+              {listing.area || "Area not added"}
+            </span>
+            {nearbyText ? ` · Near ${nearbyText}` : ""}
+          </span>
+        </p>
 
-            <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-              <MapPin size={14} className="shrink-0" />
-              <span className="line-clamp-1">
-                {listing.area || "Area not added"}
-                {nearbyText ? ` · Near ${nearbyText}` : ""}
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <CompactInfo label="Seats" value={seatsLeft > 0 ? `${seatsLeft} left` : "Full"} />
+          <CompactInfo label="Food" value={foodIncluded ? "Yes" : "No"} />
+          <CompactInfo label="Move-in" value={availableFromText} />
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {[listing.type, listing.gender, ...(listing.facilities || []).slice(0, 1)]
+            .filter(Boolean)
+            .map((chip, index) => (
+              <span
+                key={`${chip}-${index}`}
+                className="rounded-full bg-[#F6F1E8] px-2.5 py-1 text-xs font-bold text-slate-600"
+              >
+                {chip}
               </span>
-            </p>
-          </div>
-
-          <span className="shrink-0 rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
-            ₹{rent}
-          </span>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
-            {listing.type || "Stay"}
-          </span>
-
-          <span className="rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
-            {listing.gender || "For all"}
-          </span>
-
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#F6F1E8] px-3 py-1 text-xs font-bold text-slate-600">
-            <Utensils size={12} />
-            {isFoodIncluded(listing) ? "Food" : "No food"}
-          </span>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-[#F6F1E8] px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-              Seats left
-            </p>
-            <p className="mt-1 text-sm font-black text-[#1F2933]">
-              {seatsLeft > 0 ? seatsLeft : "Full"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-[#F6F1E8] px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-              First month
-            </p>
-            <p className="mt-1 text-sm font-black text-[#1F2933]">
-              ₹{firstMonthCost || rent}
-            </p>
-          </div>
+            ))}
         </div>
 
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={onView}
-            className="flex-1 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+            className="flex-1 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-black text-white transition hover:bg-[#123C35]"
           >
             View details
           </button>
