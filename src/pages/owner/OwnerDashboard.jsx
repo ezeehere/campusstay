@@ -612,7 +612,7 @@ function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-[#1E5B4F]">
-                Monetization Feature
+                Additional Feature
               </p>
 
               <h2 className="mt-2 text-xl font-bold text-[#123C35]">
@@ -702,17 +702,6 @@ function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
   );
 }
 
-function FeatureLine({ text, active }) {
-  return (
-    <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
-      <CheckCircle2
-        size={16}
-        className={active ? "text-[#1E5B4F]" : "text-slate-300"}
-      />
-      <span className="font-semibold text-slate-700">{text}</span>
-    </div>
-  );
-}
 
 function OwnerInput({ label, name, value, onChange, placeholder }) {
   return (
@@ -746,6 +735,18 @@ function MetricCard({ title, value, icon }) {
           {icon}
         </div>
       </div>
+    </div>
+  );
+}
+
+function FeatureLine({ text, active }) {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
+      <CheckCircle2
+        size={16}
+        className={active ? "text-[#1E5B4F]" : "text-slate-300"}
+      />
+      <span className="font-semibold text-slate-700">{text}</span>
     </div>
   );
 }
