@@ -297,13 +297,21 @@ function OwnerDashboard() {
     }
   }
 
-  async function handleUpdateAvailability(listingId, updatedRoomOptions) {
+  async function handleUpdateAvailability(
+    listingId,
+    updatedRoomOptions,
+    availabilityData = {}
+  ) {
     if (!listingId) return;
 
     try {
       setAvailabilityLoadingId(listingId);
 
-      await updateListingAvailability(listingId, updatedRoomOptions);
+      await updateListingAvailability(
+        listingId,
+        updatedRoomOptions,
+        availabilityData
+      );
 
       await loadOwnerListings(ownerUser, profile);
 
@@ -719,6 +727,19 @@ function OwnerListingCard({
   const nearbyText = getNearbyText(listing);
   const facilities = getFacilities(listing).slice(0, 4);
 
+  const [availableFrom, setAvailableFrom] = useState(
+    listing.availableFrom || ""
+  );
+
+  const [moveInNote, setMoveInNote] = useState(
+    listing.moveInNote || ""
+  );
+
+  useEffect(() => {
+    setAvailableFrom(listing.availableFrom || "");
+    setMoveInNote(listing.moveInNote || "");
+  }, [listing.id, listing.availableFrom, listing.moveInNote]);
+
   const roomOptions =
     listing.roomOptions?.length > 0
       ? listing.roomOptions
@@ -747,7 +768,10 @@ function OwnerListingCard({
       };
     });
 
-    onUpdateAvailability(listing.id, updatedRoomOptions);
+    onUpdateAvailability(listing.id, updatedRoomOptions, {
+      availableFrom,
+      moveInNote,
+    });
   }
 
   function markAllFull() {
@@ -757,7 +781,10 @@ function OwnerListingCard({
       available: false,
     }));
 
-    onUpdateAvailability(listing.id, updatedRoomOptions);
+    onUpdateAvailability(listing.id, updatedRoomOptions, {
+      availableFrom,
+      moveInNote,
+    });
   }
 
   function markAvailable() {
@@ -773,7 +800,10 @@ function OwnerListingCard({
       };
     });
 
-    onUpdateAvailability(listing.id, updatedRoomOptions);
+    onUpdateAvailability(listing.id, updatedRoomOptions, {
+      availableFrom,
+      moveInNote,
+    });
   }
 
   return (
@@ -868,6 +898,53 @@ function OwnerListingCard({
                 <p className="mt-1 text-xs text-slate-600">
                   Update seats left. Students will see availability immediately.
                 </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">
+                      Available from
+                    </span>
+
+                    <input
+                      type="date"
+                      value={availableFrom}
+                      onChange={(event) => setAvailableFrom(event.target.value)}
+                      className="h-11 w-full rounded-2xl border border-[#DDECE7] bg-white px-4 text-sm font-bold text-slate-700 outline-none"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">
+                      Move-in note
+                    </span>
+
+                    <select
+                      value={moveInNote}
+                      onChange={(event) => setMoveInNote(event.target.value)}
+                      className="h-11 w-full rounded-2xl border border-[#DDECE7] bg-white px-4 text-sm font-bold text-slate-700 outline-none"
+                    >
+                      <option value="">Ask owner</option>
+                      <option value="Available immediately">Available immediately</option>
+                      <option value="Available within 1 week">Available within 1 week</option>
+                      <option value="Available within 1 month">Available within 1 month</option>
+                      <option value="Contact owner before visiting">Contact owner before visiting</option>
+                    </select>
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={updatingAvailability}
+                  onClick={() =>
+                    onUpdateAvailability(listing.id, roomOptions, {
+                      availableFrom,
+                      moveInNote,
+                    })
+                  }
+                  className="mt-3 w-full rounded-2xl border border-[#DDECE7] bg-white px-4 py-3 text-sm font-black text-[#1E5B4F] transition hover:bg-[#E5F4EF] disabled:opacity-50"
+                >
+                  {updatingAvailability ? "Saving..." : "Save move-in info"}
+                </button>
               </div>
 
               <span

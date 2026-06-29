@@ -261,7 +261,11 @@ export async function getListingById(listingId) {
   };
 }
 
-export async function updateListingAvailability(listingId, roomOptions) {
+export async function updateListingAvailability(
+  listingId,
+  roomOptions,
+  availabilityData = {}
+) {
   if (!listingId) {
     throw new Error("Listing ID is required.");
   }
@@ -281,6 +285,16 @@ export async function updateListingAvailability(listingId, roomOptions) {
     (room) => Number(room.availableUnits || 0) > 0
   );
 
+  const moveInUpdates = {};
+
+  if (availabilityData.availableFrom !== undefined) {
+    moveInUpdates.availableFrom = availabilityData.availableFrom;
+  }
+
+  if (availabilityData.moveInNote !== undefined) {
+    moveInUpdates.moveInNote = availabilityData.moveInNote;
+  }
+
   const listingRef = doc(db, "listings", listingId);
 
   await updateDoc(listingRef, {
@@ -293,6 +307,7 @@ export async function updateListingAvailability(listingId, roomOptions) {
       month: "short",
       year: "numeric",
     }),
+    ...moveInUpdates,
   });
 
   const listingSnapshot = await getDoc(listingRef);
@@ -315,6 +330,7 @@ export async function updateListingAvailability(listingId, roomOptions) {
       roomOptions: cleanedRoomOptions,
       availabilityUpdatedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      ...moveInUpdates,
     },
     { merge: true }
   );

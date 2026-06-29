@@ -495,6 +495,8 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                   <DetailRow label="Area" value={listing.area} />
                   <DetailRow label="Photos" value={`${getImageCount(listing)} uploaded`} />
                   <DetailRow label="Map link" value={listing.mapLink} />
+                  <DetailRow label="Available from" value={listing.availableFrom} />
+                  <DetailRow label="Move-in note" value={listing.moveInNote} />
                   <DetailRow label="Created at" value={formatDate(listing.createdAt)} />
                   <DetailRow label="Updated at" value={formatDate(listing.updatedAt)} />
                 </div>
@@ -650,6 +652,8 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     area: "",
     type: "PG",
     gender: "Boys",
+    availableFrom: "",
+    moveInNote: "",
     nearbyInstitutions: [],
     food: "Yes",
     foodDetails: "",
@@ -668,6 +672,8 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       area: listing?.area || "",
       type: listing?.type || "PG",
       gender: listing?.gender || "Boys",
+      availableFrom: listing?.availableFrom || "",
+      moveInNote: listing?.moveInNote || "",
       nearbyInstitutions: Array.isArray(listing?.nearbyInstitutions)
         ? listing.nearbyInstitutions
         : listing?.nearbyCollege
@@ -904,6 +910,8 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       food: editData.food === "Yes",
       foodIncluded: editData.food === "Yes",
       foodDetails: editData.foodDetails.trim(),
+      availableFrom: editData.availableFrom,
+      moveInNote: editData.moveInNote,
 
       facilities,
       rules,
@@ -1027,6 +1035,28 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
                 onChange={handleChange}
               />
             </div>
+
+            <AdminEditInput
+              label="Available from"
+              name="availableFrom"
+              type="date"
+              value={editData.availableFrom}
+              onChange={handleChange}
+            />
+
+            <AdminEditSelect
+              label="Move-in note"
+              name="moveInNote"
+              value={editData.moveInNote}
+              onChange={handleChange}
+              options={[
+                "",
+                "Available immediately",
+                "Available within 1 week",
+                "Available within 1 month",
+                "Contact owner before visiting",
+              ]}
+            />
           </div>
 
           <div>
@@ -1268,7 +1298,14 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
   );
 }
 
-function AdminEditInput({ label, name, value, onChange, placeholder }) {
+function AdminEditInput({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-slate-700">
@@ -1277,6 +1314,7 @@ function AdminEditInput({ label, name, value, onChange, placeholder }) {
 
       <input
         name={name}
+        type={type}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
@@ -1300,7 +1338,9 @@ function AdminEditSelect({ label, name, value, onChange, options }) {
         className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-[#1E5B4F]"
       >
         {options.map((option) => (
-          <option key={option}>{option}</option>
+          <option key={option} value={option}>
+            {option === "" ? "Ask owner" : option}
+          </option>
         ))}
       </select>
     </label>

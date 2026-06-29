@@ -256,7 +256,9 @@ service cloud.firestore {
             "available",
             "availabilityUpdatedAt",
             "updatedAt",
-            "lastUpdated"
+            "lastUpdated",
+            "availableFrom",
+            "moveInNote"
           ])
         );
     }
