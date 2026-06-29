@@ -65,7 +65,7 @@ function ListingDetailsModal({ listing, onClose }) {
       setActiveImageIndex((previousIndex) =>
         previousIndex + 1 >= imageCount ? 0 : previousIndex + 1
       );
-    }, 4000);
+    }, 2500);
 
     return () => clearInterval(timer);
   }, [imageCount, listing?.id]);
