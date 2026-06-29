@@ -23,38 +23,22 @@ import {
 import { getOwnerListings } from "../../firebase/listings";
 import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
-import { getOwnerPlan, requestLeadAccess } from "../../firebase/ownerPlans";
+import { requestLeadAccess } from "../../firebase/ownerPlans";
 import { getOwnerCallbackLeads } from "../../firebase/studentLeads";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase/config";
 
 function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
 }
 
-async function getOwnerPlanDirect(ownerId) {
-  const planRef = doc(db, "ownerPlans", ownerId);
-  const planSnap = await getDoc(planRef);
+function buildOwnerPlanFromProfile(user, ownerProfile) {
+  const hasLeadAccess = ownerProfile?.leadAccess === true;
 
-  console.log("DIRECT OWNER PLAN EXISTS:", planSnap.exists());
-
-  if (!planSnap.exists()) {
-    return {
-      ownerId,
-      plan: "free",
-      active: false,
-      leadAccess: false,
-    };
-  }
-
-  const plan = {
-    id: planSnap.id,
-    ...planSnap.data(),
+  return {
+    ownerId: user.uid,
+    plan: hasLeadAccess ? "lead_access" : "free",
+    active: hasLeadAccess,
+    leadAccess: hasLeadAccess,
   };
-
-  console.log("DIRECT OWNER PLAN DATA:", plan);
-
-  return plan;
 }
 
 function OwnerDashboard() {
@@ -114,22 +98,12 @@ function OwnerDashboard() {
         area: ownerProfile?.area || "",
       });
 
-      let loadedPlan = {
-        ownerId: user.uid,
-        plan: "free",
-        active: false,
-        leadAccess: false,
-      };
+      const loadedPlan = buildOwnerPlanFromProfile(user, ownerProfile);
 
-      try {
-        loadedPlan = await getOwnerPlanDirect(user.uid);
-        console.log("OWNER UID:", user.uid);
-        console.log("LOADED OWNER PLAN:", loadedPlan);
-        setOwnerPlan(loadedPlan);
-      } catch (error) {
-        console.warn("Could not load owner plan:", error);
-        setOwnerPlan(loadedPlan);
-      }
+      console.log("OWNER UID:", user.uid);
+      console.log("OWNER PROFILE PLAN:", loadedPlan);
+
+      setOwnerPlan(loadedPlan);
 
       await loadOwnerListings(user, ownerProfile);
       await loadCallbackLeads(user, ownerProfile, loadedPlan);
@@ -196,7 +170,9 @@ function OwnerDashboard() {
       setProfile(updatedProfile);
 
       await loadOwnerListings(ownerUser, updatedProfile);
-      await loadCallbackLeads(ownerUser, updatedProfile, ownerPlan);
+      const updatedPlan = buildOwnerPlanFromProfile(ownerUser, updatedProfile);
+      setOwnerPlan(updatedPlan);
+      await loadCallbackLeads(ownerUser, updatedProfile, updatedPlan);
 
       alert("Owner profile saved successfully!");
     } catch (error) {
@@ -220,10 +196,7 @@ function OwnerDashboard() {
     try {
       setLoadingCallbackLeads(true);
 
-      const leads = await getOwnerCallbackLeads(
-        user.uid,
-        ownerProfile?.phone || ""
-      );
+      const leads = await getOwnerCallbackLeads(user.uid);
 
       setCallbackLeads(leads);
     } catch (error) {
