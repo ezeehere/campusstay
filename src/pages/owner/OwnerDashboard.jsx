@@ -604,13 +604,6 @@ function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
   return (
     <section className="mt-4 overflow-hidden rounded-[1.5rem] border border-[#DDECE7] bg-white shadow-sm sm:rounded-[2rem]">
       <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="bg-[#F1FAF7] p-4 sm:p-6">
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
-              {hasLeadAccess ? <CheckCircle2 size={22} /> : <Lock size={22} />}
-            </div>
-          </div>
-        </div>
 
         <div className="p-4 sm:p-6">
           <div className="rounded-[1.3rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4">
