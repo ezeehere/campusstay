@@ -5,9 +5,7 @@ import {
   CheckCircle2,
   Home as HomeIcon,
   MapPin,
-  MessageCircle,
   Search,
-  ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
 
@@ -16,18 +14,54 @@ import ListingDetailsModal from "../../components/public/ListingDetailsModal";
 import Badge from "../../components/common/Badge";
 import { getApprovedListings } from "../../firebase/listings";
 
-const genders = ["All", "Boys", "Girls", "Co-ed"];
-const types = ["All", "PG", "Room"];
-const areas = ["All", "Sotai", "Near JIST Gate", "Pulibor Road"];
+const genderFilters = [
+  { label: "All Students", value: "all" },
+  { label: "Boys", value: "Boys" },
+  { label: "Girls", value: "Girls" },
+  { label: "Co-ed", value: "Co-ed" },
+];
+
+const stayTypeFilters = [
+  { label: "All Stays", value: "all" },
+  { label: "PG", value: "PG" },
+  { label: "Room", value: "Room" },
+  { label: "Hostel", value: "Hostel" },
+];
+
+const foodFilters = [
+  { label: "Any Food Option", value: "all" },
+  { label: "Food Included", value: "included" },
+  { label: "Without Food", value: "not_included" },
+];
+
+const institutionFilters = [
+  { label: "All Institutions", value: "all" },
+  { label: "JIST", value: "JIST" },
+  { label: "JEC", value: "JEC" },
+  { label: "Kaziranga ITI", value: "Kaziranga ITI" },
+  { label: "Ayush Pharmacy", value: "Ayush Pharmacy" },
+];
+
+const sortOptions = [
+  { label: "Recommended", value: "recommended" },
+  { label: "Price: Low to High", value: "price_low_high" },
+  { label: "Price: High to Low", value: "price_high_low" },
+  { label: "Recently Added", value: "recent" },
+  { label: "Food Included First", value: "food_first" },
+];
 
 function Home() {
   const [search, setSearch] = useState("");
-  const [gender, setGender] = useState("All");
-  const [type, setType] = useState("All");
-  const [area, setArea] = useState("All");
+  const [gender, setGender] = useState("all");
+  const [type, setType] = useState("all");
+  const [area, setArea] = useState("all");
+  const [foodFilter, setFoodFilter] = useState("all");
+  const [institution, setInstitution] = useState("all");
+  const [sortBy, setSortBy] = useState("recommended");
+
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [availableOnly, setAvailableOnly] = useState(true);
-  const [foodOnly, setFoodOnly] = useState(false);
+
   const [selectedListing, setSelectedListing] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +71,6 @@ function Home() {
   function handleViewListing(listing) {
     setSelectedListing(listing);
   }
-
 
   useEffect(() => {
     async function loadApprovedListings() {
@@ -61,55 +94,109 @@ function Home() {
 
     if (!openListingId || listings.length === 0) return;
 
-    const matchedListing = listings.find((listing) => listing.id === openListingId);
+    const matchedListing = listings.find(
+      (listing) => listing.id === openListingId
+    );
 
     if (matchedListing) {
       setSelectedListing(matchedListing);
     }
   }, [searchParams, listings]);
 
+  const areaFilters = useMemo(() => {
+    const uniqueAreas = Array.from(
+      new Set(
+        listings
+          .map((listing) => listing.area)
+          .filter(Boolean)
+          .map((item) => item.trim())
+      )
+    ).sort();
+
+    return [
+      { label: "All Areas", value: "all" },
+      ...uniqueAreas.map((item) => ({
+        label: item,
+        value: item,
+      })),
+    ];
+  }, [listings]);
+
   const filteredListings = useMemo(() => {
-    return listings.filter((listing) => {
+    const cleanSearch = search.toLowerCase().trim();
+
+    const filtered = listings.filter((listing) => {
+      const nearbyText = getNearbyText(listing);
+
       const searchableText = `${listing.name || ""} ${listing.area || ""} ${listing.gender || ""
-        } ${listing.type || ""}`;
+        } ${listing.type || ""} ${nearbyText} ${(listing.facilities || []).join(
+          " "
+        )}`.toLowerCase();
 
-      const matchesSearch = searchableText
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch =
+        !cleanSearch || searchableText.includes(cleanSearch);
 
-      const matchesGender = gender === "All" || listing.gender === gender;
-      const matchesType = type === "All" || listing.type === type;
-      const matchesArea = area === "All" || listing.area === area;
+      const matchesGender = gender === "all" || listing.gender === gender;
+      const matchesType = type === "all" || listing.type === type;
+      const matchesArea = area === "all" || listing.area === area;
+
+      const matchesInstitution =
+        institution === "all" ||
+        getNearbyInstitutions(listing).includes(institution);
+
+      const foodIncluded = listing.foodIncluded === true || listing.food === true;
+
+      const matchesFood =
+        foodFilter === "all" ||
+        (foodFilter === "included" && foodIncluded) ||
+        (foodFilter === "not_included" && !foodIncluded);
+
       const matchesVerified = !verifiedOnly || listing.verified;
       const matchesAvailable = !availableOnly || listing.available;
-      const matchesFood = !foodOnly || listing.food;
 
       return (
         matchesSearch &&
         matchesGender &&
         matchesType &&
         matchesArea &&
+        matchesInstitution &&
+        matchesFood &&
         matchesVerified &&
-        matchesAvailable &&
-        matchesFood
+        matchesAvailable
       );
     });
+
+    return sortListings(filtered, sortBy);
   }, [
     listings,
     search,
     gender,
     type,
     area,
+    institution,
+    foodFilter,
     verifiedOnly,
     availableOnly,
-    foodOnly,
+    sortBy,
   ]);
 
   const quickFilterClass = (active) =>
-    `rounded-full border px-4 py-2 text-sm font-semibold transition ${active
+    `shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${active
       ? "border-slate-950 bg-slate-950 text-white"
       : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#FFF8EF]"
     }`;
+
+  function resetFilters() {
+    setSearch("");
+    setGender("all");
+    setType("all");
+    setArea("all");
+    setFoodFilter("all");
+    setInstitution("all");
+    setSortBy("recommended");
+    setVerifiedOnly(false);
+    setAvailableOnly(true);
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#FFF8EF] via-white to-[#F6F1E8] text-slate-950">
@@ -152,12 +239,13 @@ function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-[#070B1F] sm:text-5xl lg:text-6xl">
-              Find verified PGs and rooms near campus.
+              Find verified PGs and rooms near your campus.
             </h1>
 
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Search PGs and rooms near JIST with rent, photos, food details, room options,
-              and owner contact.
+              Search PGs and rooms near JIST, JEC, Kaziranga ITI, and Ayush
+              Pharmacy with rent, photos, food details, room options, and owner
+              contact.
             </p>
 
             <div className="mt-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
@@ -170,52 +258,58 @@ function Home() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by PG name, area, boys, girls, room..."
+                  placeholder="Search PG name, area, institution, boys, girls..."
                   className="h-14 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-12 pr-4 text-base outline-none transition focus:border-slate-400 focus:bg-white"
                 />
               </div>
 
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]">
                 <button
-                  onClick={() => setGender(gender === "Boys" ? "All" : "Boys")}
-                  className={`shrink-0 ${quickFilterClass(gender === "Boys")}`}
+                  onClick={() =>
+                    setGender(gender === "Boys" ? "all" : "Boys")
+                  }
+                  className={quickFilterClass(gender === "Boys")}
                 >
                   Boys
                 </button>
 
                 <button
                   onClick={() =>
-                    setGender(gender === "Girls" ? "All" : "Girls")
+                    setGender(gender === "Girls" ? "all" : "Girls")
                   }
-                  className={`shrink-0 ${quickFilterClass(gender === "Girls")}`}
+                  className={quickFilterClass(gender === "Girls")}
                 >
                   Girls
                 </button>
 
                 <button
-                  onClick={() => setType(type === "PG" ? "All" : "PG")}
-                  className={`shrink-0 ${quickFilterClass(type === "PG")}`}
+                  onClick={() => setType(type === "PG" ? "all" : "PG")}
+                  className={quickFilterClass(type === "PG")}
                 >
                   PG
                 </button>
 
                 <button
-                  onClick={() => setType(type === "Room" ? "All" : "Room")}
-                  className={`shrink-0 ${quickFilterClass(type === "Room")}`}
+                  onClick={() => setType(type === "Room" ? "all" : "Room")}
+                  className={quickFilterClass(type === "Room")}
                 >
                   Room
                 </button>
 
                 <button
-                  onClick={() => setFoodOnly(!foodOnly)}
-                  className={`shrink-0 ${quickFilterClass(foodOnly)}`}
+                  onClick={() =>
+                    setFoodFilter(
+                      foodFilter === "included" ? "all" : "included"
+                    )
+                  }
+                  className={quickFilterClass(foodFilter === "included")}
                 >
                   Food included
                 </button>
 
                 <button
                   onClick={() => setVerifiedOnly(!verifiedOnly)}
-                  className={`shrink-0 ${quickFilterClass(verifiedOnly)}`}
+                  className={quickFilterClass(verifiedOnly)}
                 >
                   Verified only
                 </button>
@@ -247,19 +341,26 @@ function Home() {
 
             <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-2xl">
               <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">20+</p>
-                <p className="mt-1 text-xs text-slate-500">Listings</p>
+                <p className="text-xl font-extrabold text-[#070B1F]">
+                  {listings.length || "20"}+
+                </p>
+                <p className="mt-1 text-xs text-slate-500">Listed stays</p>
               </div>
 
               <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">JIST</p>
-                <p className="mt-1 text-xs text-slate-500">Area</p>
+                <p className="text-xl font-extrabold text-[#070B1F]">4</p>
+                <p className="mt-1 text-xs text-slate-500">Institutions</p>
               </div>
 
               <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
                 <p className="text-xl font-extrabold text-[#070B1F]">Free</p>
                 <p className="mt-1 text-xs text-slate-500">For students</p>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-3xl border border-[#E8DFD2] bg-white/80 p-4 text-sm leading-6 text-slate-600 shadow-sm">
+              Students are already exploring PGs near JIST, JEC, Kaziranga ITI,
+              and Ayush Pharmacy. More verified stays are being added.
             </div>
           </div>
 
@@ -286,10 +387,10 @@ function Home() {
                 <div className="mt-5 rounded-3xl bg-white p-4 text-slate-950">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold">Near JIST Gate PG</h3>
+                      <h3 className="text-lg font-bold">Near campus PG</h3>
                       <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
                         <MapPin size={15} />
-                        700 m from campus
+                        Near JIST and nearby student areas
                       </p>
                     </div>
 
@@ -304,7 +405,7 @@ function Home() {
                       Girls PG
                     </span>
                     <span className="rounded-2xl bg-slate-100 px-3 py-2">
-                      WiFi
+                      Wi-Fi
                     </span>
                     <span className="rounded-2xl bg-slate-100 px-3 py-2">
                       Available
@@ -316,6 +417,7 @@ function Home() {
           </div>
         </div>
       </section>
+
       <section
         id="available-stays"
         className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8"
@@ -327,13 +429,13 @@ function Home() {
               className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
             >
               <SlidersHorizontal size={14} />
-              {showMobileFilters ? "Hide filters" : "Filters"}
+              {showMobileFilters ? "Hide filters" : "Filters & Sort"}
             </button>
 
             <div className="hidden lg:inline-flex">
               <Badge>
                 <SlidersHorizontal size={14} />
-                Refine results
+                Filters and sorting
               </Badge>
             </div>
 
@@ -347,62 +449,81 @@ function Home() {
           </p>
         </div>
 
-        <div className={`mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm ${showMobileFilters ? "block" : "hidden"
-          } lg:block`}
+        <div
+          className={`mb-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm ${showMobileFilters ? "block" : "hidden"
+            } lg:block`}
         >
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]">
-            <select
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <FilterSelect
+              label="For"
               value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="h-12 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm outline-none"
-            >
-              {genders.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
+              onChange={setGender}
+              options={genderFilters}
+            />
 
-            <select
+            <FilterSelect
+              label="Stay Type"
               value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="h-12 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm outline-none"
-            >
-              {types.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
+              onChange={setType}
+              options={stayTypeFilters}
+            />
 
-            <select
+            <FilterSelect
+              label="Food"
+              value={foodFilter}
+              onChange={setFoodFilter}
+              options={foodFilters}
+            />
+
+            <FilterSelect
+              label="Nearby Institution"
+              value={institution}
+              onChange={setInstitution}
+              options={institutionFilters}
+            />
+
+            <FilterSelect
+              label="Area"
               value={area}
-              onChange={(e) => setArea(e.target.value)}
-              className="h-12 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm outline-none"
-            >
-              {areas.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
+              onChange={setArea}
+              options={areaFilters}
+            />
 
-            <label className="flex h-12 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm font-medium text-slate-700">
-              <input
-                type="checkbox"
-                checked={availableOnly}
-                onChange={(e) => setAvailableOnly(e.target.checked)}
-              />
-              Available
-            </label>
+            <FilterSelect
+              label="Sort By"
+              value={sortBy}
+              onChange={setSortBy}
+              options={sortOptions}
+            />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-3">
+              <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={availableOnly}
+                  onChange={(e) => setAvailableOnly(e.target.checked)}
+                />
+                Available only
+              </label>
+
+              <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                />
+                Verified only
+              </label>
+            </div>
 
             <button
-              onClick={() => {
-                setSearch("");
-                setGender("All");
-                setType("All");
-                setArea("All");
-                setVerifiedOnly(false);
-                setAvailableOnly(true);
-                setFoodOnly(false);
-              }}
-              className="h-12 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-[#FFF8EF]"
+              type="button"
+              onClick={resetFilters}
+              className="h-11 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-[#FFF8EF]"
             >
-              Reset
+              Reset filters
             </button>
           </div>
         </div>
@@ -434,8 +555,6 @@ function Home() {
         )}
       </section>
 
-
-
       <footer className="border-t border-[#E8DFD2] bg-[#FFF8EF]">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-6 shadow-sm sm:p-8">
@@ -457,8 +576,9 @@ function Home() {
                 </div>
 
                 <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-                  CampusStay helps students find verified PGs and rooms near campus
-                  with rent, photos, facilities, location, and direct owner contact.
+                  CampusStay helps students find verified PGs and rooms near
+                  campus with rent, photos, facilities, location, and direct
+                  owner contact.
                 </p>
               </div>
 
@@ -504,10 +624,12 @@ function Home() {
                 </h4>
 
                 <div className="mt-4 rounded-3xl bg-[#F6F1E8] p-4">
-                  <p className="text-2xl font-extrabold text-[#1F2933]">JIST</p>
+                  <p className="text-2xl font-extrabold text-[#1F2933]">
+                    JIST · JEC
+                  </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    Starting with stays near Jorhat Institute of Science and
-                    Technology.
+                    Expanding across nearby student areas including Kaziranga
+                    ITI and Ayush Pharmacy.
                   </p>
                 </div>
               </div>
@@ -516,8 +638,8 @@ function Home() {
             <div className="mt-8 border-t border-[#E8DFD2] pt-5">
               <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                 <p>
-                  Students and parents are advised to visit and verify the stay before making
-                  any payment.
+                  Students and parents are advised to visit and verify the stay
+                  before making any payment.
                 </p>
 
                 <p>
@@ -541,6 +663,106 @@ function Home() {
       )}
     </main>
   );
+}
+
+function FilterSelect({ label, value, onChange, options }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </span>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm font-semibold text-slate-700 outline-none"
+      >
+        {options.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function getListingRent(listing) {
+  return Number(listing.startingRent || listing.rent || 0);
+}
+
+function getNearbyInstitutions(listing) {
+  if (
+    Array.isArray(listing.nearbyInstitutions) &&
+    listing.nearbyInstitutions.length > 0
+  ) {
+    return listing.nearbyInstitutions;
+  }
+
+  if (listing.nearbyCollege) {
+    return [listing.nearbyCollege];
+  }
+
+  if (listing.nearbyInstitutionText) {
+    return String(listing.nearbyInstitutionText)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getNearbyText(listing) {
+  return getNearbyInstitutions(listing).join(" ");
+}
+
+function getTimestampSeconds(value) {
+  if (!value) return 0;
+  if (value?.seconds) return value.seconds;
+  if (typeof value?.toDate === "function") return value.toDate().getTime() / 1000;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime() / 1000;
+}
+
+function sortListings(items, sortBy) {
+  const sorted = [...items];
+
+  if (sortBy === "price_low_high") {
+    return sorted.sort((a, b) => getListingRent(a) - getListingRent(b));
+  }
+
+  if (sortBy === "price_high_low") {
+    return sorted.sort((a, b) => getListingRent(b) - getListingRent(a));
+  }
+
+  if (sortBy === "recent") {
+    return sorted.sort(
+      (a, b) =>
+        getTimestampSeconds(b.createdAt || b.updatedAt) -
+        getTimestampSeconds(a.createdAt || a.updatedAt)
+    );
+  }
+
+  if (sortBy === "food_first") {
+    return sorted.sort((a, b) => {
+      const aFood = a.foodIncluded === true || a.food === true ? 1 : 0;
+      const bFood = b.foodIncluded === true || b.food === true ? 1 : 0;
+
+      return bFood - aFood;
+    });
+  }
+
+  return sorted.sort((a, b) => {
+    const aVerified = a.verified ? 1 : 0;
+    const bVerified = b.verified ? 1 : 0;
+
+    const aAvailable = a.available ? 1 : 0;
+    const bAvailable = b.available ? 1 : 0;
+
+    return bVerified + bAvailable - (aVerified + aAvailable);
+  });
 }
 
 export default Home;

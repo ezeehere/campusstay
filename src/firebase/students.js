@@ -19,7 +19,7 @@ export async function ensureStudentProfile(user, extraData = {}) {
       fullName: extraData.fullName || user.displayName || "",
       email: user.email || "",
       phone: "",
-      college: "JIST",
+      college: "",
       gender: "",
       budgetMin: "",
       budgetMax: "",

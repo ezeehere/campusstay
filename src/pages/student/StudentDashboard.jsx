@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import {
+  CheckCircle2,
   Heart,
   Home as HomeIcon,
   Loader2,
@@ -18,9 +19,44 @@ import {
 } from "../../firebase/students";
 import StudentListingSection from "../../components/student/StudentListingSection";
 
-function StudentDashboard() {
-  const navigate = useNavigate();
+const institutionOptions = [
+  "",
+  "JIST",
+  "JEC",
+  "Kaziranga ITI",
+  "Ayush Pharmacy",
+  "Other",
+];
 
+const initialFormData = {
+  fullName: "",
+  phone: "",
+  college: "",
+  gender: "",
+  budgetMin: "",
+  budgetMax: "",
+  preferredArea: "",
+  preferredStayType: "",
+  foodRequired: "",
+  preferredRoomType: "",
+  moveInTime: "",
+};
+
+function isStudentPreferencesComplete(profile) {
+  const minBudget = Number(profile?.budgetMin || 0);
+  const maxBudget = Number(profile?.budgetMax || 0);
+
+  return Boolean(
+    profile?.college &&
+    profile?.gender &&
+    minBudget > 0 &&
+    maxBudget > 0 &&
+    profile?.preferredStayType &&
+    profile?.foodRequired
+  );
+}
+
+function StudentDashboard() {
   const [studentUser, setStudentUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
@@ -28,19 +64,7 @@ function StudentDashboard() {
   const [saving, setSaving] = useState(false);
   const [showPreferenceForm, setShowPreferenceForm] = useState(false);
 
-  const [formData, setFormData] = useState({
-    fullName: "",
-    phone: "",
-    college: "JIST",
-    gender: "",
-    budgetMin: "",
-    budgetMax: "",
-    preferredArea: "",
-    preferredStayType: "",
-    foodRequired: "",
-    preferredRoomType: "",
-    moveInTime: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
     const unsubscribe = watchStudentAuth(async (user) => {
@@ -62,10 +86,10 @@ function StudentDashboard() {
       if (studentProfile) {
         setProfile(studentProfile);
 
-        setFormData({
+        const nextFormData = {
           fullName: studentProfile.fullName || user.displayName || "",
           phone: studentProfile.phone || "",
-          college: studentProfile.college || "JIST",
+          college: studentProfile.college || "",
           gender: studentProfile.gender || "",
           budgetMin: studentProfile.budgetMin || "",
           budgetMax: studentProfile.budgetMax || "",
@@ -74,7 +98,10 @@ function StudentDashboard() {
           foodRequired: studentProfile.foodRequired || "",
           preferredRoomType: studentProfile.preferredRoomType || "",
           moveInTime: studentProfile.moveInTime || "",
-        });
+        };
+
+        setFormData(nextFormData);
+        setShowPreferenceForm(!isStudentPreferencesComplete(studentProfile));
       }
 
       setLoading(false);
@@ -82,6 +109,8 @@ function StudentDashboard() {
 
     return () => unsubscribe();
   }, []);
+
+  const preferencesComplete = isStudentPreferencesComplete(profile);
 
   function handleInputChange(event) {
     const { name, value } = event.target;
@@ -92,31 +121,74 @@ function StudentDashboard() {
     }));
   }
 
+  function validatePreferenceForm() {
+    const minBudget = Number(formData.budgetMin || 0);
+    const maxBudget = Number(formData.budgetMax || 0);
+
+    if (!formData.college) {
+      alert("Please select your nearby institution.");
+      return false;
+    }
+
+    if (!formData.gender) {
+      alert("Please select who the stay is for.");
+      return false;
+    }
+
+    if (!minBudget || !maxBudget) {
+      alert("Please enter your minimum and maximum budget.");
+      return false;
+    }
+
+    if (maxBudget < minBudget) {
+      alert("Maximum budget cannot be less than minimum budget.");
+      return false;
+    }
+
+    if (!formData.preferredStayType) {
+      alert("Please select your preferred stay type.");
+      return false;
+    }
+
+    if (!formData.foodRequired) {
+      alert("Please select whether food is required.");
+      return false;
+    }
+
+    return true;
+  }
+
   async function handleSaveProfile(event) {
     event.preventDefault();
 
     if (!studentUser) return;
+    if (!validatePreferenceForm()) return;
 
     const minBudget = Number(formData.budgetMin || 0);
     const maxBudget = Number(formData.budgetMax || 0);
 
-    if (minBudget && maxBudget && maxBudget < minBudget) {
-      alert("Maximum budget cannot be less than minimum budget.");
-      return;
-    }
-
     try {
       setSaving(true);
+
       await ensureStudentProfile(studentUser);
+
       await updateStudentProfile(studentUser.uid, {
-        ...formData,
-        budgetMin: formData.budgetMin ? Number(formData.budgetMin) : "",
-        budgetMax: formData.budgetMax ? Number(formData.budgetMax) : "",
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        college: formData.college,
+        gender: formData.gender,
+        budgetMin: minBudget,
+        budgetMax: maxBudget,
+        preferredArea: formData.preferredArea.trim(),
+        preferredStayType: formData.preferredStayType,
+        foodRequired: formData.foodRequired,
+        preferredRoomType: formData.preferredRoomType,
+        moveInTime: formData.moveInTime.trim(),
       });
 
       const updatedProfile = await getStudentProfile(studentUser.uid);
       setProfile(updatedProfile);
-      setShowPreferenceForm(false);
+      setShowPreferenceForm(!isStudentPreferencesComplete(updatedProfile));
 
       alert("Preferences saved successfully!");
     } catch (error) {
@@ -163,18 +235,20 @@ function StudentDashboard() {
                   Hi, {profile?.fullName || studentUser?.displayName || "Student"}
                 </h1>
                 <p className="mt-1 text-sm text-slate-500">
-                  Browse, save, and compare PGs near campus.
+                  {preferencesComplete
+                    ? "Browse, save, and compare PGs near campus."
+                    : "Complete your preferences first to see matched stays."}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:flex">
               <Link
-                to="/"
+                to="/student/saved"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
               >
-                <HomeIcon size={16} />
-                Home
+                <Heart size={16} />
+                Saved
               </Link>
 
               <button
@@ -188,187 +262,232 @@ function StudentDashboard() {
           </div>
         </header>
 
-        <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <DashboardMiniCard
-            title="Saved"
-            value="View"
-            description="Your shortlist"
-            to="/student/saved"
-            icon={<Heart size={19} />}
-          />
+        {!preferencesComplete ? (
+          <section className="mt-5 rounded-[1.5rem] border border-[#DDECE7] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+            <div className="rounded-[1.5rem] border border-[#DDECE7] bg-[#F1FAF7] p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-[#123C35]">
+                    Set your PG preferences first
+                  </h2>
 
-          <DashboardMiniCard
-            title="Area"
-            value={formData.preferredArea || "Any"}
-            description="Preference"
-            icon={<SlidersHorizontal size={19} />}
-          />
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    This helps CampusStay show relevant PGs and rooms based on your
+                    institution, budget, stay type, and food requirement.
+                  </p>
+                </div>
 
-          <DashboardMiniCard
-            title="Budget"
-            value={`₹${formData.budgetMin || "Any"} - ₹${formData.budgetMax || "Any"}`}
-            description="Monthly range"
-            icon={<SlidersHorizontal size={19} />}
-          />
-
-          <DashboardMiniCard
-            title="Stay"
-            value={formData.preferredStayType || "PG/Room"}
-            description="Type"
-            icon={<HomeIcon size={19} />}
-          />
-        </section>
-
-        <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-[#1F2933]">
-                Your preference summary
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {formData.gender || "Any gender"} ·{" "}
-                {formData.preferredStayType || "PG or Room"} · ₹
-                {formData.budgetMin || "Any"} - ₹{formData.budgetMax || "Any"} ·{" "}
-                {formData.foodRequired || "Food optional"} ·{" "}
-                {formData.preferredArea || "Any area"}
-              </p>
+                <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] shadow-sm">
+                  Required before browsing
+                </div>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowPreferenceForm((previous) => !previous)}
-              className="w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8] sm:w-auto"
-            >
-              {showPreferenceForm ? "Hide preferences" : "Edit preferences"}
-            </button>
-          </div>
-
-          {showPreferenceForm && (
-            <form
+            <PreferenceForm
+              formData={formData}
+              saving={saving}
+              onChange={handleInputChange}
               onSubmit={handleSaveProfile}
-              className="mt-5 grid gap-4 md:grid-cols-2"
-            >
-              <InputField
-                label="Full Name"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
+            />
+          </section>
+        ) : (
+          <>
+            <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <DashboardMiniCard
+                title="Saved"
+                value="View"
+                description="Your shortlist"
+                to="/student/saved"
+                icon={<Heart size={19} />}
               />
 
-              <InputField
-                label="Phone Number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="Optional"
+              <DashboardMiniCard
+                title="Institution"
+                value={formData.college || "Any"}
+                description="Nearby"
+                icon={<SlidersHorizontal size={19} />}
               />
 
-              <SelectField
-                label="College"
-                name="college"
-                value={formData.college}
-                onChange={handleInputChange}
-                options={["JIST", "JEC", "Other"]}
+              <DashboardMiniCard
+                title="Budget"
+                value={`₹${formData.budgetMin || "Any"} - ₹${formData.budgetMax || "Any"
+                  }`}
+                description="Monthly range"
+                icon={<SlidersHorizontal size={19} />}
               />
 
-              <SelectField
-                label="Gender"
-                name="gender"
-                value={formData.gender}
-                onChange={handleInputChange}
-                options={["", "Boys", "Girls", "All"]}
+              <DashboardMiniCard
+                title="Stay"
+                value={formData.preferredStayType || "PG/Room"}
+                description="Type"
+                icon={<HomeIcon size={19} />}
               />
+            </section>
 
-              <InputField
-                label="Minimum Budget"
-                name="budgetMin"
-                type="number"
-                value={formData.budgetMin}
-                onChange={handleInputChange}
-                placeholder="3000"
-              />
+            <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
+                    <CheckCircle2 size={20} className="text-[#1E5B4F]" />
+                    Your preference summary
+                  </h2>
 
-              <InputField
-                label="Maximum Budget"
-                name="budgetMax"
-                type="number"
-                value={formData.budgetMax}
-                onChange={handleInputChange}
-                placeholder="6000"
-              />
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {formData.college || "Any institution"} ·{" "}
+                    {formData.gender || "Any gender"} ·{" "}
+                    {formData.preferredStayType || "PG or Room"} · ₹
+                    {formData.budgetMin || "Any"} - ₹
+                    {formData.budgetMax || "Any"} ·{" "}
+                    {formData.foodRequired || "Food optional"} ·{" "}
+                    {formData.preferredArea || "Any area"}
+                  </p>
+                </div>
 
-              <InputField
-                label="Preferred Area"
-                name="preferredArea"
-                value={formData.preferredArea}
-                onChange={handleInputChange}
-                placeholder="JIST Gate, Sotai, Tarajan"
-              />
-
-              <SelectField
-                label="Preferred Stay Type"
-                name="preferredStayType"
-                value={formData.preferredStayType}
-                onChange={handleInputChange}
-                options={["", "PG", "Room", "Both"]}
-              />
-
-              <SelectField
-                label="Food Required"
-                name="foodRequired"
-                value={formData.foodRequired}
-                onChange={handleInputChange}
-                options={["", "Yes", "No", "Maybe"]}
-              />
-
-              <SelectField
-                label="Room Sharing Preference"
-                name="preferredRoomType"
-                value={formData.preferredRoomType}
-                onChange={handleInputChange}
-                options={[
-                  "",
-                  "Single Room",
-                  "Double Sharing",
-                  "Triple Sharing",
-                  "Four Sharing",
-                ]}
-              />
-
-              <div className="md:col-span-2">
-                <InputField
-                  label="Move-in Time"
-                  name="moveInTime"
-                  value={formData.moveInTime}
-                  onChange={handleInputChange}
-                  placeholder="Immediately, within 1 month, after admission"
-                />
-              </div>
-
-              <div className="md:col-span-2">
                 <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  type="button"
+                  onClick={() => setShowPreferenceForm((previous) => !previous)}
+                  className="w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8] sm:w-auto"
                 >
-                  {saving ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : (
-                    <Save size={18} />
-                  )}
-                  Save preferences
+                  {showPreferenceForm ? "Hide preferences" : "Edit preferences"}
                 </button>
               </div>
-            </form>
-          )}
-        </section>
 
-        <StudentListingSection profile={profile} />
+              {showPreferenceForm && (
+                <PreferenceForm
+                  formData={formData}
+                  saving={saving}
+                  onChange={handleInputChange}
+                  onSubmit={handleSaveProfile}
+                />
+              )}
+            </section>
 
-
+            <StudentListingSection profile={profile} />
+          </>
+        )}
       </div>
     </main>
+  );
+}
+
+function PreferenceForm({ formData, saving, onChange, onSubmit }) {
+  return (
+    <form onSubmit={onSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
+      <InputField
+        label="Full Name"
+        name="fullName"
+        value={formData.fullName}
+        onChange={onChange}
+        placeholder="Your name"
+      />
+
+      <InputField
+        label="Phone Number"
+        name="phone"
+        value={formData.phone}
+        onChange={onChange}
+        placeholder="Optional now, required when requesting callback"
+      />
+
+      <SelectField
+        label="Nearby Institution"
+        name="college"
+        value={formData.college}
+        onChange={onChange}
+        options={institutionOptions}
+        required
+      />
+
+      <SelectField
+        label="Stay Suitable For"
+        name="gender"
+        value={formData.gender}
+        onChange={onChange}
+        options={["", "Boys", "Girls", "Co-ed"]}
+        required
+      />
+
+      <InputField
+        label="Minimum Budget"
+        name="budgetMin"
+        type="number"
+        value={formData.budgetMin}
+        onChange={onChange}
+        placeholder="3000"
+        required
+      />
+
+      <InputField
+        label="Maximum Budget"
+        name="budgetMax"
+        type="number"
+        value={formData.budgetMax}
+        onChange={onChange}
+        placeholder="6000"
+        required
+      />
+
+      <InputField
+        label="Preferred Area"
+        name="preferredArea"
+        value={formData.preferredArea}
+        onChange={onChange}
+        placeholder="JIST Gate, Sotai, Tarajan"
+      />
+
+      <SelectField
+        label="Preferred Stay Type"
+        name="preferredStayType"
+        value={formData.preferredStayType}
+        onChange={onChange}
+        options={["", "PG", "Room", "Hostel", "Both"]}
+        required
+      />
+
+      <SelectField
+        label="Food Required"
+        name="foodRequired"
+        value={formData.foodRequired}
+        onChange={onChange}
+        options={["", "Yes", "No", "Maybe"]}
+        required
+      />
+
+      <SelectField
+        label="Room Sharing Preference"
+        name="preferredRoomType"
+        value={formData.preferredRoomType}
+        onChange={onChange}
+        options={[
+          "",
+          "Single Room",
+          "Double Sharing",
+          "Triple Sharing",
+          "Four Sharing",
+        ]}
+      />
+
+      <div className="md:col-span-2">
+        <InputField
+          label="Move-in Time"
+          name="moveInTime"
+          value={formData.moveInTime}
+          onChange={onChange}
+          placeholder="Immediately, within 1 month, after admission"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        >
+          {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          {saving ? "Saving..." : "Save and continue"}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -407,15 +526,21 @@ function InputField({
   onChange,
   placeholder = "",
   type = "text",
+  required = false,
 }) {
   return (
     <div>
-      <label className="text-sm font-bold text-slate-700">{label}</label>
+      <label className="text-sm font-bold text-slate-700">
+        {label}
+        {required && <span className="ml-1 text-red-600">*</span>}
+      </label>
+
       <input
         name={name}
         type={type}
         value={value}
         onChange={onChange}
+        required={required}
         placeholder={placeholder}
         className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
       />
@@ -423,14 +548,19 @@ function InputField({
   );
 }
 
-function SelectField({ label, name, value, onChange, options }) {
+function SelectField({ label, name, value, onChange, options, required = false }) {
   return (
     <div>
-      <label className="text-sm font-bold text-slate-700">{label}</label>
+      <label className="text-sm font-bold text-slate-700">
+        {label}
+        {required && <span className="ml-1 text-red-600">*</span>}
+      </label>
+
       <select
         name={name}
         value={value}
         onChange={onChange}
+        required={required}
         className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
       >
         {options.map((option) => (

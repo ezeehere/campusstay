@@ -170,7 +170,8 @@ function ListingDetailsModal({ listing, onClose }) {
 
             <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
               <MapPin size={15} />
-              {listing.area} · {listing.distance}
+              {listing.area}
+              {getNearbyText(listing) ? ` · Near ${getNearbyText(listing)}` : ""}
             </p>
           </div>
 
@@ -651,6 +652,14 @@ function ListingDetailsModal({ listing, onClose }) {
       </div>
     </div>
   );
+}
+
+function getNearbyText(listing) {
+  if (Array.isArray(listing.nearbyInstitutions) && listing.nearbyInstitutions.length > 0) {
+    return listing.nearbyInstitutions.join(", ");
+  }
+
+  return listing.nearbyInstitutionText || listing.nearbyCollege || "";
 }
 
 export default ListingDetailsModal;

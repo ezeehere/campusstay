@@ -23,12 +23,12 @@ function createStatusKey(trackingId, phone) {
 const listingsCollection = collection(db, "listings");
 
 export async function addPendingListing(listingData) {
-    const roomOptions = listingData.roomOptions || [];
+  const roomOptions = listingData.roomOptions || [];
 
-const startingRent =
-  roomOptions.length > 0
-    ? Math.min(...roomOptions.map((room) => Number(room.rent || 0)).filter(Boolean))
-    : Number(listingData.rent || 0);
+  const startingRent =
+    roomOptions.length > 0
+      ? Math.min(...roomOptions.map((room) => Number(room.rent || 0)).filter(Boolean))
+      : Number(listingData.rent || 0);
   const docRef = await addDoc(listingsCollection, {
     ...listingData,
     ownerId: listingData.ownerId || "",
@@ -39,9 +39,12 @@ const startingRent =
       callClicks: 0,
       whatsappClicks: 0,
       mapClicks: 0,
+      callbackRequests: 0,
     },
 
-    nearbyCollege: "JIST",
+    nearbyInstitutions: listingData.nearbyInstitutions || [],
+    nearbyCollege: listingData.nearbyInstitutions?.[0] || "",
+    nearbyInstitutionText: (listingData.nearbyInstitutions || []).join(", "),
 
     approved: false,
     verified: false,
@@ -52,36 +55,39 @@ const startingRent =
     trackingId: listingData.trackingId,
     adminNote: listingData.adminNote || "",
     lastUpdated: new Date().toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        }),
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
 
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     status: listingData.status || "pending",
-    
+
   });
 
   const statusKey = createStatusKey(listingData.trackingId, listingData.phone);
 
-await setDoc(doc(db, "listingStatus", statusKey), {
-  listingId: docRef.id,
-  trackingId: listingData.trackingId,
-  phone: listingData.phone,
-  name: listingData.name || "",
-  area: listingData.area || "",
-  distance: listingData.distance || "",
-  type: listingData.type || "",
-  gender: listingData.gender || "",
-  startingRent,
-  approved: false,
-  available: true,
-  status: listingData.status || "pending",
-  adminNote: listingData.adminNote || "",
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp(),
-});
+  await setDoc(doc(db, "listingStatus", statusKey), {
+    listingId: docRef.id,
+    trackingId: listingData.trackingId,
+    phone: listingData.phone,
+    name: listingData.name || "",
+    area: listingData.area || "",
+    nearbyInstitutions: listingData.nearbyInstitutions || [],
+    nearbyCollege: listingData.nearbyInstitutions?.[0] || "",
+    nearbyInstitutionText: (listingData.nearbyInstitutions || []).join(", "),
+    distance: "",
+    type: listingData.type || "",
+    gender: listingData.gender || "",
+    startingRent,
+    approved: false,
+    available: true,
+    status: listingData.status || "pending",
+    adminNote: listingData.adminNote || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 
   return docRef.id;
 }
@@ -158,7 +164,10 @@ export async function updateListing(listingId, updates) {
       phone: listingData.phone,
       name: listingData.name || "",
       area: listingData.area || "",
-      distance: listingData.distance || "",
+      nearbyInstitutions: listingData.nearbyInstitutions || [],
+      nearbyCollege: listingData.nearbyInstitutions?.[0] || "",
+      nearbyInstitutionText: (listingData.nearbyInstitutions || []).join(", "),
+      distance: "",
       type: listingData.type || "",
       gender: listingData.gender || "",
       startingRent: listingData.startingRent || listingData.rent || 0,

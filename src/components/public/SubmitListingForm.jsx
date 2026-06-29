@@ -68,9 +68,9 @@ function SubmitListingForm() {
       previousOptions.map((room, roomIndex) =>
         roomIndex === index
           ? {
-              ...room,
-              [name]: value,
-            }
+            ...room,
+            [name]: value,
+          }
           : room
       )
     );
@@ -452,7 +452,7 @@ function SubmitListingForm() {
                 />
 
                 <InputField
-                  label="Deposit"
+                  label="Advance"
                   name="deposit"
                   type="number"
                   value={room.deposit}

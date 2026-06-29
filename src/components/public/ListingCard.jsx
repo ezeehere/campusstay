@@ -89,9 +89,14 @@ function ListingCard({ listing, onViewDetails }) {
         <div className="flex items-start gap-2 text-slate-600">
           <MapPin size={18} className="mt-0.5 shrink-0 text-slate-400" />
           <p className="text-[15px] leading-6">
-            <span className="font-semibold text-slate-700">{listing.area}</span>
-            {listing.distance ? (
-              <span className="text-slate-500"> · {listing.distance} from JIST</span>
+            <span className="font-semibold text-slate-700">
+              {listing.area || "Area not added"}
+            </span>
+
+            {getNearbyText(listing) ? (
+              <span className="text-slate-500">
+                {" "}· Near {getNearbyText(listing)}
+              </span>
             ) : null}
           </p>
         </div>
@@ -194,6 +199,14 @@ function formatListingDate(timestamp) {
   } catch {
     return "Recently";
   }
+}
+
+function getNearbyText(listing) {
+  if (Array.isArray(listing.nearbyInstitutions) && listing.nearbyInstitutions.length > 0) {
+    return listing.nearbyInstitutions.join(", ");
+  }
+
+  return listing.nearbyInstitutionText || listing.nearbyCollege || "";
 }
 
 export default ListingCard;
