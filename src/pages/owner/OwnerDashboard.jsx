@@ -896,8 +896,7 @@ function OwnerListingCard({
                           {room.title || "Room"}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          ₹{room.rent || 0}/month · Capacity{" "}
-                          {room.capacity || 1}
+                          ₹{room.rent || 0}/month · Seats left {room.availableUnits || 0}
                         </p>
                       </div>
 

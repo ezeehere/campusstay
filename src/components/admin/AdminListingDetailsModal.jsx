@@ -45,6 +45,59 @@ const DEFAULT_ROOM_OPTION = {
   note: "",
 };
 
+const ADMIN_NOTE_TEMPLATES = [
+  {
+    label: "Clearer room photos",
+    status: "needs_changes",
+    note: "Please upload clearer room photos. At least one room photo, one outside/building photo, and one bathroom/common area photo are needed.",
+  },
+  {
+    label: "Bathroom/common photo missing",
+    status: "needs_changes",
+    note: "Please add a bathroom or common area photo so students can properly judge the stay.",
+  },
+  {
+    label: "Rent/deposit unclear",
+    status: "needs_changes",
+    note: "Please correct the rent, deposit, or extra charges. The current pricing details are unclear.",
+  },
+  {
+    label: "Phone not reachable",
+    status: "needs_changes",
+    note: "The submitted phone number is not reachable. Please provide a working owner contact number.",
+  },
+  {
+    label: "Map link missing",
+    status: "needs_changes",
+    note: "Please add a correct Google Maps link so students can locate the PG/room easily.",
+  },
+  {
+    label: "Seats left unclear",
+    status: "needs_changes",
+    note: "Please update the number of seats left for each room option. This helps students avoid calling fully booked stays.",
+  },
+  {
+    label: "Food details unclear",
+    status: "needs_changes",
+    note: "Please clarify the food details, such as whether food is included, meal timing, or extra food charges.",
+  },
+  {
+    label: "Rules unclear",
+    status: "needs_changes",
+    note: "Please clarify important rules like entry time, visitor rules, ID proof requirement, and restrictions.",
+  },
+  {
+    label: "Nearby details missing",
+    status: "needs_changes",
+    note: "Please select nearby institution and nearby essentials like market, bus stop, pharmacy, or food shops if available.",
+  },
+  {
+    label: "Possible duplicate",
+    status: "needs_changes",
+    note: "This listing looks similar to an existing listing. Please confirm whether this is a new PG/room or a duplicate submission.",
+  },
+];
+
 function formatDate(value) {
   if (!value) return "Not available";
 
@@ -120,6 +173,16 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
       status: selectedStatus,
       adminNote,
       approved: isApproved,
+    });
+  }
+
+  function applyAdminTemplate(template) {
+    setSelectedStatus(template.status);
+
+    setAdminNote((previousNote) => {
+      if (!previousNote.trim()) return template.note;
+
+      return `${previousNote.trim()}\n\n${template.note}`;
     });
   }
 
@@ -371,9 +434,40 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                   </div>
 
                   <div className="mt-4">
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Admin note
-                    </label>
+                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="block text-sm font-bold text-slate-700">
+                        Admin note
+                      </label>
+
+                      {adminNote && (
+                        <button
+                          type="button"
+                          onClick={() => setAdminNote("")}
+                          className="w-fit rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
+                        >
+                          Clear note
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="mb-3 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] p-3">
+                      <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">
+                        Quick templates
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {ADMIN_NOTE_TEMPLATES.map((template) => (
+                          <button
+                            key={template.label}
+                            type="button"
+                            onClick={() => applyAdminTemplate(template)}
+                            className="rounded-full border border-[#E8DFD2] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:border-[#1E5B4F] hover:text-[#1E5B4F]"
+                          >
+                            {template.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     <textarea
                       value={adminNote}
@@ -389,7 +483,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                     disabled={saving}
                     className="mt-4 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {saving ? "Saving..." : "Save status"}
+                    {saving ? "Saving..." : "Save status and note"}
                   </button>
                 </div>
 
@@ -423,8 +517,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                             </h4>
 
                             <p className="mt-1 text-sm text-slate-600">
-                              Capacity: {room.capacity} student
-                              {Number(room.capacity) > 1 ? "s" : ""}
+                              Seats left: {room.availableUnits || 0}
                             </p>
 
                             {room.note && (
@@ -442,17 +535,9 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                           </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                        <div className="mt-3 text-sm">
                           <div className="rounded-2xl bg-white px-3 py-2">
                             Advance: ₹{room.deposit || 0}
-                          </div>
-
-                          <div className="rounded-2xl bg-white px-3 py-2">
-                            Available: {room.availableUnits || 0}
-                          </div>
-
-                          <div className="rounded-2xl bg-white px-3 py-2">
-                            Status: {room.available ? "Available" : "Full"}
                           </div>
                         </div>
                       </div>
@@ -764,7 +849,6 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     const cleanedRoomOptions = editData.roomOptions.map((room, index) => {
       const rent = Number(room.rent || 0);
       const deposit = Number(room.deposit || 0);
-      const capacity = Number(room.capacity || 1);
       const availableUnits = Number(room.availableUnits || 0);
 
       return {
@@ -772,7 +856,6 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
         title: String(room.title || "Room").trim(),
         rent,
         deposit,
-        capacity,
         availableUnits,
         available: availableUnits > 0,
         note: String(room.note || "").trim(),
@@ -780,11 +863,11 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     });
 
     const hasInvalidRoom = cleanedRoomOptions.some(
-      (room) => !room.title || room.rent <= 0 || room.capacity <= 0
+      (room) => !room.title || room.rent <= 0
     );
 
     if (hasInvalidRoom) {
-      alert("Each room option needs room type, valid rent, and valid capacity.");
+      alert("Each room option needs room type and valid rent.");
       return;
     }
 
@@ -1146,14 +1229,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
                       }
                     />
 
-                    <RoomEditInput
-                      label="Students per room"
-                      type="number"
-                      value={room.capacity}
-                      onChange={(value) =>
-                        updateRoomOption(index, "capacity", value)
-                      }
-                    />
+
 
                     <RoomEditInput
                       label="Seats left"

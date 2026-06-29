@@ -7,6 +7,40 @@ import {
 } from "lucide-react";
 import SaveListingButton from "../student/SaveListingButton";
 
+function getTotalSeatsLeft(listing) {
+  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
+
+  return listing.roomOptions.reduce(
+    (sum, room) => sum + Number(room.availableUnits || 0),
+    0
+  );
+}
+
+function getAvailableFromText(listing) {
+  if (listing.moveInNote) return listing.moveInNote;
+  if (!listing.availableFrom) return "Ask owner";
+
+  try {
+    return new Date(listing.availableFrom).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch {
+    return listing.availableFrom;
+  }
+}
+
+function getEstimatedFirstMonthCost(listing) {
+  const rent = Number(listing.startingRent || listing.rent || 0);
+  const deposit = Number(listing.deposit || 0);
+  const electricity =
+    listing.electricityIncluded === false
+      ? Number(listing.electricityCharge || 0)
+      : 0;
+
+  return rent + deposit + electricity;
+}
+
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -28,6 +62,9 @@ function ListingCard({ listing, onViewDetails }) {
     return () => clearInterval(timer);
   }, [images.length]);
   const rent = listing.startingRent || listing.rent || 0;
+  const seatsLeft = getTotalSeatsLeft(listing);
+  const availableFromText = getAvailableFromText(listing);
+  const firstMonthCost = getEstimatedFirstMonthCost(listing);
 
   const roomTypeText =
     listing.roomType ||
@@ -42,7 +79,8 @@ function ListingCard({ listing, onViewDetails }) {
   const chips = [
     listing.type,
     listing.gender,
-    ...(listing.facilities || []).slice(0, 3),
+    ...(listing.facilities || []).slice(0, 2),
+    ...(listing.nearbyEssentials || []).slice(0, 2),
   ].filter(Boolean);
 
   const formattedDate = formatListingDate(listing.updatedAt || listing.createdAt);
@@ -141,19 +179,26 @@ function ListingCard({ listing, onViewDetails }) {
             <div className="flex items-center gap-2 text-slate-400">
               <BedDouble size={17} />
               <p className="text-xs font-semibold uppercase tracking-wide">
-                Room type
+                Seats left
               </p>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {getRoomTypeTags(roomTypeText).map((roomType) => (
-                <span
-                  key={roomType}
-                  className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm"
-                >
-                  {roomType}
-                </span>
-              ))}
+
+            <p className="mt-2 text-[15px] font-extrabold leading-6 text-[#1F2933]">
+              {seatsLeft > 0 ? `${seatsLeft} available` : "Fully booked"}
+            </p>
+          </div>
+
+          <div className="rounded-[1.5rem] bg-[#F8F8F8] p-4">
+            <div className="flex items-center gap-2 text-slate-400">
+              <CalendarDays size={17} />
+              <p className="text-xs font-semibold uppercase tracking-wide">
+                Move-in
+              </p>
             </div>
+
+            <p className="mt-2 line-clamp-2 text-[15px] font-semibold leading-6 text-[#1F2933]">
+              {availableFromText}
+            </p>
           </div>
 
           <div className="rounded-[1.5rem] bg-[#F8F8F8] p-4">
@@ -163,8 +208,19 @@ function ListingCard({ listing, onViewDetails }) {
                 Food
               </p>
             </div>
-            <p className="mt-2 line-clamp-3 text-[15px] font-semibold leading-6 text-[#1F2933]">
+
+            <p className="mt-2 line-clamp-2 text-[15px] font-semibold leading-6 text-[#1F2933]">
               {foodText}
+            </p>
+          </div>
+
+          <div className="rounded-[1.5rem] bg-[#F8F8F8] p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              First month
+            </p>
+
+            <p className="mt-2 text-[15px] font-extrabold leading-6 text-[#1F2933]">
+              ₹{firstMonthCost || rent}
             </p>
           </div>
         </div>

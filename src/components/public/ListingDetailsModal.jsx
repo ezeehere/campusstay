@@ -329,8 +329,7 @@ function ListingDetailsModal({ listing, onClose }) {
                             </h4>
 
                             <p className="mt-1 text-sm text-slate-600">
-                              Capacity: {room.capacity} student
-                              {Number(room.capacity) > 1 ? "s" : ""}
+                              Seats left: {room.availableUnits || 0}
                             </p>
 
                             {room.note && (
@@ -348,13 +347,9 @@ function ListingDetailsModal({ listing, onClose }) {
                           </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                        <div className="mt-3 text-sm">
                           <div className="rounded-2xl bg-white px-3 py-2">
                             Advance: ₹{room.deposit || 0}
-                          </div>
-
-                          <div className="rounded-2xl bg-white px-3 py-2">
-                            Available: {room.availableUnits || 0}
                           </div>
                         </div>
                       </div>
@@ -366,6 +361,89 @@ function ListingDetailsModal({ listing, onClose }) {
                   )}
                 </div>
               </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                <h3 className="text-base font-black text-slate-950">
+                  Move-in availability
+                </h3>
+
+                <div className="mt-3 grid gap-2 text-sm">
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    Available from:{" "}
+                    <span className="font-bold">
+                      {listing.availableFrom || "Ask owner"}
+                    </span>
+                  </div>
+
+                  {listing.moveInNote && (
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                      {listing.moveInNote}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                <h3 className="text-base font-black text-slate-950">
+                  Charges
+                </h3>
+
+                <div className="mt-3 grid gap-2 text-sm">
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    Electricity:{" "}
+                    <span className="font-bold">
+                      {listing.electricityIncluded
+                        ? "Included"
+                        : `₹${listing.electricityCharge || 0}`}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    Other charges:{" "}
+                    <span className="font-bold">
+                      {listing.otherCharges || "Not added"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {listing.structuredRules && (
+                <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                  <h3 className="text-base font-black text-slate-950">
+                    Rules and safety
+                  </h3>
+
+                  <div className="mt-3 grid gap-2 text-sm">
+                    <RuleRow label="Entry time" value={listing.structuredRules.entryTime} />
+                    <RuleRow label="Visitors" value={listing.structuredRules.visitorsAllowed} />
+                    <RuleRow label="Parents" value={listing.structuredRules.parentsAllowed} />
+                    <RuleRow label="Smoking" value={listing.structuredRules.smokingAllowed} />
+                    <RuleRow label="Gents" value={listing.structuredRules.gentsAllowed} />
+                    <RuleRow label="Girls" value={listing.structuredRules.girlsAllowed} />
+                    <RuleRow label="ID proof" value={listing.structuredRules.idProofRequired} />
+                  </div>
+                </div>
+              )}
+
+              {Array.isArray(listing.nearbyEssentials) &&
+                listing.nearbyEssentials.length > 0 && (
+                  <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                    <h3 className="text-base font-black text-slate-950">
+                      Nearby essentials
+                    </h3>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {listing.nearbyEssentials.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
                 <h3 className="text-base font-black text-slate-950">
@@ -711,6 +789,17 @@ function ListingDetailsModal({ listing, onClose }) {
           />
         )}
       </div>
+    </div>
+  );
+}
+
+function RuleRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-bold text-slate-800">
+        {value || "Not added"}
+      </span>
     </div>
   );
 }

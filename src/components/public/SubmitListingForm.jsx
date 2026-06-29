@@ -36,6 +36,20 @@ const PREDEFINED_FACILITIES = [
 const MIN_IMAGES = 3;
 const MAX_IMAGES = 15;
 
+const NEARBY_ESSENTIALS = [
+  "Market nearby",
+  "Bus stop nearby",
+  "Food shops nearby",
+  "Pharmacy nearby",
+  "Stationery nearby",
+  "ATM nearby",
+  "Medical store nearby",
+  "Public transport nearby",
+];
+
+const YES_NO_OPTIONS = ["Yes", "No"];
+const RULE_OPTIONS = ["Yes", "No", "With permission"];
+
 const initialFormData = {
   name: "",
   type: "PG",
@@ -50,13 +64,30 @@ const initialFormData = {
   ownerName: "",
   phone: "",
   mapLink: "",
+
+  availableFrom: "",
+  moveInNote: "",
+
+  electricityIncluded: "Yes",
+  electricityCharge: "",
+  otherCharges: "",
+
+  entryTime: "",
+  visitorsAllowed: "With permission",
+  parentsAllowed: "Yes",
+  smokingAllowed: "No",
+  gentsAllowed: "No",
+  girlsAllowed: "Yes",
+  idProofRequired: "Yes",
+
+  nearbyEssentials: [],
+  customEssential: "",
 };
 
 const initialRoomOption = {
   title: "Single Room",
   rent: "",
   deposit: "",
-  capacity: "1",
   availableUnits: "",
   note: "",
 };
@@ -138,6 +169,48 @@ function SubmitListingForm({ ownerMode = false }) {
     }));
   }
 
+  function toggleNearbyEssential(essential) {
+    setFormData((previousData) => {
+      const selected = previousData.nearbyEssentials.includes(essential);
+
+      return {
+        ...previousData,
+        nearbyEssentials: selected
+          ? previousData.nearbyEssentials.filter((item) => item !== essential)
+          : [...previousData.nearbyEssentials, essential],
+      };
+    });
+  }
+
+  function addCustomEssential() {
+    const cleanEssential = formData.customEssential.trim();
+
+    if (!cleanEssential) return;
+
+    if (formData.nearbyEssentials.includes(cleanEssential)) {
+      setFormData((previousData) => ({
+        ...previousData,
+        customEssential: "",
+      }));
+      return;
+    }
+
+    setFormData((previousData) => ({
+      ...previousData,
+      nearbyEssentials: [...previousData.nearbyEssentials, cleanEssential],
+      customEssential: "",
+    }));
+  }
+
+  function removeNearbyEssential(essential) {
+    setFormData((previousData) => ({
+      ...previousData,
+      nearbyEssentials: previousData.nearbyEssentials.filter(
+        (item) => item !== essential
+      ),
+    }));
+  }
+
   function handleRoomOptionChange(index, event) {
     const { name, value } = event.target;
 
@@ -160,7 +233,6 @@ function SubmitListingForm({ ownerMode = false }) {
         title: "Double Sharing",
         rent: "",
         deposit: "",
-        capacity: "2",
         availableUnits: "",
         note: "",
       },
@@ -232,18 +304,17 @@ function SubmitListingForm({ ownerMode = false }) {
       title: room.title.trim(),
       rent: Number(room.rent || 0),
       deposit: Number(room.deposit || 0),
-      capacity: Number(room.capacity || 1),
       availableUnits: Number(room.availableUnits || 0),
       available: Number(room.availableUnits || 0) > 0,
       note: room.note.trim(),
     }));
 
     const hasInvalidRoom = cleanRoomOptions.some(
-      (room) => !room.title || !room.rent || !room.capacity
+      (room) => !room.title || !room.rent
     );
 
     if (hasInvalidRoom) {
-      alert("Please fill room type, rent, and capacity for every room option.");
+      alert("Please fill room type and rent for every room option.");
       return;
     }
 
@@ -276,6 +347,25 @@ function SubmitListingForm({ ownerMode = false }) {
 
       ownerId: auth.currentUser?.uid || "",
       ownerEmail: auth.currentUser?.email || "",
+
+      availableFrom: formData.availableFrom,
+      moveInNote: formData.moveInNote.trim(),
+
+      electricityIncluded: formData.electricityIncluded === "Yes",
+      electricityCharge: Number(formData.electricityCharge || 0),
+      otherCharges: formData.otherCharges.trim(),
+
+      structuredRules: {
+        entryTime: formData.entryTime.trim(),
+        visitorsAllowed: formData.visitorsAllowed,
+        parentsAllowed: formData.parentsAllowed,
+        smokingAllowed: formData.smokingAllowed,
+        gentsAllowed: formData.gentsAllowed,
+        girlsAllowed: formData.girlsAllowed,
+        idProofRequired: formData.idProofRequired,
+      },
+
+      nearbyEssentials: formData.nearbyEssentials,
 
       roomOptions: cleanRoomOptions,
       startingRent,
@@ -615,17 +705,7 @@ function SubmitListingForm({ ownerMode = false }) {
                 />
 
                 <InputField
-                  label="Capacity"
-                  name="capacity"
-                  type="number"
-                  value={room.capacity}
-                  onChange={(event) => handleRoomOptionChange(index, event)}
-                  placeholder="Example: 2"
-                  required
-                />
-
-                <InputField
-                  label="Available rooms / seats"
+                  label="Seats left"
                   name="availableUnits"
                   type="number"
                   value={room.availableUnits}
@@ -643,6 +723,61 @@ function SubmitListingForm({ ownerMode = false }) {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="text-xl font-extrabold text-[#1F2933]">
+          Availability and charges
+        </h3>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Help students understand when they can move in and what extra costs exist.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <InputField
+            label="Available from"
+            name="availableFrom"
+            type="date"
+            value={formData.availableFrom}
+            onChange={handleChange}
+          />
+
+          <InputField
+            label="Move-in note"
+            name="moveInNote"
+            value={formData.moveInNote}
+            onChange={handleChange}
+            placeholder="Example: Available immediately"
+          />
+
+          <SelectField
+            label="Electricity included?"
+            name="electricityIncluded"
+            value={formData.electricityIncluded}
+            onChange={handleChange}
+            options={YES_NO_OPTIONS}
+          />
+
+          <InputField
+            label="Electricity charge"
+            name="electricityCharge"
+            type="number"
+            value={formData.electricityCharge}
+            onChange={handleChange}
+            placeholder="Example: 500"
+          />
+
+          <div className="md:col-span-2">
+            <InputField
+              label="Other charges"
+              name="otherCharges"
+              value={formData.otherCharges}
+              onChange={handleChange}
+              placeholder="Example: Gas ₹300/month, maintenance ₹200"
+            />
+          </div>
         </div>
       </section>
 
@@ -739,6 +874,139 @@ function SubmitListingForm({ ownerMode = false }) {
             helper="Separate each rule using comma."
           />
         </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="text-xl font-extrabold text-[#1F2933]">
+          Rules and safety
+        </h3>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Structured rules reduce unnecessary calls and confusion.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <InputField
+            label="Entry time"
+            name="entryTime"
+            value={formData.entryTime}
+            onChange={handleChange}
+            placeholder="Example: 10:00 PM"
+          />
+
+          <SelectField
+            label="Visitors allowed?"
+            name="visitorsAllowed"
+            value={formData.visitorsAllowed}
+            onChange={handleChange}
+            options={RULE_OPTIONS}
+          />
+
+          <SelectField
+            label="Parents allowed?"
+            name="parentsAllowed"
+            value={formData.parentsAllowed}
+            onChange={handleChange}
+            options={YES_NO_OPTIONS}
+          />
+
+          <SelectField
+            label="Smoking allowed?"
+            name="smokingAllowed"
+            value={formData.smokingAllowed}
+            onChange={handleChange}
+            options={YES_NO_OPTIONS}
+          />
+
+          <SelectField
+            label="Gents allowed?"
+            name="gentsAllowed"
+            value={formData.gentsAllowed}
+            onChange={handleChange}
+            options={RULE_OPTIONS}
+          />
+
+          <SelectField
+            label="Girls allowed?"
+            name="girlsAllowed"
+            value={formData.girlsAllowed}
+            onChange={handleChange}
+            options={RULE_OPTIONS}
+          />
+
+          <SelectField
+            label="ID proof required?"
+            name="idProofRequired"
+            value={formData.idProofRequired}
+            onChange={handleChange}
+            options={YES_NO_OPTIONS}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="text-xl font-extrabold text-[#1F2933]">
+          Nearby essentials
+        </h3>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Add useful nearby places students care about.
+        </p>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {NEARBY_ESSENTIALS.map((essential) => {
+            const selected = formData.nearbyEssentials.includes(essential);
+
+            return (
+              <button
+                key={essential}
+                type="button"
+                onClick={() => toggleNearbyEssential(essential)}
+                className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
+                  selected
+                    ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                    : "border-[#E8DFD2] bg-[#FFF8EF] text-slate-700 hover:bg-[#F6F1E8]"
+                }`}
+              >
+                {essential}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <input
+            name="customEssential"
+            value={formData.customEssential}
+            onChange={handleChange}
+            placeholder="Add custom nearby place e.g. Gym nearby"
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 outline-none focus:border-slate-400"
+          />
+
+          <button
+            type="button"
+            onClick={addCustomEssential}
+            className="rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+          >
+            Add
+          </button>
+        </div>
+
+        {formData.nearbyEssentials.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {formData.nearbyEssentials.map((essential) => (
+              <button
+                key={essential}
+                type="button"
+                onClick={() => removeNearbyEssential(essential)}
+                className="inline-flex items-center gap-1 rounded-full bg-[#F6F1E8] px-3 py-1.5 text-xs font-bold text-slate-700"
+              >
+                {essential}
+                <X size={12} />
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:p-5">

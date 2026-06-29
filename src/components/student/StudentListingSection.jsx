@@ -86,6 +86,26 @@ function getNearbyText(listing) {
   return getNearbyInstitutions(listing).join(", ");
 }
 
+function getTotalSeatsLeft(listing) {
+  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
+
+  return listing.roomOptions.reduce(
+    (sum, room) => sum + Number(room.availableUnits || 0),
+    0
+  );
+}
+
+function getEstimatedFirstMonthCost(listing) {
+  const rent = Number(listing.startingRent || listing.rent || 0);
+  const deposit = Number(listing.deposit || 0);
+  const electricity =
+    listing.electricityIncluded === false
+      ? Number(listing.electricityCharge || 0)
+      : 0;
+
+  return rent + deposit + electricity;
+}
+
 function getTimestampSeconds(value) {
   if (!value) return 0;
   if (value?.seconds) return value.seconds;
@@ -264,10 +284,13 @@ function StudentListingSection({ profile }) {
     const filtered = listings.filter((listing) => {
       const nearbyText = getNearbyText(listing);
 
-      const searchableText = `${listing.name || ""} ${listing.area || ""} ${listing.gender || ""
-        } ${listing.type || ""} ${nearbyText} ${(listing.facilities || []).join(
-          " "
-        )}`.toLowerCase();
+      const searchableText = `${listing.name || ""} ${listing.area || ""} ${
+        listing.gender || ""
+      } ${listing.type || ""} ${nearbyText} ${(listing.facilities || []).join(
+        " "
+      )} ${(listing.nearbyEssentials || []).join(" ")} ${
+        listing.otherCharges || ""
+      } ${listing.moveInNote || ""}`.toLowerCase();
 
       const matchesSearch =
         !cleanSearch || searchableText.includes(cleanSearch);
@@ -578,6 +601,8 @@ function StudentListingCard({ listing, onView }) {
   }, [images.length]);
   const rent = getListingRent(listing);
   const nearbyText = getNearbyText(listing);
+  const seatsLeft = getTotalSeatsLeft(listing);
+  const firstMonthCost = getEstimatedFirstMonthCost(listing);
 
   return (
     <article className="overflow-hidden rounded-[1.4rem] border border-[#E8DFD2] bg-white shadow-sm">
@@ -654,6 +679,26 @@ function StudentListingCard({ listing, onView }) {
             <Utensils size={12} />
             {isFoodIncluded(listing) ? "Food" : "No food"}
           </span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-[#F6F1E8] px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              Seats left
+            </p>
+            <p className="mt-1 text-sm font-black text-[#1F2933]">
+              {seatsLeft > 0 ? seatsLeft : "Full"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-[#F6F1E8] px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              First month
+            </p>
+            <p className="mt-1 text-sm font-black text-[#1F2933]">
+              ₹{firstMonthCost || rent}
+            </p>
+          </div>
         </div>
 
         <div className="mt-4 flex gap-2">
