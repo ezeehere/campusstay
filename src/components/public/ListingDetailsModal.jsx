@@ -3,7 +3,9 @@ import {
   AlertTriangle,
   BedDouble,
   CalendarDays,
+  CheckCircle2,
   IndianRupee,
+  Loader2,
   MapPin,
   MessageCircle,
   Phone,
@@ -19,6 +21,7 @@ import { submitListingReport } from "../../firebase/reports";
 import SaveListingButton from "../student/SaveListingButton";
 import { trackListingInteraction } from "../../firebase/analytics";
 import { auth } from "../../firebase/config";
+import { createStudentLead } from "../../firebase/studentLeads";
 import StudentActionLoginPrompt from "../student/StudentActionLoginPrompt";
 
 function InfoBox({ icon, title, value }) {
@@ -34,23 +37,25 @@ function InfoBox({ icon, title, value }) {
 }
 
 function ListingDetailsModal({ listing, onClose }) {
-  if (!listing) return null;
-
-  const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
-
-  const fallbackImage =
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=900&auto=format&fit=crop";
-
-  const images = listing.images?.length ? listing.images : [fallbackImage];
-
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const activeImage = images[activeImageIndex];
+
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportReason, setReportReason] = useState("Wrong information");
   const [reportMessage, setReportMessage] = useState("");
   const [reporterPhone, setReporterPhone] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  const [loginAction, setLoginAction] = useState("");
+
+  const [callbackLoading, setCallbackLoading] = useState(false);
+  const [callbackSent, setCallbackSent] = useState(false);
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+    setCallbackSent(false);
+    setLoginAction("");
+  }, [listing?.id]);
 
   useEffect(() => {
     if (!listing?.id) return;
@@ -60,19 +65,67 @@ function ListingDetailsModal({ listing, onClose }) {
     });
   }, [listing?.id]);
 
+  if (!listing) return null;
+
+  const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
+
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=900&auto=format&fit=crop";
+
+  const images = listing.images?.length ? listing.images : [fallbackImage];
+  const activeImage = images[activeImageIndex] || images[0];
+
   function handleAnalyticsClick(eventType, metricKey) {
     trackListingInteraction(eventType, listing, metricKey).catch((error) => {
       console.error("Analytics click failed:", error);
     });
   }
 
-  const [loginAction, setLoginAction] = useState("");
-
   function requireStudentLogin(action) {
     if (auth.currentUser) return false;
 
     setLoginAction(action);
     return true;
+  }
+
+  async function handleRequestCallback() {
+    if (requireStudentLogin("callback")) {
+      return;
+    }
+
+    const confirmShare = window.confirm(
+      "Share your contact details with this PG/room owner so they can contact you about this listing?"
+    );
+
+    if (!confirmShare) return;
+
+    try {
+      setCallbackLoading(true);
+
+      const result = await createStudentLead(listing);
+
+      await trackListingInteraction(
+        "callback_request",
+        listing,
+        "callbackRequests"
+      ).catch((error) => {
+        console.error("Callback analytics failed:", error);
+      });
+
+      setCallbackSent(true);
+
+      if (result.alreadyExists) {
+        alert("You already requested a callback for this listing.");
+        return;
+      }
+
+      alert("Callback request sent. The owner can contact you now.");
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Could not request callback.");
+    } finally {
+      setCallbackLoading(false);
+    }
   }
 
   async function handleSubmitReport(event) {
@@ -194,7 +247,7 @@ function ListingDetailsModal({ listing, onClose }) {
                   </p>
                   <p className="mt-2 flex items-center text-2xl font-black text-slate-950">
                     <IndianRupee size={20} />
-                    {listing.rent || 0}
+                    {listing.startingRent || listing.rent || 0}
                   </p>
                 </div>
 
@@ -206,6 +259,48 @@ function ListingDetailsModal({ listing, onClose }) {
                     <IndianRupee size={20} />
                     {listing.deposit || 0}
                   </p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-[#DDECE7] bg-[#F1FAF7] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
+                    <Phone size={18} />
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-black text-[#123C35]">
+                      Want the owner to contact you?
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Request a callback and your contact details will be shared
+                      with this PG/room owner for this listing only.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={handleRequestCallback}
+                      disabled={callbackLoading || callbackSent}
+                      className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {callbackLoading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Sending request...
+                        </>
+                      ) : callbackSent ? (
+                        <>
+                          <CheckCircle2 size={16} />
+                          Callback requested
+                        </>
+                      ) : (
+                        <>
+                          <Phone size={16} />
+                          Request owner callback
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -238,7 +333,9 @@ function ListingDetailsModal({ listing, onClose }) {
               </div>
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                <h3 className="text-base font-extrabold text-slate-950">Room options</h3>
+                <h3 className="text-base font-extrabold text-slate-950">
+                  Room options
+                </h3>
 
                 <div className="mt-3 grid gap-3">
                   {(listing.roomOptions || []).length > 0 ? (
@@ -285,7 +382,9 @@ function ListingDetailsModal({ listing, onClose }) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500">No room options added.</p>
+                    <p className="text-sm text-slate-500">
+                      No room options added.
+                    </p>
                   )}
                 </div>
               </div>
@@ -344,7 +443,6 @@ function ListingDetailsModal({ listing, onClose }) {
           </div>
         </div>
 
-
         {showReportForm && (
           <div className="border-t border-slate-200 bg-white p-4">
             <div className="rounded-3xl border border-red-200 bg-red-50 p-4">
@@ -377,8 +475,8 @@ function ListingDetailsModal({ listing, onClose }) {
                       </h3>
 
                       <p className="mt-1 text-sm leading-6 text-red-700">
-                        Tell us what is wrong with this listing so the admin can review
-                        it.
+                        Tell us what is wrong with this listing so the admin can
+                        review it.
                       </p>
                     </div>
 
@@ -399,7 +497,9 @@ function ListingDetailsModal({ listing, onClose }) {
 
                       <select
                         value={reportReason}
-                        onChange={(event) => setReportReason(event.target.value)}
+                        onChange={(event) =>
+                          setReportReason(event.target.value)
+                        }
                         className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
                       >
                         <option>Wrong information</option>
@@ -419,7 +519,9 @@ function ListingDetailsModal({ listing, onClose }) {
 
                       <input
                         value={reporterPhone}
-                        onChange={(event) => setReporterPhone(event.target.value)}
+                        onChange={(event) =>
+                          setReporterPhone(event.target.value)
+                        }
                         placeholder="Only if admin needs to contact you"
                         className="h-12 w-full rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none"
                       />
@@ -433,7 +535,9 @@ function ListingDetailsModal({ listing, onClose }) {
 
                     <textarea
                       value={reportMessage}
-                      onChange={(event) => setReportMessage(event.target.value)}
+                      onChange={(event) =>
+                        setReportMessage(event.target.value)
+                      }
                       rows="4"
                       placeholder="Example: The owner said rent is ₹6000 but listing shows ₹4500."
                       className="w-full rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm outline-none"
@@ -453,8 +557,9 @@ function ListingDetailsModal({ listing, onClose }) {
         )}
 
         <div className="border-t border-slate-200 bg-white p-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <SaveListingButton listing={listing} />
+
             <a
               href={auth.currentUser ? `tel:${listing.phone}` : undefined}
               onClick={(event) => {
@@ -465,7 +570,7 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("call_click", "callClicks");
               }}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
               <Phone size={16} />
               Call Owner
@@ -483,11 +588,31 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("whatsapp_click", "whatsappClicks");
               }}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <MessageCircle size={16} />
               WhatsApp
             </a>
+
+            <button
+              type="button"
+              onClick={handleRequestCallback}
+              disabled={callbackLoading || callbackSent}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#DDECE7] bg-[#F1FAF7] px-4 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#E5F4EF] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {callbackLoading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : callbackSent ? (
+                <CheckCircle2 size={16} />
+              ) : (
+                <Phone size={16} />
+              )}
+              {callbackLoading
+                ? "Sending..."
+                : callbackSent
+                  ? "Callback requested"
+                  : "Request Callback"}
+            </button>
 
             <a
               href={auth.currentUser ? listing.mapLink : undefined}
@@ -501,7 +626,7 @@ function ListingDetailsModal({ listing, onClose }) {
 
                 handleAnalyticsClick("map_click", "mapClicks");
               }}
-              className="inline-flex items-center justify-center rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
             >
               <MapPin size={16} />
               Open Map
