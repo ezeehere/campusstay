@@ -13,23 +13,48 @@ import {
 import { db } from "./config";
 
 export async function getOwnerPlan(ownerId) {
-  if (!ownerId) return null;
-
-  const planRef = doc(db, "ownerPlans", ownerId);
-  const planSnap = await getDoc(planRef);
-
-  if (!planSnap.exists()) {
+  if (!ownerId) {
     return {
-      ownerId,
+      ownerId: "",
       plan: "free",
       active: false,
       leadAccess: false,
     };
   }
 
+  // Main method: document ID should be owner UID.
+  const directPlanRef = doc(db, "ownerPlans", ownerId);
+  const directPlanSnap = await getDoc(directPlanRef);
+
+  if (directPlanSnap.exists()) {
+    return {
+      id: directPlanSnap.id,
+      ...directPlanSnap.data(),
+    };
+  }
+
+  // Backup method: find by ownerId field.
+  const planQuery = query(
+    collection(db, "ownerPlans"),
+    where("ownerId", "==", ownerId)
+  );
+
+  const planSnapshot = await getDocs(planQuery);
+
+  if (!planSnapshot.empty) {
+    const planDoc = planSnapshot.docs[0];
+
+    return {
+      id: planDoc.id,
+      ...planDoc.data(),
+    };
+  }
+
   return {
-    id: planSnap.id,
-    ...planSnap.data(),
+    ownerId,
+    plan: "free",
+    active: false,
+    leadAccess: false,
   };
 }
 
