@@ -24,6 +24,7 @@ import { getOwnerListings } from "../../firebase/listings";
 import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
 import { getOwnerPlan, requestLeadAccess } from "../../firebase/ownerPlans";
+import { getOwnerCallbackLeads } from "../../firebase/studentLeads";
 
 function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
@@ -42,6 +43,8 @@ function OwnerDashboard() {
   const [refreshingListings, setRefreshingListings] = useState(false);
   const [leadRequestLoading, setLeadRequestLoading] = useState(false);
   const [leadAccessRequested, setLeadAccessRequested] = useState(false);
+  const [callbackLeads, setCallbackLeads] = useState([]);
+  const [loadingCallbackLeads, setLoadingCallbackLeads] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     fullName: "",
@@ -98,6 +101,7 @@ function OwnerDashboard() {
       }
 
       await loadOwnerListings(user, ownerProfile);
+      await loadCallbackLeads(user, ownerProfile, plan);
 
       setLoading(false);
     });
@@ -161,6 +165,7 @@ function OwnerDashboard() {
       setProfile(updatedProfile);
 
       await loadOwnerListings(ownerUser, updatedProfile);
+      await loadCallbackLeads(ownerUser, updatedProfile, ownerPlan);
 
       alert("Owner profile saved successfully!");
     } catch (error) {
@@ -168,6 +173,32 @@ function OwnerDashboard() {
       alert("Failed to save owner profile.");
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function loadCallbackLeads(user, ownerProfile, plan) {
+    if (!user) return;
+
+    const hasLeadAccess = plan?.active === true && plan?.leadAccess === true;
+
+    if (!hasLeadAccess) {
+      setCallbackLeads([]);
+      return;
+    }
+
+    try {
+      setLoadingCallbackLeads(true);
+
+      const leads = await getOwnerCallbackLeads(
+        user.uid,
+        ownerProfile?.phone || ""
+      );
+
+      setCallbackLeads(leads);
+    } catch (error) {
+      console.error("Could not load callback leads:", error);
+    } finally {
+      setLoadingCallbackLeads(false);
     }
   }
 
@@ -306,6 +337,11 @@ function OwnerDashboard() {
           requested={leadAccessRequested}
           loading={leadRequestLoading}
           onRequest={handleRequestLeadAccess}
+        />
+        <OwnerCallbackLeadsSection
+          ownerPlan={ownerPlan}
+          leads={callbackLeads}
+          loading={loadingCallbackLeads}
         />
 
         <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
@@ -699,6 +735,140 @@ function SmallMetric({ label, value }) {
       <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
         {label}
       </p>
+    </div>
+  );
+}
+
+function OwnerCallbackLeadsSection({ ownerPlan, leads, loading }) {
+  const hasLeadAccess =
+    ownerPlan?.active === true && ownerPlan?.leadAccess === true;
+
+  if (!hasLeadAccess) return null;
+
+  return (
+    <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
+            <Users size={21} />
+            Interested student leads
+          </h2>
+
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Students who requested callback for your PG or room listings.
+          </p>
+        </div>
+
+        {loading && (
+          <p className="flex items-center gap-2 text-sm font-bold text-[#1E5B4F]">
+            <Loader2 className="animate-spin" size={16} />
+            Loading leads
+          </p>
+        )}
+      </div>
+
+      {leads.length === 0 ? (
+        <div className="mt-4 rounded-3xl border border-dashed border-slate-300 p-6 text-center">
+          <h3 className="text-lg font-bold text-[#1F2933]">
+            No callback leads yet
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            When students request callbacks, their details will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          {leads.map((lead) => (
+            <OwnerLeadCard key={lead.id} lead={lead} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OwnerLeadCard({ lead }) {
+  const cleanPhone = String(lead.studentPhone || "").replace(/\D/g, "");
+  const whatsappPhone = cleanPhone.startsWith("91")
+    ? cleanPhone
+    : `91${cleanPhone}`;
+
+  const whatsappText = encodeURIComponent(
+    `Hi ${lead.studentName || "there"}, this is regarding your callback request for ${lead.listingName || "my PG/room"} on CampusStay.`
+  );
+
+  const whatsappLink = `https://wa.me/${whatsappPhone}?text=${whatsappText}`;
+
+  return (
+    <article className="rounded-[1.5rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#1E5B4F]">
+            Callback Request
+          </p>
+
+          <h3 className="mt-2 text-lg font-bold text-[#1F2933]">
+            {lead.studentName || "Student"}
+          </h3>
+
+          <p className="mt-1 text-sm text-slate-500">
+            {lead.studentCollege || "College not added"} ·{" "}
+            {lead.studentGender || "Gender not added"}
+          </p>
+        </div>
+
+        <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+          {lead.status || "new"}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-2 text-sm">
+        <LeadInfo label="Interested in" value={lead.listingName || "Listing"} />
+        <LeadInfo
+          label="Area / Rent"
+          value={`${lead.listingArea || "Area"} · ₹${lead.listingRent || 0}`}
+        />
+        <LeadInfo
+          label="Budget"
+          value={`₹${lead.studentBudgetMin || "Any"} - ₹${lead.studentBudgetMax || "Any"}`}
+        />
+        <LeadInfo
+          label="Preference"
+          value={`${lead.studentPreferredStayType || "Any stay"} · ${lead.studentFoodRequired || "Food optional"
+            }`}
+        />
+        <LeadInfo label="Phone" value={lead.studentPhone || "No phone"} />
+        <LeadInfo label="Email" value={lead.studentEmail || "No email"} />
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <a
+          href={`tel:${lead.studentPhone}`}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+        >
+          <Phone size={16} />
+          Call student
+        </a>
+
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
+        >
+          <MessageCircle size={16} />
+          WhatsApp
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function LeadInfo({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-2xl bg-white px-3 py-2">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-bold text-[#1F2933]">{value}</span>
     </div>
   );
 }
