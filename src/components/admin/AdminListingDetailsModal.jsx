@@ -39,7 +39,6 @@ const DEFAULT_ROOM_OPTION = {
   title: "Single Room",
   rent: 0,
   deposit: 0,
-  capacity: 1,
   availableUnits: 0,
   available: false,
   note: "",
@@ -1198,7 +1197,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
                   Room options
                 </h4>
                 <p className="mt-1 text-sm text-slate-500">
-                  Fix rent, deposit, capacity, and available seats.
+                  Fix rent, deposit, and available seats.
                 </p>
               </div>
 

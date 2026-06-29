@@ -181,11 +181,9 @@ function AdminDashboard() {
 
   const filteredListings = useMemo(() => {
     return adminListings.filter((listing) => {
-      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${
-        listing.area || ""
-      } ${listing.phone || ""} ${getNearbyText(listing)} ${
-        listing.trackingId || ""
-      } ${(listing.facilities || []).join(" ")}`.toLowerCase();
+      const searchText = `${listing.name || ""} ${listing.ownerName || ""} ${listing.area || ""
+        } ${listing.phone || ""} ${getNearbyText(listing)} ${listing.trackingId || ""
+        } ${(listing.facilities || []).join(" ")}`.toLowerCase();
 
       const matchesSearch = searchText.includes(search.toLowerCase());
 
@@ -578,11 +576,11 @@ function AdminDashboard() {
                                 <p className="font-bold text-[#070B1F]">
                                   {listing.name || "Unnamed listing"}
                                 </p>
-                                 <p className="mt-1 text-xs text-slate-500">
-                                   {isFoodIncluded(listing) ? "Food included" : "No food"} ·{" "}
-                                   {getImageCount(listing)} photos ·{" "}
-                                   {listing.roomType || "Room type not added"}
-                                 </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {isFoodIncluded(listing) ? "Food included" : "No food"} ·{" "}
+                                  {getImageCount(listing)} photos ·{" "}
+                                  {listing.roomType || "Room type not added"}
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -610,9 +608,9 @@ function AdminDashboard() {
                             <p className="font-semibold">
                               {listing.area || "Not added"}
                             </p>
-                             <p className="mt-1 text-xs text-slate-500">
-                               Near {getNearbyText(listing)}
-                             </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Near {getNearbyText(listing)}
+                            </p>
                           </td>
 
                           <td className="py-4 pr-4">

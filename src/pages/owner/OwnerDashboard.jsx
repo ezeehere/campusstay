@@ -749,7 +749,6 @@ function OwnerListingCard({
           title: listing.roomType || "Room",
           rent: listing.rent || listing.startingRent || 0,
           deposit: listing.deposit || 0,
-          capacity: 1,
           availableUnits: listing.available ? 1 : 0,
           available: listing.available,
         },
@@ -1156,7 +1155,7 @@ function OwnerLeadCard({ lead }) {
           </h3>
 
           <p className="mt-1 text-sm text-slate-500">
-            {lead.studentCollege || "College not added"} ·{" "}
+            {lead.studentCollege || "Institution not added"} ·{" "}
             {lead.studentGender || "Gender not added"}
           </p>
         </div>

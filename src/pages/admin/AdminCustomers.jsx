@@ -306,7 +306,7 @@ function CustomerDetailsModal({ customer, onClose }) {
                         </h3>
 
                         <div className="mt-4 grid gap-3 text-sm">
-                            <InfoRow label="College" value={customer.college || "Not set"} />
+                            <InfoRow label="Institution" value={customer.college || "Not set"} />
                             <InfoRow label="Gender" value={customer.gender || "Not set"} />
                             <InfoRow
                                 label="Budget"
