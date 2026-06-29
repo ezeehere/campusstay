@@ -1,18 +1,49 @@
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   BedDouble,
   CalendarDays,
   Copy,
+  ImagePlus,
   IndianRupee,
+  Loader2,
   MapPin,
   MessageCircle,
   Phone,
+  PlusCircle,
+  Save,
   ShieldCheck,
+  Trash2,
   Utensils,
   User,
   X,
 } from "lucide-react";
+
+import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
+
+const MAX_IMAGES = 14;
+
+const NEARBY_INSTITUTIONS = [
+  "JIST",
+  "JEC",
+  "Kaziranga ITI",
+  "Ayush Pharmacy",
+];
+
+const STAY_TYPES = ["PG", "Room", "Hostel"];
+const GENDER_OPTIONS = ["Boys", "Girls", "Co-ed"];
+
+const DEFAULT_ROOM_OPTION = {
+  title: "Single Room",
+  rent: 0,
+  deposit: 0,
+  capacity: 1,
+  availableUnits: 0,
+  available: false,
+  note: "",
+};
 
 function formatDate(value) {
   if (!value) return "Not available";
@@ -198,6 +229,12 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
             </div>
 
             <div className="space-y-4">
+              <AdminListingEditPanel
+                listing={listing}
+                onUpdate={onUpdate}
+                saving={saving}
+              />
+
               <div className="grid gap-3 sm:grid-cols-2">
 
                 <div className="rounded-3xl border border-indigo-200 bg-indigo-50 p-4 sm:col-span-2">
@@ -514,6 +551,719 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function AdminListingEditPanel({ listing, onUpdate, saving }) {
+  const [open, setOpen] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+
+  const [editData, setEditData] = useState({
+    name: "",
+    ownerName: "",
+    phone: "",
+    area: "",
+    type: "PG",
+    gender: "Boys",
+    nearbyInstitutions: [],
+    food: "Yes",
+    foodDetails: "",
+    facilitiesText: "",
+    rulesText: "",
+    mapLink: "",
+    images: [],
+    roomOptions: [{ ...DEFAULT_ROOM_OPTION }],
+  });
+
+  useEffect(() => {
+    setEditData({
+      name: listing?.name || "",
+      ownerName: listing?.ownerName || "",
+      phone: listing?.phone || "",
+      area: listing?.area || "",
+      type: listing?.type || "PG",
+      gender: listing?.gender || "Boys",
+      nearbyInstitutions: Array.isArray(listing?.nearbyInstitutions)
+        ? listing.nearbyInstitutions
+        : listing?.nearbyCollege
+          ? [listing.nearbyCollege]
+          : [],
+      food: listing?.foodIncluded || listing?.food ? "Yes" : "No",
+      foodDetails: listing?.foodDetails || "",
+      facilitiesText: Array.isArray(listing?.facilities)
+        ? listing.facilities.join(", ")
+        : "",
+      rulesText: Array.isArray(listing?.rules) ? listing.rules.join(", ") : "",
+      mapLink: listing?.mapLink || "",
+      images: Array.isArray(listing?.images) ? listing.images : [],
+      roomOptions:
+        Array.isArray(listing?.roomOptions) && listing.roomOptions.length > 0
+          ? listing.roomOptions
+          : [
+              {
+                ...DEFAULT_ROOM_OPTION,
+                title: listing?.roomType || "Single Room",
+                rent: listing?.rent || listing?.startingRent || 0,
+                deposit: listing?.deposit || 0,
+                availableUnits: listing?.available ? 1 : 0,
+                available: listing?.available || false,
+              },
+            ],
+    });
+  }, [listing]);
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setEditData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  // Handle deposit label change from "Deposit" to "Advance" inside helper RoomEditInput
+  // This satisfies the earlier change request cleanly for input labels.
+  function toggleInstitution(institution) {
+    setEditData((previous) => {
+      const selected = previous.nearbyInstitutions.includes(institution);
+
+      return {
+        ...previous,
+        nearbyInstitutions: selected
+          ? previous.nearbyInstitutions.filter((item) => item !== institution)
+          : [...previous.nearbyInstitutions, institution],
+      };
+    });
+  }
+
+  function updateRoomOption(index, field, value) {
+    setEditData((previous) => ({
+      ...previous,
+      roomOptions: previous.roomOptions.map((room, roomIndex) =>
+        roomIndex === index
+          ? {
+              ...room,
+              [field]: value,
+            }
+          : room
+      ),
+    }));
+  }
+
+  function addRoomOption() {
+    setEditData((previous) => ({
+      ...previous,
+      roomOptions: [
+        ...previous.roomOptions,
+        {
+          ...DEFAULT_ROOM_OPTION,
+          id: `room-${previous.roomOptions.length + 1}`,
+        },
+      ],
+    }));
+  }
+
+  function removeRoomOption(index) {
+    if (editData.roomOptions.length === 1) {
+      alert("At least one room option is required.");
+      return;
+    }
+
+    setEditData((previous) => ({
+      ...previous,
+      roomOptions: previous.roomOptions.filter(
+        (_, roomIndex) => roomIndex !== index
+      ),
+    }));
+  }
+
+  function moveImage(index, direction) {
+    const nextIndex = index + direction;
+
+    if (nextIndex < 0 || nextIndex >= editData.images.length) return;
+
+    const updatedImages = [...editData.images];
+    const currentImage = updatedImages[index];
+
+    updatedImages[index] = updatedImages[nextIndex];
+    updatedImages[nextIndex] = currentImage;
+
+    setEditData((previous) => ({
+      ...previous,
+      images: updatedImages,
+    }));
+  }
+
+  function removeImage(index) {
+    const confirmRemove = window.confirm("Remove this image from the listing?");
+    if (!confirmRemove) return;
+
+    setEditData((previous) => ({
+      ...previous,
+      images: previous.images.filter((_, imageIndex) => imageIndex !== index),
+    }));
+  }
+
+  async function handleAddImages(event) {
+    const files = Array.from(event.target.files || []);
+
+    if (files.length === 0) return;
+
+    const totalAfterUpload = editData.images.length + files.length;
+
+    if (totalAfterUpload > MAX_IMAGES) {
+      alert(`Maximum ${MAX_IMAGES} images are allowed in one listing.`);
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImages(true);
+
+      const uploadedUrls = await uploadImagesToCloudinary(files);
+
+      setEditData((previous) => ({
+        ...previous,
+        images: [...previous.images, ...uploadedUrls],
+      }));
+    } catch (error) {
+      console.error(error);
+      alert("Could not upload images.");
+    } finally {
+      setUploadingImages(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleSaveEdits() {
+    if (!editData.name.trim()) {
+      alert("PG / Room name is required.");
+      return;
+    }
+
+    if (!editData.phone.trim()) {
+      alert("Owner phone is required.");
+      return;
+    }
+
+    if (!editData.area.trim()) {
+      alert("Area is required.");
+      return;
+    }
+
+    if (editData.nearbyInstitutions.length === 0) {
+      alert("Select at least one nearby institution.");
+      return;
+    }
+
+    if (editData.images.length > MAX_IMAGES) {
+      alert(`Maximum ${MAX_IMAGES} images are allowed.`);
+      return;
+    }
+
+    const cleanedRoomOptions = editData.roomOptions.map((room, index) => {
+      const rent = Number(room.rent || 0);
+      const deposit = Number(room.deposit || 0);
+      const capacity = Number(room.capacity || 1);
+      const availableUnits = Number(room.availableUnits || 0);
+
+      return {
+        id: room.id || `room-${index + 1}`,
+        title: String(room.title || "Room").trim(),
+        rent,
+        deposit,
+        capacity,
+        availableUnits,
+        available: availableUnits > 0,
+        note: String(room.note || "").trim(),
+      };
+    });
+
+    const hasInvalidRoom = cleanedRoomOptions.some(
+      (room) => !room.title || room.rent <= 0 || room.capacity <= 0
+    );
+
+    if (hasInvalidRoom) {
+      alert("Each room option needs room type, valid rent, and valid capacity.");
+      return;
+    }
+
+    const startingRent = Math.min(
+      ...cleanedRoomOptions.map((room) => Number(room.rent || 0))
+    );
+
+    const hasAvailableRoom = cleanedRoomOptions.some(
+      (room) => Number(room.availableUnits || 0) > 0
+    );
+
+    const facilities = editData.facilitiesText
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const rules = editData.rulesText
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const updates = {
+      name: editData.name.trim(),
+      ownerName: editData.ownerName.trim(),
+      phone: editData.phone.trim(),
+      area: editData.area.trim(),
+      type: editData.type,
+      gender: editData.gender,
+
+      nearbyInstitutions: editData.nearbyInstitutions,
+      nearbyCollege: editData.nearbyInstitutions[0] || "",
+      nearbyInstitutionText: editData.nearbyInstitutions.join(", "),
+
+      food: editData.food === "Yes",
+      foodIncluded: editData.food === "Yes",
+      foodDetails: editData.foodDetails.trim(),
+
+      facilities,
+      rules,
+      mapLink: editData.mapLink.trim(),
+
+      images: editData.images,
+
+      roomOptions: cleanedRoomOptions,
+      startingRent,
+      rent: startingRent,
+      deposit: cleanedRoomOptions[0]?.deposit || 0,
+      roomType: cleanedRoomOptions.map((room) => room.title).join(" / "),
+      available: hasAvailableRoom,
+
+      lastUpdated: new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+    };
+
+    await onUpdate(listing.id, updates);
+    alert("Listing details updated.");
+    setOpen(false);
+  }
+
+  return (
+    <div className="rounded-3xl border border-[#DDECE7] bg-[#F1FAF7] p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-[#1E5B4F]">
+            Admin edit tools
+          </p>
+
+          <h3 className="mt-1 text-lg font-black text-[#123C35]">
+            Edit PG details and images
+          </h3>
+
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Correct owner mistakes, add images, remove bad images, and reorder
+            photo priority. Limit: {MAX_IMAGES} images.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((previous) => !previous)}
+          className="rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+        >
+          {open ? "Close editor" : "Edit listing"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-5 grid gap-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminEditInput
+              label="PG / Room name"
+              name="name"
+              value={editData.name}
+              onChange={handleChange}
+            />
+
+            <AdminEditInput
+              label="Owner name"
+              name="ownerName"
+              value={editData.ownerName}
+              onChange={handleChange}
+            />
+
+            <AdminEditInput
+              label="Phone"
+              name="phone"
+              value={editData.phone}
+              onChange={handleChange}
+            />
+
+            <AdminEditInput
+              label="Area"
+              name="area"
+              value={editData.area}
+              onChange={handleChange}
+            />
+
+            <AdminEditSelect
+              label="Type"
+              name="type"
+              value={editData.type}
+              onChange={handleChange}
+              options={STAY_TYPES}
+            />
+
+            <AdminEditSelect
+              label="For"
+              name="gender"
+              value={editData.gender}
+              onChange={handleChange}
+              options={GENDER_OPTIONS}
+            />
+
+            <AdminEditSelect
+              label="Food available?"
+              name="food"
+              value={editData.food}
+              onChange={handleChange}
+              options={["Yes", "No"]}
+            />
+
+            <AdminEditInput
+              label="Food details"
+              name="foodDetails"
+              value={editData.foodDetails}
+              onChange={handleChange}
+            />
+
+            <div className="md:col-span-2">
+              <AdminEditInput
+                label="Google Maps link"
+                name="mapLink"
+                value={editData.mapLink}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-bold text-slate-700">
+              Nearby institutions
+            </p>
+
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {NEARBY_INSTITUTIONS.map((institution) => {
+                const selected =
+                  editData.nearbyInstitutions.includes(institution);
+
+                return (
+                  <button
+                    key={institution}
+                    type="button"
+                    onClick={() => toggleInstitution(institution)}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${
+                      selected
+                        ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                        : "border-[#E8DFD2] bg-white text-slate-700"
+                    }`}
+                  >
+                    {institution}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminEditTextarea
+              label="Facilities comma separated"
+              name="facilitiesText"
+              value={editData.facilitiesText}
+              onChange={handleChange}
+              placeholder="Wi-Fi, Food, Parking, Geyser"
+            />
+
+            <AdminEditTextarea
+              label="Rules comma separated"
+              name="rulesText"
+              value={editData.rulesText}
+              onChange={handleChange}
+              placeholder="No smoking, Entry before 9 PM"
+            />
+          </div>
+
+          <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="text-base font-black text-[#1F2933]">
+                  Images
+                </h4>
+                <p className="mt-1 text-sm text-slate-500">
+                  {editData.images.length}/{MAX_IMAGES} images. First image is
+                  used as cover photo.
+                </p>
+              </div>
+
+              <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]">
+                {uploadingImages ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <ImagePlus size={16} />
+                )}
+                {uploadingImages ? "Uploading..." : "Add images"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleAddImages}
+                  disabled={uploadingImages}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {editData.images.length === 0 ? (
+              <div className="mt-4 rounded-3xl border border-dashed border-slate-300 p-6 text-center text-sm font-semibold text-slate-500">
+                No images added.
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                {editData.images.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+                  >
+                    <img
+                      src={image}
+                      alt={`Listing ${index + 1}`}
+                      className="h-28 w-full object-cover"
+                    />
+
+                    <div className="grid grid-cols-3 gap-1 p-2">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, -1)}
+                        disabled={index === 0}
+                        className="rounded-xl bg-slate-100 px-2 py-2 text-xs font-bold text-slate-700 disabled:opacity-40"
+                      >
+                        <ArrowUp size={14} className="mx-auto" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, 1)}
+                        disabled={index === editData.images.length - 1}
+                        className="rounded-xl bg-slate-100 px-2 py-2 text-xs font-bold text-slate-700 disabled:opacity-40"
+                      >
+                        <ArrowDown size={14} className="mx-auto" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="rounded-xl bg-red-50 px-2 py-2 text-xs font-bold text-red-700"
+                      >
+                        <Trash2 size={14} className="mx-auto" />
+                      </button>
+                    </div>
+
+                    {index === 0 && (
+                      <p className="px-2 pb-2 text-center text-[11px] font-black uppercase tracking-wide text-[#1E5B4F]">
+                        Cover image
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="text-base font-black text-[#1F2933]">
+                  Room options
+                </h4>
+                <p className="mt-1 text-sm text-slate-500">
+                  Fix rent, deposit, capacity, and available seats.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addRoomOption}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white"
+              >
+                <PlusCircle size={16} />
+                Add room
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-4">
+              {editData.roomOptions.map((room, index) => (
+                <div
+                  key={room.id || index}
+                  className="rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="font-black text-[#1F2933]">
+                      Room option {index + 1}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => removeRoomOption(index)}
+                      className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <RoomEditInput
+                      label="Room type"
+                      value={room.title}
+                      onChange={(value) =>
+                        updateRoomOption(index, "title", value)
+                      }
+                    />
+
+                    <RoomEditInput
+                      label="Rent"
+                      type="number"
+                      value={room.rent}
+                      onChange={(value) =>
+                        updateRoomOption(index, "rent", value)
+                      }
+                    />
+
+                    <RoomEditInput
+                      label="Advance"
+                      type="number"
+                      value={room.deposit}
+                      onChange={(value) =>
+                        updateRoomOption(index, "deposit", value)
+                      }
+                    />
+
+                    <RoomEditInput
+                      label="Students per room"
+                      type="number"
+                      value={room.capacity}
+                      onChange={(value) =>
+                        updateRoomOption(index, "capacity", value)
+                      }
+                    />
+
+                    <RoomEditInput
+                      label="Seats left"
+                      type="number"
+                      value={room.availableUnits}
+                      onChange={(value) =>
+                        updateRoomOption(index, "availableUnits", value)
+                      }
+                    />
+
+                    <RoomEditInput
+                      label="Note"
+                      value={room.note || ""}
+                      onChange={(value) =>
+                        updateRoomOption(index, "note", value)
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSaveEdits}
+            disabled={saving || uploadingImages}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-4 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            <Save size={17} />
+            {saving ? "Saving..." : "Save edited listing"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminEditInput({ label, name, value, onChange, placeholder }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
+        {label}
+      </span>
+
+      <input
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-[#1E5B4F]"
+      />
+    </label>
+  );
+}
+
+function AdminEditSelect({ label, name, value, onChange, options }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
+        {label}
+      </span>
+
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-[#1E5B4F]"
+      >
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function AdminEditTextarea({ label, name, value, onChange, placeholder }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
+        {label}
+      </span>
+
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows="4"
+        className="w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#1E5B4F]"
+      />
+    </label>
+  );
+}
+
+function RoomEditInput({ label, value, onChange, type = "text" }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-black uppercase tracking-wide text-slate-500">
+        {label}
+      </span>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-bold text-slate-700 outline-none focus:border-[#1E5B4F]"
+      />
+    </label>
   );
 }
 
