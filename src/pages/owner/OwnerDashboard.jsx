@@ -87,21 +87,23 @@ function OwnerDashboard() {
         area: ownerProfile?.area || "",
       });
 
+      let loadedPlan = {
+        ownerId: user.uid,
+        plan: "free",
+        active: false,
+        leadAccess: false,
+      };
+
       try {
-        const plan = await getOwnerPlan(user.uid);
-        setOwnerPlan(plan);
+        loadedPlan = await getOwnerPlan(user.uid);
+        setOwnerPlan(loadedPlan);
       } catch (error) {
         console.warn("Could not load owner plan:", error);
-        setOwnerPlan({
-          ownerId: user.uid,
-          plan: "free",
-          active: false,
-          leadAccess: false,
-        });
+        setOwnerPlan(loadedPlan);
       }
 
       await loadOwnerListings(user, ownerProfile);
-      await loadCallbackLeads(user, ownerProfile, plan);
+      await loadCallbackLeads(user, ownerProfile, loadedPlan);
 
       setLoading(false);
     });
