@@ -420,11 +420,3 @@ Student at Jorhat Institute of Science and Technology
 Project: CampusStay
 
 ````
-
-After adding it, run:
-
-```bash
-git add README.md
-git commit -m "Add README"
-git push
-````
