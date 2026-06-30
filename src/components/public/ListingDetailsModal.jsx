@@ -19,6 +19,7 @@ import Badge from "../common/Badge";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { submitListingReport } from "../../firebase/reports";
 import SaveListingButton from "../student/SaveListingButton";
+import ShareListingButton from "../shared/ShareListingButton";
 import { trackListingInteraction } from "../../firebase/analytics";
 import { auth } from "../../firebase/config";
 import { createStudentLead } from "../../firebase/studentLeads";
@@ -188,13 +189,17 @@ function ListingDetailsModal({ listing, onClose }) {
             </p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
-            aria-label="Close details"
-          >
-            <X size={21} />
-          </button>
+          <div className="flex items-center gap-2">
+            <ShareListingButton listing={listing} />
+
+            <button
+              onClick={onClose}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
+              aria-label="Close details"
+            >
+              <X size={21} />
+            </button>
+          </div>
         </div>
 
         <div className="overflow-y-auto p-4 pb-28 sm:p-5">

@@ -40,6 +40,7 @@ export async function addPendingListing(listingData) {
       whatsappClicks: 0,
       mapClicks: 0,
       callbackRequests: 0,
+      shareClicks: 0,
     },
 
     nearbyInstitutions: listingData.nearbyInstitutions || [],

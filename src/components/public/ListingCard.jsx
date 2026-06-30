@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import SaveListingButton from "../student/SaveListingButton";
+import ShareListingButton from "../shared/ShareListingButton";
 
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
@@ -164,6 +165,8 @@ function ListingCard({ listing, onViewDetails }) {
           >
             View details
           </button>
+
+          <ShareListingButton listing={listing} />
 
           <div className="w-14">
             <SaveListingButton listing={listing} showText={false} />

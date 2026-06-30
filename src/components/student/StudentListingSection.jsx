@@ -15,6 +15,7 @@ import { getSavedListings } from "../../firebase/savedListings";
 import { watchStudentAuth } from "../../firebase/studentAuth";
 import ListingDetailsModal from "../public/ListingDetailsModal";
 import SaveListingButton from "./SaveListingButton";
+import ShareListingButton from "../shared/ShareListingButton";
 
 const genderFilters = [
   { label: "All Students", value: "all" },
@@ -648,7 +649,8 @@ function StudentListingCard({ listing, onView }) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
-        <div className="absolute right-3 top-3">
+        <div className="absolute right-3 top-3 flex gap-2">
+          <ShareListingButton listing={listing} />
           <SaveListingButton listing={listing} showText={false} />
         </div>
 

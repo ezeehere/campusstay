@@ -28,6 +28,7 @@ import { logoutOwner, watchOwnerAuth } from "../../firebase/ownerAuth";
 import { getOwnerProfile, updateOwnerProfile } from "../../firebase/owners";
 import { requestLeadAccess } from "../../firebase/ownerPlans";
 import { getOwnerCallbackLeads } from "../../firebase/studentLeads";
+import ShareListingButton from "../../components/shared/ShareListingButton";
 
 function getMetric(listing, key) {
   return Number(listing.analytics?.[key] || listing[key] || 0);
@@ -1048,6 +1049,21 @@ function OwnerListingCard({
               label="Callbacks"
               value={getMetric(listing, "callbackRequests")}
             />
+          </div>
+
+          <div className="mt-4">
+            {listing.approved ? (
+              <ShareListingButton
+                listing={listing}
+                variant="full"
+                label="Share public listing"
+                className="w-full"
+              />
+            ) : (
+              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm font-bold text-slate-500">
+                Public sharing will be available after admin approval.
+              </div>
+            )}
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
