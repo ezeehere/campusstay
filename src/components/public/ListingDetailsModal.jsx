@@ -59,17 +59,7 @@ function ListingDetailsModal({ listing, onClose }) {
     setLoginAction("");
   }, [listing?.id]);
 
-  useEffect(() => {
-    if (imageCount <= 1) return;
 
-    const timer = setInterval(() => {
-      setActiveImageIndex((previousIndex) =>
-        previousIndex + 1 >= imageCount ? 0 : previousIndex + 1
-      );
-    }, 2500);
-
-    return () => clearInterval(timer);
-  }, [imageCount, listing?.id]);
 
   useEffect(() => {
     if (!listing?.id) return;
