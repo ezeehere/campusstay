@@ -889,6 +889,23 @@ function OwnerListingCard({
             </div>
           )}
 
+          <div className="mt-3 rounded-2xl bg-[#F6F1E8] px-4 py-3 text-sm">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-500">
+              Contact info
+            </p>
+
+            <p className="mt-1 font-black text-slate-800">
+              {listing.contactPerson || "Owner"}: {listing.phone}
+            </p>
+
+            {listing.alternatePhone && (
+              <p className="mt-1 font-bold text-slate-600">
+                {listing.alternateContactPerson || "Caretaker"}:{" "}
+                {listing.alternatePhone}
+              </p>
+            )}
+          </div>
+
           <div className="mt-4 rounded-3xl border border-[#DDECE7] bg-[#F1FAF7] p-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>

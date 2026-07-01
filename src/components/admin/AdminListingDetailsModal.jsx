@@ -35,6 +35,13 @@ const NEARBY_INSTITUTIONS = [
 const STAY_TYPES = ["PG", "Room", "Hostel"];
 const GENDER_OPTIONS = ["Boys", "Girls", "Co-ed"];
 
+const CONTACT_PERSON_OPTIONS = [
+  "Owner",
+  "Caretaker",
+  "Manager",
+  "Family member",
+];
+
 const DEFAULT_ROOM_OPTION = {
   title: "Single Room",
   rent: 0,
@@ -648,6 +655,9 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     name: "",
     ownerName: "",
     phone: "",
+    contactPerson: "Owner",
+    alternatePhone: "",
+    alternateContactPerson: "Caretaker",
     area: "",
     type: "PG",
     gender: "Boys",
@@ -668,6 +678,9 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       name: listing?.name || "",
       ownerName: listing?.ownerName || "",
       phone: listing?.phone || "",
+      contactPerson: listing?.contactPerson || "Owner",
+      alternatePhone: listing?.alternatePhone || "",
+      alternateContactPerson: listing?.alternateContactPerson || "Caretaker",
       area: listing?.area || "",
       type: listing?.type || "PG",
       gender: listing?.gender || "Boys",
@@ -898,6 +911,12 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       name: editData.name.trim(),
       ownerName: editData.ownerName.trim(),
       phone: editData.phone.trim(),
+      contactPerson: editData.contactPerson || "Owner",
+
+      alternatePhone: editData.alternatePhone.trim(),
+      alternateContactPerson: editData.alternatePhone.trim()
+        ? editData.alternateContactPerson || "Caretaker"
+        : "",
       area: editData.area.trim(),
       type: editData.type,
       gender: editData.gender,
@@ -986,6 +1005,30 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
               name="phone"
               value={editData.phone}
               onChange={handleChange}
+            />
+
+            <AdminEditSelect
+              label="Primary contact person"
+              name="contactPerson"
+              value={editData.contactPerson}
+              onChange={handleChange}
+              options={CONTACT_PERSON_OPTIONS}
+            />
+
+            <AdminEditInput
+              label="Second phone number"
+              name="alternatePhone"
+              value={editData.alternatePhone}
+              onChange={handleChange}
+              placeholder="Optional backup number"
+            />
+
+            <AdminEditSelect
+              label="Second contact person"
+              name="alternateContactPerson"
+              value={editData.alternateContactPerson}
+              onChange={handleChange}
+              options={CONTACT_PERSON_OPTIONS}
             />
 
             <AdminEditInput

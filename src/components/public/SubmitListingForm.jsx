@@ -50,6 +50,13 @@ const NEARBY_ESSENTIALS = [
 const YES_NO_OPTIONS = ["Yes", "No"];
 const RULE_OPTIONS = ["Yes", "No", "With permission"];
 
+const CONTACT_PERSON_OPTIONS = [
+  "Owner",
+  "Caretaker",
+  "Manager",
+  "Family member",
+];
+
 const initialFormData = {
   name: "",
   type: "PG",
@@ -63,6 +70,9 @@ const initialFormData = {
   rules: "",
   ownerName: "",
   phone: "",
+  contactPerson: "Owner",
+  alternatePhone: "",
+  alternateContactPerson: "Caretaker",
   mapLink: "",
 
   availableFrom: "",
@@ -343,6 +353,12 @@ function SubmitListingForm({ ownerMode = false }) {
 
       ownerName: formData.ownerName.trim(),
       phone: formData.phone.trim(),
+      contactPerson: formData.contactPerson || "Owner",
+
+      alternatePhone: formData.alternatePhone.trim(),
+      alternateContactPerson: formData.alternatePhone.trim()
+        ? formData.alternateContactPerson || "Caretaker"
+        : "",
       mapLink: formData.mapLink.trim(),
 
       ownerId: auth.currentUser?.uid || "",
@@ -574,6 +590,30 @@ function SubmitListingForm({ ownerMode = false }) {
             onChange={handleChange}
             placeholder="10 digit number"
             required
+          />
+
+          <SelectField
+            label="Who will answer primary number?"
+            name="contactPerson"
+            value={formData.contactPerson}
+            onChange={handleChange}
+            options={CONTACT_PERSON_OPTIONS}
+          />
+
+          <InputField
+            label="Second phone number optional"
+            name="alternatePhone"
+            value={formData.alternatePhone}
+            onChange={handleChange}
+            placeholder="Example: caretaker or manager number"
+          />
+
+          <SelectField
+            label="Who will answer second number?"
+            name="alternateContactPerson"
+            value={formData.alternateContactPerson}
+            onChange={handleChange}
+            options={CONTACT_PERSON_OPTIONS}
           />
 
           <SelectField

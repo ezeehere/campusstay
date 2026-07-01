@@ -31,8 +31,9 @@ export async function addPendingListing(listingData) {
       : Number(listingData.rent || 0);
   const docRef = await addDoc(listingsCollection, {
     ...listingData,
-    ownerId: listingData.ownerId || "",
-    ownerEmail: listingData.ownerEmail || "",
+    contactPerson: listingData.contactPerson || "Owner",
+    alternatePhone: listingData.alternatePhone || "",
+    alternateContactPerson: listingData.alternateContactPerson || "",
     analytics: listingData.analytics || {
       views: 0,
       saves: 0,
@@ -73,6 +74,9 @@ export async function addPendingListing(listingData) {
     listingId: docRef.id,
     trackingId: listingData.trackingId,
     phone: listingData.phone,
+    contactPerson: listingData.contactPerson || "Owner",
+    alternatePhone: listingData.alternatePhone || "",
+    alternateContactPerson: listingData.alternateContactPerson || "",
     name: listingData.name || "",
     area: listingData.area || "",
     nearbyInstitutions: listingData.nearbyInstitutions || [],
@@ -181,6 +185,9 @@ export async function updateListing(listingId, updates) {
       listingId,
       trackingId: listingData.trackingId,
       phone: listingData.phone,
+      contactPerson: listingData.contactPerson || "Owner",
+      alternatePhone: listingData.alternatePhone || "",
+      alternateContactPerson: listingData.alternateContactPerson || "",
       name: listingData.name || "",
       area: listingData.area || "",
       nearbyInstitutions: listingData.nearbyInstitutions || [],

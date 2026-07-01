@@ -39,6 +39,9 @@ function InfoBox({ icon, title, value }) {
 
 function ListingDetailsModal({ listing, onClose }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const primaryContactPerson = listing?.contactPerson || "Owner";
+  const alternatePhone = listing?.alternatePhone || "";
+  const alternateContactPerson = listing?.alternateContactPerson || "Caretaker";
   const imageCount = Array.isArray(listing?.images) ? listing.images.length : 0;
 
   const [showReportForm, setShowReportForm] = useState(false);
@@ -442,6 +445,50 @@ function ListingDetailsModal({ listing, onClose }) {
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
                 <h3 className="text-base font-black text-slate-950">
+                  Contact info
+                </h3>
+
+                <div className="mt-3 grid gap-2 text-sm">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                    <span className="text-slate-500">{primaryContactPerson}</span>
+                    <a
+                      href={auth.currentUser ? `tel:${listing.phone}` : undefined}
+                      onClick={(event) => {
+                        if (requireStudentLogin("call")) {
+                          event.preventDefault();
+                          return;
+                        }
+                        handleAnalyticsClick("call_click", "callClicks");
+                      }}
+                      className="font-black text-[#1E5B4F]"
+                    >
+                      {listing.phone}
+                    </a>
+                  </div>
+
+                  {alternatePhone && (
+                    <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                      <span className="text-slate-500">{alternateContactPerson}</span>
+                      <a
+                        href={auth.currentUser ? `tel:${alternatePhone}` : undefined}
+                        onClick={(event) => {
+                          if (requireStudentLogin("call")) {
+                            event.preventDefault();
+                            return;
+                          }
+                          handleAnalyticsClick("alternate_call_click", "callClicks");
+                        }}
+                        className="font-black text-[#1E5B4F]"
+                      >
+                        {alternatePhone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                <h3 className="text-base font-black text-slate-950">
                   Facilities
                 </h3>
 
@@ -623,26 +670,44 @@ function ListingDetailsModal({ listing, onClose }) {
               className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-3 text-xs font-black text-white"
             >
               <Phone size={17} />
-              Call
+              Call {primaryContactPerson}
             </a>
 
-            <a
-              href={auth.currentUser ? whatsappLink : undefined}
-              target={auth.currentUser ? "_blank" : undefined}
-              rel={auth.currentUser ? "noreferrer" : undefined}
-              onClick={(event) => {
-                if (requireStudentLogin("whatsapp")) {
-                  event.preventDefault();
-                  return;
-                }
+            {alternatePhone ? (
+              <a
+                href={auth.currentUser ? `tel:${alternatePhone}` : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("call")) {
+                    event.preventDefault();
+                    return;
+                  }
 
-                handleAnalyticsClick("whatsapp_click", "whatsappClicks");
-              }}
-              className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-3 text-xs font-black text-slate-700"
-            >
-              <MessageCircle size={17} />
-              WhatsApp
-            </a>
+                  handleAnalyticsClick("alternate_call_click", "callClicks");
+                }}
+                className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-3 text-xs font-black text-[#1E5B4F]"
+              >
+                <Phone size={17} />
+                Call {alternateContactPerson}
+              </a>
+            ) : (
+              <a
+                href={auth.currentUser ? whatsappLink : undefined}
+                target={auth.currentUser ? "_blank" : undefined}
+                rel={auth.currentUser ? "noreferrer" : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("whatsapp")) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  handleAnalyticsClick("whatsapp_click", "whatsappClicks");
+                }}
+                className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-3 text-xs font-black text-slate-700"
+              >
+                <MessageCircle size={17} />
+                WhatsApp
+              </a>
+            )}
 
             <button
               type="button"
@@ -663,33 +728,88 @@ function ListingDetailsModal({ listing, onClose }) {
 
           {/* Mobile secondary actions */}
           <div className="mt-2 grid grid-cols-3 gap-2 sm:hidden">
-            <SaveListingButton listing={listing} showText={false} />
+            {alternatePhone ? (
+              <a
+                href={auth.currentUser ? whatsappLink : undefined}
+                target={auth.currentUser ? "_blank" : undefined}
+                rel={auth.currentUser ? "noreferrer" : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("whatsapp")) {
+                    event.preventDefault();
+                    return;
+                  }
 
-            <a
-              href={auth.currentUser ? listing.mapLink : undefined}
-              target={auth.currentUser ? "_blank" : undefined}
-              rel={auth.currentUser ? "noreferrer" : undefined}
-              onClick={(event) => {
-                if (requireStudentLogin("map")) {
-                  event.preventDefault();
-                  return;
-                }
+                  handleAnalyticsClick("whatsapp_click", "whatsappClicks");
+                }}
+                className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2 text-xs font-bold text-slate-700"
+              >
+                <MessageCircle size={15} />
+                WhatsApp
+              </a>
+            ) : (
+              <SaveListingButton listing={listing} showText={false} />
+            )}
 
-                handleAnalyticsClick("map_click", "mapClicks");
-              }}
-              className="inline-flex items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2.5 text-xs font-bold text-slate-700"
-            >
-              <MapPin size={15} />
-              Map
-            </a>
+            {alternatePhone ? (
+              <SaveListingButton listing={listing} showText={false} />
+            ) : (
+              <a
+                href={auth.currentUser ? listing.mapLink : undefined}
+                target={auth.currentUser ? "_blank" : undefined}
+                rel={auth.currentUser ? "noreferrer" : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("map")) {
+                    event.preventDefault();
+                    return;
+                  }
 
-            <button
-              onClick={() => setShowReportForm(true)}
-              className="rounded-2xl bg-red-50 px-2 py-2.5 text-xs font-bold text-red-700"
-            >
-              Report
-            </button>
+                  handleAnalyticsClick("map_click", "mapClicks");
+                }}
+                className="inline-flex items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2.5 text-xs font-bold text-slate-700"
+              >
+                <MapPin size={15} />
+                Map
+              </a>
+            )}
+
+            {alternatePhone ? (
+              <a
+                href={auth.currentUser ? listing.mapLink : undefined}
+                target={auth.currentUser ? "_blank" : undefined}
+                rel={auth.currentUser ? "noreferrer" : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("map")) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  handleAnalyticsClick("map_click", "mapClicks");
+                }}
+                className="inline-flex items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2 text-xs font-bold text-slate-700"
+              >
+                <MapPin size={15} />
+                Map
+              </a>
+            ) : (
+              <button
+                onClick={() => setShowReportForm(true)}
+                className="rounded-2xl bg-red-50 px-2 py-2.5 text-xs font-bold text-red-700"
+              >
+                Report
+              </button>
+            )}
           </div>
+
+          {alternatePhone && (
+            <div className="mt-2 grid grid-cols-1 sm:hidden">
+              <button
+                onClick={() => setShowReportForm(true)}
+                className="rounded-2xl bg-red-50 px-2 py-2 text-xs font-bold text-red-700"
+              >
+                Report issue
+              </button>
+            </div>
+          )}
 
           {/* Desktop action grid */}
           <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3">
@@ -708,8 +828,26 @@ function ListingDetailsModal({ listing, onClose }) {
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
               <Phone size={16} />
-              Call Owner
+              Call {primaryContactPerson}
             </a>
+
+            {alternatePhone && (
+              <a
+                href={auth.currentUser ? `tel:${alternatePhone}` : undefined}
+                onClick={(event) => {
+                  if (requireStudentLogin("call")) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  handleAnalyticsClick("alternate_call_click", "callClicks");
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
+              >
+                <Phone size={16} />
+                Call {alternateContactPerson}
+              </a>
+            )}
 
             <a
               href={auth.currentUser ? whatsappLink : undefined}
