@@ -50,6 +50,240 @@ const sortOptions = [
   { label: "Food Included First", value: "food_first" },
 ];
 
+function HighlightSticker({ children, color = "green" }) {
+  const bgColor = color === "yellow" ? "bg-[#FFE45C]" : "bg-[#42B66B]";
+
+  return (
+    <span className="relative inline-flex rotate-[-3deg] px-2 py-0.5 sm:px-3 sm:py-1">
+      <span
+        className={`absolute inset-0 -z-10 ${bgColor}`}
+        style={{
+          clipPath:
+            "polygon(2% 8%, 98% 0%, 96% 92%, 5% 100%, 0% 45%)",
+        }}
+      />
+      <span className="relative z-10 font-black text-[#03071F]">
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function HeroTrustPill({ children }) {
+  return (
+    <span className="rounded-full border border-[#E8DFD2] bg-white/80 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm backdrop-blur">
+      {children}
+    </span>
+  );
+}
+
+function HeroPreviewCard() {
+  return (
+    <div className="relative hidden lg:block">
+      <div className="absolute -left-8 top-10 z-20">
+        <HeroTrustPill>Updated seats</HeroTrustPill>
+      </div>
+
+      <div className="absolute -right-5 bottom-12 z-20">
+        <HeroTrustPill>Direct owner contact</HeroTrustPill>
+      </div>
+
+      <div className="rounded-[2.2rem] border border-[#E8DFD2] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+        <div className="rounded-[1.7rem] bg-[#070B1F] p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-black text-white">
+              Quick stay preview
+            </p>
+
+            <span className="rounded-full bg-[#E9FFF4] px-3 py-1 text-xs font-black text-[#16845A]">
+              Verified
+            </span>
+          </div>
+
+          <div className="h-52 overflow-hidden rounded-[1.5rem] bg-[#FFF8EF]">
+            <img
+              src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80"
+              alt="Room preview"
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] bg-white p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-black text-[#03071F]">
+                  Student stay near JIST
+                </h3>
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  Sotai · Near JIST and nearby student areas
+                </p>
+              </div>
+
+              <p className="text-right text-lg font-black text-[#03071F]">
+                ₹3,000
+                <span className="block text-[10px] font-bold text-slate-400">
+                  month
+                </span>
+              </p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">
+                8 seats left
+              </div>
+              <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">
+                Food available
+              </div>
+              <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">
+                Wi-Fi
+              </div>
+              <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">
+                Move-in: Ask
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InstitutionStrip() {
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-bold text-slate-500">Made for</span>
+
+      {["JIST", "JEC", "Kaziranga ITI", "Ayush Pharmacy"].map((item) => (
+        <span
+          key={item}
+          className="rounded-full border border-[#E8DFD2] bg-white px-3 py-1.5 text-xs font-black text-[#03071F] shadow-sm"
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function RouteLineBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
+      <svg
+        viewBox="0 0 1200 500"
+        className="absolute left-0 top-0 h-full w-full"
+        fill="none"
+      >
+        <path
+          d="M80 420 C250 300, 330 360, 480 240 C620 130, 760 170, 900 90 C1010 30, 1080 80, 1160 40"
+          stroke="#F97316"
+          strokeWidth="3"
+          strokeDasharray="10 14"
+          strokeLinecap="round"
+        />
+
+        <circle cx="80" cy="420" r="7" fill="#1E5B4F" />
+        <circle cx="480" cy="240" r="7" fill="#1E5B4F" />
+        <circle cx="900" cy="90" r="7" fill="#1E5B4F" />
+      </svg>
+    </div>
+  );
+}
+
+function TrustProcessSection() {
+  const items = [
+    {
+      title: "Owner submits stay",
+      text: "PG owners add photos, rent, seats left, food and rules.",
+    },
+    {
+      title: "Admin checks details",
+      text: "Listings are reviewed before becoming public.",
+    },
+    {
+      title: "Students contact directly",
+      text: "Call, WhatsApp or request callback without broker fee.",
+    },
+  ];
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-5 shadow-sm sm:p-7">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#1E5B4F]">
+              Trust first
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black text-[#03071F]">
+              Built to reduce PG confusion
+            </h2>
+          </div>
+
+          <span className="w-fit rounded-full bg-[#FFF3D6] px-4 py-2 text-xs font-black text-[#B45309]">
+            No random unverified posts
+          </span>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          {items.map((item, index) => (
+            <div
+              key={item.title}
+              className="rounded-[1.5rem] border border-[#E8DFD2] bg-[#FFF8EF] p-4"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#03071F] text-sm font-black text-white">
+                {index + 1}
+              </div>
+
+              <h3 className="mt-4 font-black text-[#03071F]">
+                {item.title}
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {item.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OwnerCTASection() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#070B1F] p-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:p-8">
+        <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-[#42B66B]/30 blur-3xl" />
+        <div className="absolute -bottom-24 left-20 h-60 w-60 rounded-full bg-orange-400/25 blur-3xl" />
+
+        <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#A7F3D0]">
+              For PG owners
+            </p>
+
+            <h2 className="mt-2 max-w-2xl text-3xl font-black tracking-tight">
+              Have empty seats? List your PG and share one clean public link.
+            </h2>
+
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">
+              Add photos, rent, rules, seats left and move-in info. Students can call
+              or WhatsApp you directly.
+            </p>
+          </div>
+
+          <a
+            href="/submit-listing"
+            className="inline-flex justify-center rounded-2xl bg-white px-6 py-4 text-sm font-black text-[#070B1F] transition hover:bg-[#FFF3D6]"
+          >
+            List your PG
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Home() {
   const [search, setSearch] = useState("");
   const [gender, setGender] = useState("all");
@@ -239,185 +473,167 @@ function Home() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div className="mx-auto hidden max-w-7xl px-4 pt-4 sm:block sm:px-6">
+        <div className="rounded-full border border-[#E8DFD2] bg-white px-4 py-2 text-center text-xs font-black text-slate-700 shadow-sm">
+          Now helping students find stays around JIST, JEC, Kaziranga ITI and nearby areas
+        </div>
+      </div>
+
+      <section className="relative overflow-hidden border-b border-[#E8DFD2] bg-[#FFF8EF]">
+        <RouteLineBackground />
+        <div className="pointer-events-none absolute -right-24 bottom-[-140px] h-72 w-72 rounded-full bg-[#FF7A1A]/20" />
+        <div className="pointer-events-none absolute -right-10 bottom-[-90px] h-52 w-52 rounded-full bg-[#42B66B]/20" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 pb-5 pt-5 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-14 lg:pt-12">
           <div>
-            <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-[#070B1F] sm:text-5xl lg:text-6xl">
-              Find verified PGs and rooms near your campus.
-            </h1>
-
-            <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-2xl">
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">
-                  {listings.length || "20"}+
-                </p>
-                <p className="mt-1 text-xs text-slate-500">Listed stays</p>
+            <div>
+              <div className="mb-3 inline-flex rounded-full border border-[#E8DFD2] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-wide text-[#1E5B4F] shadow-sm">
+                No broker fee for students
               </div>
 
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">4</p>
-                <p className="mt-1 text-xs text-slate-500">Institutions</p>
-              </div>
+              <h1 className="max-w-3xl text-[2.35rem] font-black leading-[1.03] tracking-[-0.055em] text-[#03071F] sm:text-6xl lg:text-7xl">
+                Find verified PGs and rooms near{" "}
+                <HighlightSticker color="green">JIST</HighlightSticker>
+              </h1>
 
-              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-                <p className="text-xl font-extrabold text-[#070B1F]">Free</p>
-                <p className="mt-1 text-xs text-slate-500">For students</p>
+              <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600 sm:text-lg sm:leading-7">
+                Real photos, updated seats, clear charges, and direct owner contact.
+              </p>
+
+              <div className="mt-4 hidden flex-wrap items-center gap-2 text-sm sm:flex">
+                <span className="font-bold text-slate-500">Made for</span>
+
+                {["JIST", "JEC", "Kaziranga ITI", "Ayush Pharmacy"].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-[#E8DFD2] bg-white px-3 py-1.5 text-xs font-black text-[#03071F] shadow-sm"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-[#E8DFD2] bg-white p-4 shadow-sm">
-              <div className="relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-3 shadow-sm sm:p-4">
+                <p className="text-xl font-black text-[#03071F] sm:text-2xl">
+                  {listings.length}+
+                </p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
+                  Stays listed
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-3 shadow-sm sm:p-4">
+                <p className="text-xl font-black text-[#03071F] sm:text-2xl">4</p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
+                  Student areas
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#E8DFD2] bg-white p-3 shadow-sm sm:p-4">
+                <p className="text-xl font-black text-[#03071F] sm:text-2xl">0</p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
+                  Broker fee
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white/95 p-2 shadow-sm backdrop-blur sm:mt-7 sm:rounded-[2rem] sm:p-3">
+              <div className="flex items-center gap-3 rounded-[1.2rem] border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 sm:rounded-[1.5rem] sm:py-4">
+                <Search size={18} className="text-slate-400" />
 
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search PG name, area, institution, boys, girls..."
-                  className="h-14 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-12 pr-4 text-base outline-none transition focus:border-slate-400 focus:bg-white"
+                  placeholder="Search PG, area, institution..."
+                  className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400"
                 />
               </div>
 
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]">
-                <button
-                  onClick={() =>
-                    setGender(gender === "Boys" ? "all" : "Boys")
-                  }
-                  className={quickFilterClass(gender === "Boys")}
-                >
-                  Boys
-                </button>
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1 sm:mt-3">
+                {["Boys", "Girls", "PG", "Room", "Food included"].map((chip) => {
+                  let isActive = false;
+                  let clickHandler = () => {};
 
-                <button
-                  onClick={() =>
-                    setGender(gender === "Girls" ? "all" : "Girls")
-                  }
-                  className={quickFilterClass(gender === "Girls")}
-                >
-                  Girls
-                </button>
+                  if (chip === "Boys") {
+                     isActive = gender === "Boys";
+                     clickHandler = () => setGender(gender === "Boys" ? "all" : "Boys");
+                   } else if (chip === "Girls") {
+                     isActive = gender === "Girls";
+                     clickHandler = () => setGender(gender === "Girls" ? "all" : "Girls");
+                   } else if (chip === "PG") {
+                     isActive = type === "PG";
+                     clickHandler = () => setType(type === "PG" ? "all" : "PG");
+                   } else if (chip === "Room") {
+                     isActive = type === "Room";
+                     clickHandler = () => setType(type === "Room" ? "all" : "Room");
+                   } else if (chip === "Food included") {
+                     isActive = foodFilter === "included";
+                     clickHandler = () => setFoodFilter(foodFilter === "included" ? "all" : "included");
+                   }
 
-                <button
-                  onClick={() => setType(type === "PG" ? "all" : "PG")}
-                  className={quickFilterClass(type === "PG")}
-                >
-                  PG
-                </button>
-
-                <button
-                  onClick={() => setType(type === "Room" ? "all" : "Room")}
-                  className={quickFilterClass(type === "Room")}
-                >
-                  Room
-                </button>
-
-                <button
-                  onClick={() =>
-                    setFoodFilter(
-                      foodFilter === "included" ? "all" : "included"
-                    )
-                  }
-                  className={quickFilterClass(foodFilter === "included")}
-                >
-                  Food included
-                </button>
-
-                <button
-                  onClick={() => setVerifiedOnly(!verifiedOnly)}
-                  className={quickFilterClass(verifiedOnly)}
-                >
-                  Verified only
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <div className="hidden lg:block">
-            <div className="rounded-[2rem] border border-[#E8DFD2] bg-white p-4 shadow-2xl shadow-slate-200/70">
-              <div className="rounded-[1.5rem] bg-slate-950 p-5 text-white">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">Quick stay preview</p>
-
-                  <Badge type="verified">
-                    <CheckCircle2 size={13} />
-                    Verified
-                  </Badge>
-                </div>
-
-                <div className="mt-5 overflow-hidden rounded-3xl">
-                  <img
-                    src="https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=1200&auto=format&fit=crop"
-                    alt="Room preview"
-                    className="h-60 w-full object-cover sm:h-64"
-                  />
-                </div>
-
-                <div className="mt-5 rounded-3xl bg-white p-4 text-slate-950">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-bold">Near campus PG</h3>
-                      <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-                        <MapPin size={15} />
-                        Near JIST and nearby student areas
-                      </p>
-                    </div>
-
-                    <p className="font-extrabold">₹5,200</p>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                    <span className="rounded-2xl bg-slate-100 px-3 py-2">
-                      Food included
-                    </span>
-                    <span className="rounded-2xl bg-slate-100 px-3 py-2">
-                      Girls PG
-                    </span>
-                    <span className="rounded-2xl bg-slate-100 px-3 py-2">
-                      Wi-Fi
-                    </span>
-                    <span className="rounded-2xl bg-slate-100 px-3 py-2">
-                      Available
-                    </span>
-                  </div>
-                </div>
+                  return (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={clickHandler}
+                      className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black transition ${isActive
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#F6F1E8]"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
+
+          <HeroPreviewCard />
         </div>
       </section>
 
       <section
         id="available-stays"
-        className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8"
+        className="mx-auto max-w-7xl px-4 pt-5 pb-10 sm:px-6 lg:px-8 sm:pt-8"
       >
-        <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
-            >
-              <SlidersHorizontal size={14} />
-              {showMobileFilters ? "Hide filters" : "Filters & Sort"}
-            </button>
-
-            <div className="hidden lg:inline-flex">
-              <Badge>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="inline-flex items-center gap-2 rounded-full border border-[#E8DFD2] bg-[#F6F1E8] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white lg:hidden"
+              >
                 <SlidersHorizontal size={14} />
-                Filters and sorting
-              </Badge>
+                {showMobileFilters ? "Hide filters" : "Filters & Sort"}
+              </button>
+
+              <div className="hidden lg:inline-flex">
+                <Badge>
+                  <SlidersHorizontal size={14} />
+                  Filters and sorting
+                </Badge>
+              </div>
+
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#1E5B4F] hidden lg:block">
+                Live listings
+              </p>
             </div>
 
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
-              Available stays
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-[#03071F]">
+              Available stays near you
             </h2>
+
+            <p className="mt-2 text-sm font-medium text-slate-500">
+              Sorted by seats left, so students see the most available stays first.
+            </p>
           </div>
 
-          <p className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
-            Showing {filteredListings.length} of {listings.length} listings
-          </p>
+          <div className="w-fit rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm">
+            Showing {filteredListings.length} of {listings.length}
+          </div>
         </div>
 
         <div
@@ -525,6 +741,10 @@ function Home() {
           </div>
         )}
       </section>
+
+      <TrustProcessSection />
+
+      <OwnerCTASection />
 
       <footer className="border-t border-[#E8DFD2] bg-[#FFF8EF]">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
