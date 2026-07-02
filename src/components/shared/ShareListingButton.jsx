@@ -12,7 +12,7 @@ function ShareListingButton({
 
   if (!listing?.id) return null;
 
-  const shareUrl = `${window.location.origin}/listing/${listing.id}`;
+  const shareUrl = `${window.location.origin}/share/${listing.id}`;
   const shareText = buildShareText(listing);
 
   async function handleShare(event) {
