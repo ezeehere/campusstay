@@ -21,11 +21,7 @@
   ],
   "rewrites": [
     {
-      "source": "/share/:listingId",
-      "destination": "/api/share-listing?listingId=:listingId"
-    },
-    {
-      "source": "/((?!sitemap.xml|robots.txt|api/.*).*)",
+      "source": "/((?!sitemap.xml|robots.txt).*)",
       "destination": "/index.html"
     }
   ]
