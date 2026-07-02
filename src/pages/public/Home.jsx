@@ -77,7 +77,7 @@ function Home() {
       try {
         setLoading(true);
         const data = await getApprovedListings();
-        setListings(data);
+        setListings(sortListingsBySeatsLeft(data));
       } catch (error) {
         console.error("Error loading approved listings:", error);
         alert("Could not load listings.");
@@ -179,6 +179,10 @@ function Home() {
     availableOnly,
     sortBy,
   ]);
+
+  const sortedListings = useMemo(() => {
+    return sortListingsBySeatsLeft(filteredListings);
+  }, [filteredListings]);
 
   const quickFilterClass = (active) =>
     `shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${active
@@ -504,7 +508,7 @@ function Home() {
           </div>
         ) : filteredListings.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredListings.map((listing) => (
+            {sortedListings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
@@ -729,6 +733,33 @@ function sortListings(items, sortBy) {
     const bAvailable = b.available ? 1 : 0;
 
     return bVerified + bAvailable - (aVerified + aAvailable);
+  });
+}
+
+function getTotalSeatsLeft(listing) {
+  if (Array.isArray(listing.roomOptions) && listing.roomOptions.length > 0) {
+    return listing.roomOptions.reduce(
+      (total, room) => total + Number(room.availableUnits || 0),
+      0
+    );
+  }
+
+  return listing.available ? 1 : 0;
+}
+
+function sortListingsBySeatsLeft(listings) {
+  return [...listings].sort((a, b) => {
+    const seatsA = getTotalSeatsLeft(a);
+    const seatsB = getTotalSeatsLeft(b);
+
+    if (seatsB !== seatsA) {
+      return seatsB - seatsA;
+    }
+
+    const timeA = getTimestampSeconds(a.updatedAt || a.createdAt);
+    const timeB = getTimestampSeconds(b.updatedAt || b.createdAt);
+
+    return timeB - timeA;
   });
 }
 
