@@ -75,6 +75,13 @@ function buildShareText(listing) {
   const seatsLeft = getTotalSeatsLeft(listing);
   const nearbyText = getNearbyText(listing);
 
+  const foodText =
+    listing.foodIncluded === true || listing.food === true
+      ? "Food available"
+      : "Food not included";
+
+  const moveInText = listing.moveInNote || listing.availableFrom || "Ask owner";
+
   return [
     "Check this PG/Room on CampusStay:",
     "",
@@ -83,6 +90,10 @@ function buildShareText(listing) {
     rent ? `Rent starts from ₹${rent}/month` : "",
     seatsLeft > 0 ? `Seats left: ${seatsLeft}` : "Currently fully booked",
     nearbyText ? `Near: ${nearbyText}` : "",
+    `Food: ${foodText}`,
+    `Move-in: ${moveInText}`,
+    "",
+    "View photos, rent, facilities, rules and owner contact here:",
   ]
     .filter(Boolean)
     .join("\n");

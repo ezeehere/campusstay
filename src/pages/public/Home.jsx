@@ -284,6 +284,23 @@ function OwnerCTASection() {
   );
 }
 
+const POPULAR_SEARCHES = [
+  "PG near JIST",
+  "PG in JIST",
+  "Rooms near JIST",
+  "Rent rooms in JIST",
+  "Girls PG near JIST",
+  "Boys PG near JIST",
+  "PG near JEC",
+  "Rooms near Kaziranga ITI",
+  "PG in Sotai",
+  "Student rooms near Jorhat",
+];
+
+function PopularSearches({ onSearch }) {
+  return;
+}
+
 function Home() {
   const [search, setSearch] = useState("");
   const [gender, setGender] = useState("all");
@@ -418,11 +435,7 @@ function Home() {
     return sortListingsBySeatsLeft(filteredListings);
   }, [filteredListings]);
 
-  const quickFilterClass = (active) =>
-    `shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${active
-      ? "border-slate-950 bg-slate-950 text-white"
-      : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#FFF8EF]"
-    }`;
+
 
   function resetFilters() {
     setSearch("");
@@ -554,24 +567,24 @@ function Home() {
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1 sm:mt-3">
                 {["Boys", "Girls", "PG", "Room", "Food included"].map((chip) => {
                   let isActive = false;
-                  let clickHandler = () => {};
+                  let clickHandler = () => { };
 
                   if (chip === "Boys") {
-                     isActive = gender === "Boys";
-                     clickHandler = () => setGender(gender === "Boys" ? "all" : "Boys");
-                   } else if (chip === "Girls") {
-                     isActive = gender === "Girls";
-                     clickHandler = () => setGender(gender === "Girls" ? "all" : "Girls");
-                   } else if (chip === "PG") {
-                     isActive = type === "PG";
-                     clickHandler = () => setType(type === "PG" ? "all" : "PG");
-                   } else if (chip === "Room") {
-                     isActive = type === "Room";
-                     clickHandler = () => setType(type === "Room" ? "all" : "Room");
-                   } else if (chip === "Food included") {
-                     isActive = foodFilter === "included";
-                     clickHandler = () => setFoodFilter(foodFilter === "included" ? "all" : "included");
-                   }
+                    isActive = gender === "Boys";
+                    clickHandler = () => setGender(gender === "Boys" ? "all" : "Boys");
+                  } else if (chip === "Girls") {
+                    isActive = gender === "Girls";
+                    clickHandler = () => setGender(gender === "Girls" ? "all" : "Girls");
+                  } else if (chip === "PG") {
+                    isActive = type === "PG";
+                    clickHandler = () => setType(type === "PG" ? "all" : "PG");
+                  } else if (chip === "Room") {
+                    isActive = type === "Room";
+                    clickHandler = () => setType(type === "Room" ? "all" : "Room");
+                  } else if (chip === "Food included") {
+                    isActive = foodFilter === "included";
+                    clickHandler = () => setFoodFilter(foodFilter === "included" ? "all" : "included");
+                  }
 
                   return (
                     <button
@@ -581,7 +594,7 @@ function Home() {
                       className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black transition ${isActive
                         ? "border-slate-950 bg-slate-950 text-white"
                         : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#F6F1E8]"
-                      }`}
+                        }`}
                     >
                       {chip}
                     </button>
@@ -594,6 +607,8 @@ function Home() {
           <HeroPreviewCard />
         </div>
       </section>
+
+      <PopularSearches onSearch={setSearch} />
 
       <section
         id="available-stays"
@@ -766,10 +781,11 @@ function Home() {
                   </div>
                 </div>
 
-                <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-                  CampusStay helps students find verified PGs and rooms near
-                  campus with rent, photos, facilities, location, and direct
-                  owner contact.
+                <p className="mt-4 text-sm leading-7 text-slate-600">
+                  CampusStay helps students find verified PGs, boys PGs, girls PGs, and rooms
+                  for rent near JIST, JEC, Kaziranga ITI, Ayush Pharmacy, Sotai, and nearby
+                  Jorhat student areas. Students can check real photos, rent, seats left, food,
+                  facilities, rules, charges, location, and direct owner contact before visiting.
                 </p>
               </div>
 
@@ -818,10 +834,29 @@ function Home() {
                   <p className="text-2xl font-extrabold text-[#1F2933]">
                     JIST · JEC
                   </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Expanding across nearby student areas including Kaziranga
-                    ITI and Ayush Pharmacy.
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Starting with PGs and rent rooms near JIST and JEC, then expanding across
+                    Kaziranga ITI, Ayush Pharmacy, Sotai, and nearby Jorhat student areas.
                   </p>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    "PG near JIST",
+                    "PG in JIST",
+                    "Rent rooms in JIST",
+                    "Girls PG near JIST",
+                    "Boys PG near JIST",
+                    "PG near JEC",
+                    "PG in Sotai",
+                    "Student rooms near Jorhat",
+                  ].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-[#FFF8EF] px-3 py-1.5 text-xs font-bold text-slate-600"
+                    >
+                      {item}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
