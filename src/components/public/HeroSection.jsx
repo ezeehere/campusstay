@@ -93,7 +93,7 @@ function RouteLineBackground() {
   );
 }
 
-export default function HeroSection({ search, setSearch, gender, setGender, type, setType, foodFilter, setFoodFilter, totalListings }) {
+export default function HeroSection({ search, setSearch, gender, setGender, type, setType, foodFilter, setFoodFilter, totalListings , currentInstitutionName }) {
   return (
     <section className="relative overflow-hidden border-b border-[#E8DFD2] bg-[#FFF8EF]">
       <RouteLineBackground />
@@ -107,7 +107,7 @@ export default function HeroSection({ search, setSearch, gender, setGender, type
               No broker fee for students
             </div>
             <h1 className="max-w-3xl text-[2.35rem] font-black leading-[1.03] tracking-[-0.055em] text-[#03071F] sm:text-6xl lg:text-7xl">
-              Find verified PGs and rooms near <HighlightSticker color="green">JIST</HighlightSticker>
+              Find verified PGs and rooms near <HighlightSticker color="green">{currentInstitutionName || "JIST"}</HighlightSticker>
             </h1>
             <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600 sm:text-lg sm:leading-7">
               Real photos, updated seats, clear charges, and direct owner contact.
