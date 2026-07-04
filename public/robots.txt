@@ -1,4 +1,13 @@
 User-agent: *
+
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /utils/
+
+Disallow: /submit-listing
+Disallow: /check-status
+
 Allow: /
+Allow: /student
 
 Sitemap: https://www.campusstay.in/sitemap.xml
