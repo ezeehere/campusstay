@@ -1,6 +1,6 @@
 export const institutionNames = [
   "JIST",
   "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy"
+//   "Kaziranga ITI",
+//   "Ayush Pharmacy"
 ];
