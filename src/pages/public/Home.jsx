@@ -291,12 +291,12 @@ function Home() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchParams] = useSearchParams();
 
-  // TIMER FOR CHANGING NAMES (Sirf ye naya logic add kiya hai text change karne ke liye)
+  // TIMER FOR CHANGING NAMES 
   const [textIndex, setTextIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
       setTextIndex((prev) => (prev + 1) % institutionNames.length);
-    }, 2500); // Har 2.5 seconds me badlega
+    }, 2500);
     return () => clearInterval(timer);
   }, []);
 
