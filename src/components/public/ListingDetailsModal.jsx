@@ -42,7 +42,7 @@ function ListingDetailsModal({ listing, onClose }) {
   const primaryContactPerson = listing?.contactPerson || "Owner";
   const alternatePhone = listing?.alternatePhone || "";
   const alternateContactPerson = listing?.alternateContactPerson || "Caretaker";
-  const imageCount = Array.isArray(listing?.images) ? listing.images.length : 0;
+  // const imageCount = Array.isArray(listing?.images) ? listing.images.length : 0;
 
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportReason, setReportReason] = useState("Wrong information");
