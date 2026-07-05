@@ -1,5 +1,3 @@
-// src/utils/footerConfig.js
-
 export const launchData = {
   title: "JIST · JEC",
   description: "Verified student rooms and PGs across major campus zones in Jorhat, Assam.",
@@ -14,12 +12,14 @@ export const teamMembers = [
     name: "Ezaz Ahmed",
     role: "Developer",
     email: "ezazstudy@gmail.com", 
-    instagram: "https://instagram.com/ezee.io"
+    instagram: "https://instagram.com/ezee.io",
+    phone: "+917281904209"
   },
   {
     name: "kongkon Ray",
     role: "Designer",
     email: "kankanray059@gmail.com", 
-    instagram: "https://instagram.com/kongkon_ray_"
+    instagram: "https://instagram.com/kongkon_ray_",
+    phone: "+916003963538"
   }
 ];
