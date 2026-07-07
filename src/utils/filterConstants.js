@@ -32,6 +32,7 @@ export const sortOptions = [
   { label: "Recommended", value: "recommended" },
   { label: "Price: Low to High", value: "price_low_high" },
   { label: "Price: High to Low", value: "price_high_low" },
-  { label: "Recently Added", value: "recent" },
-  { label: "Food Included First", value: "food_first" },
+  { label: "Most seats left", value: "seats_left" },
+  { label: "Recently updated", value: "recently_updated" },
+  { label: "Verified first", value: "verified_first" },
 ];

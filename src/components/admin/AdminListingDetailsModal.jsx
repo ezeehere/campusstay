@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
+import { getListingScoreBreakdown } from "../../utils/listingScore";
 
 const MAX_IMAGES = 14;
 
@@ -161,6 +162,8 @@ function getFoodText(listing) {
 
 function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
   if (!listing) return null;
+
+  const scoreData = getListingScoreBreakdown(listing);
 
   const [selectedStatus, setSelectedStatus] = useState(
     listing.status || (listing.approved ? "approved" : "pending")
@@ -303,6 +306,8 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                 onUpdate={onUpdate}
                 saving={saving}
               />
+
+              <RecommendationScoreBox scoreData={scoreData} />
 
               <div className="grid gap-3 sm:grid-cols-2">
 
@@ -499,6 +504,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                   <DetailRow label="For" value={listing.gender} />
                   <DetailRow label="Nearby" value={getNearbyText(listing)} />
                   <DetailRow label="Area" value={listing.area} />
+                  <DetailRow label="PG note" value={listing.pgNote} />
                   <DetailRow label="Photos" value={`${getImageCount(listing)} uploaded`} />
                   <DetailRow label="Map link" value={listing.mapLink} />
                   <DetailRow label="Available from" value={listing.availableFrom} />
@@ -659,6 +665,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     alternatePhone: "",
     alternateContactPerson: "Caretaker",
     area: "",
+    pgNote: "",
     type: "PG",
     gender: "Boys",
     availableFrom: "",
@@ -682,6 +689,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       alternatePhone: listing?.alternatePhone || "",
       alternateContactPerson: listing?.alternateContactPerson || "Caretaker",
       area: listing?.area || "",
+      pgNote: listing?.pgNote || "",
       type: listing?.type || "PG",
       gender: listing?.gender || "Boys",
       availableFrom: listing?.availableFrom || "",
@@ -918,6 +926,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
         ? editData.alternateContactPerson || "Caretaker"
         : "",
       area: editData.area.trim(),
+      pgNote: editData.pgNote.trim(),
       type: editData.type,
       gender: editData.gender,
 
@@ -1036,6 +1045,14 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
               name="area"
               value={editData.area}
               onChange={handleChange}
+            />
+
+            <AdminEditInput
+              label="PG note"
+              name="pgNote"
+              value={editData.pgNote}
+              onChange={handleChange}
+              placeholder="Example: Advance ₹5000"
             />
 
             <AdminEditSelect
@@ -1466,6 +1483,56 @@ function DetailRow({ label, value }) {
       <p className="break-words font-medium text-slate-800">
         {value || "Not added"}
       </p>
+    </div>
+  );
+}
+
+function RecommendationScoreBox({ scoreData }) {
+  return (
+    <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-[#1E5B4F]">
+            Recommended ranking score
+          </p>
+
+          <h3 className="mt-1 text-2xl font-black text-[#070B1F]">
+            {scoreData.total}/100
+          </h3>
+
+          <p className="mt-1 text-sm font-bold text-slate-600">
+            {scoreData.label}
+          </p>
+        </div>
+
+        <span className="w-fit rounded-full bg-[#F1FAF7] px-3 py-1.5 text-xs font-black text-[#1E5B4F]">
+          Admin visibility check
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {scoreData.items.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between rounded-2xl bg-[#FFF8EF] px-3 py-2 text-sm"
+          >
+            <span className="font-bold text-slate-700">{item.label}</span>
+            <span className="font-black text-[#1E5B4F]">+{item.points}</span>
+          </div>
+        ))}
+      </div>
+
+      {scoreData.missing.length > 0 && (
+        <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3">
+          <p className="text-xs font-black uppercase tracking-wide text-amber-700">
+            Improve visibility
+          </p>
+
+          <p className="mt-1 text-sm leading-6 text-amber-800">
+            {scoreData.missing.slice(0, 4).join(", ")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

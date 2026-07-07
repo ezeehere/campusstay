@@ -18,11 +18,11 @@ import {
 
 import { getApprovedListings } from "../../firebase/listings";
 import {
-  sortListings,
-  sortListingsBySeatsLeft,
   getNearbyText,
   getNearbyInstitutions,
 } from "../../utils/listingHelpers";
+
+import { sortListingsByOption } from "../../utils/listingScore";
 
 import { 
   genderFilters, 
@@ -63,7 +63,7 @@ function Home() {
       try {
         setLoading(true);
         const data = await getApprovedListings();
-        setListings(sortListingsBySeatsLeft(data));
+        setListings(data);
       } catch (error) {
         console.error("Error loading approved listings:", error);
         alert("Could not load listings.");
@@ -131,7 +131,7 @@ function Home() {
         matchesAvailable
       );
     });
-    return sortListings(filtered, sortBy);
+    return sortListingsByOption(filtered, sortBy);
   }, [
     listings,
     search,
@@ -144,11 +144,6 @@ function Home() {
     availableOnly,
     sortBy,
   ]);
-
-  const sortedListings = useMemo(
-    () => sortListingsBySeatsLeft(filteredListings),
-    [filteredListings],
-  );
 
   function resetFilters() {
     setSearch("");
@@ -244,8 +239,7 @@ function Home() {
               Available stays near you
             </h2>
             <p className="mt-2 text-sm font-medium text-slate-500">
-              Sorted by seats left, so students see the most available stays
-              first.
+              Recommended stays based on availability, updates, trust, and fair visibility.
             </p>
           </div>
           <div className="w-fit rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm">
@@ -330,7 +324,7 @@ function Home() {
           </div>
         ) : filteredListings.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedListings.map((listing) => (
+            {filteredListings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}

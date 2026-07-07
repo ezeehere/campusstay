@@ -308,6 +308,18 @@ function ListingDetailsModal({ listing, onClose }) {
                 />
               </div>
 
+              {listing.pgNote && (
+                <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4">
+                  <h3 className="text-base font-black text-amber-950">
+                    PG note
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-amber-800">
+                    {listing.pgNote}
+                  </p>
+                </div>
+              )}
+
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
                 <h3 className="text-base font-extrabold text-slate-950">
                   Room options

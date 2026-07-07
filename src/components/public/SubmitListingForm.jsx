@@ -62,6 +62,7 @@ const initialFormData = {
   type: "PG",
   gender: "Boys",
   area: "",
+  pgNote: "",
   nearbyInstitutions: [],
   food: "Yes",
   foodDetails: "",
@@ -336,6 +337,7 @@ function SubmitListingForm({ ownerMode = false }) {
       type: formData.type,
       gender: formData.gender,
       area: formData.area.trim(),
+      pgNote: formData.pgNote.trim(),
 
       nearbyInstitutions: formData.nearbyInstitutions,
       nearbyCollege: formData.nearbyInstitutions[0] || "",
@@ -581,6 +583,15 @@ function SubmitListingForm({ ownerMode = false }) {
             onChange={handleChange}
             placeholder="Example: Sotai, JIST Gate, Tarajan"
             required
+          />
+
+          <InputField
+            label="PG note optional"
+            name="pgNote"
+            value={formData.pgNote}
+            onChange={handleChange}
+            placeholder="Example: Advance ₹5000, Self-cooking allowed"
+            helper="Short note shown on the listing card. Keep it under 40 characters."
           />
 
           <InputField

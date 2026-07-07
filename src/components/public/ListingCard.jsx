@@ -19,6 +19,7 @@ function ListingCard({ listing, onViewDetails }) {
   const availableFromText = getAvailableFromText(listing);
   const nearbyText = getNearbyText(listing);
   const foodIncluded = listing.foodIncluded === true || listing.food === true;
+  const pgNote = String(listing.pgNote || "").trim();
 
   const chips = [
     listing.type,
@@ -76,6 +77,12 @@ function ListingCard({ listing, onViewDetails }) {
             {listing.available ? "Available" : "Full"}
           </span>
         </div>
+
+        {pgNote && (
+          <div className="absolute right-3 top-3 max-w-[52%] rounded-2xl bg-[#FFF3D6]/95 px-3 py-1.5 text-right text-[11px] font-black leading-4 text-[#92400E] shadow-sm backdrop-blur">
+            <span className="line-clamp-2">{pgNote}</span>
+          </div>
+        )}
 
         <div className="absolute bottom-3 right-3 rounded-2xl bg-white/95 px-3 py-2 text-right shadow-sm backdrop-blur">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">

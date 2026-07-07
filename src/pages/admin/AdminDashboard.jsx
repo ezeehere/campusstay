@@ -25,6 +25,7 @@ import {
 } from "../../firebase/listings";
 
 import AdminListingDetailsModal from "../../components/admin/AdminListingDetailsModal";
+import { getListingScoreBreakdown } from "../../utils/listingScore";
 
 function getNearbyInstitutions(listing) {
   if (
@@ -397,6 +398,7 @@ function AdminDashboard() {
               <div className="grid gap-4 lg:hidden">
                 {filteredListings.map((listing) => {
                   const isActionLoading = actionLoadingId === listing.id;
+                  const scoreData = getListingScoreBreakdown(listing);
                   const coverImage =
                     listing.images?.[0] ||
                     "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=600&auto=format&fit=crop";
@@ -477,6 +479,8 @@ function AdminDashboard() {
                         />
                       </div>
 
+                      <AdminScoreCard scoreData={scoreData} />
+
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <button
                           onClick={() => setSelectedListing(listing)}
@@ -547,6 +551,7 @@ function AdminDashboard() {
                       <th className="py-3 pr-4">Stay</th>
                       <th className="py-3 pr-4">Location</th>
                       <th className="py-3 pr-4">Rent</th>
+                      <th className="py-3 pr-4">Score</th>
                       <th className="py-3 pr-4">Status</th>
                       <th className="py-3 pr-4">Actions</th>
                     </tr>
@@ -555,6 +560,7 @@ function AdminDashboard() {
                   <tbody>
                     {filteredListings.map((listing) => {
                       const isActionLoading = actionLoadingId === listing.id;
+                      const scoreData = getListingScoreBreakdown(listing);
                       const coverImage =
                         listing.images?.[0] ||
                         "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=600&auto=format&fit=crop";
@@ -618,6 +624,10 @@ function AdminDashboard() {
                               ₹{listing.startingRent || listing.rent || 0}
                             </p>
                             <p className="text-xs text-slate-500">per month</p>
+                          </td>
+
+                          <td className="py-4 pr-4">
+                            <AdminScoreCompact scoreData={scoreData} />
                           </td>
 
                           <td className="py-4 pr-4">
@@ -779,6 +789,80 @@ function InfoMini({ label, value }) {
         {value}
       </p>
     </div>
+  );
+}
+
+function AdminScoreCard({ scoreData }) {
+  return (
+    <div className="mt-4 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-[#1E5B4F]">
+            Ranking score
+          </p>
+
+          <p className="mt-1 text-2xl font-black text-[#070B1F]">
+            {scoreData.total}/100
+          </p>
+
+          <p className="mt-1 text-sm font-bold text-slate-600">
+            {scoreData.label}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2">
+        {scoreData.items.slice(0, 5).map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between rounded-2xl bg-white px-3 py-2 text-xs"
+          >
+            <span className="font-bold text-slate-700">{item.label}</span>
+            <span className="font-black text-[#1E5B4F]">+{item.points}</span>
+          </div>
+        ))}
+      </div>
+
+      {scoreData.missing.length > 0 && (
+        <p className="mt-3 text-xs leading-5 text-amber-700">
+          Missing: {scoreData.missing.slice(0, 3).join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function AdminScoreCompact({ scoreData }) {
+  return (
+    <details className="group w-56 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-3 py-2">
+      <summary className="cursor-pointer list-none">
+        <p className="text-base font-black text-[#070B1F]">
+          {scoreData.total}/100
+        </p>
+
+        <p className="text-xs font-bold text-slate-500">
+          {scoreData.label}
+        </p>
+      </summary>
+
+      <div className="mt-3 grid gap-1.5">
+        {scoreData.items.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between rounded-xl bg-white px-2 py-1.5 text-xs"
+          >
+            <span className="font-semibold text-slate-700">{item.label}</span>
+            <span className="font-black text-[#1E5B4F]">+{item.points}</span>
+          </div>
+        ))}
+
+        {scoreData.missing.length > 0 && (
+          <div className="rounded-xl bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-700">
+            Missing: {scoreData.missing.slice(0, 3).join(", ")}
+          </div>
+        )}
+      </div>
+    </details>
   );
 }
 
