@@ -32,10 +32,7 @@ export async function uploadImagesToCloudinary(imageFiles) {
 
     const data = await response.json();
 
-    return {
-      url: data.secure_url,
-      publicId: data.public_id,
-    };
+    return data.secure_url;
   });
 
   return Promise.all(uploadPromises);
