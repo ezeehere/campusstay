@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BedDouble,
   MapPin,
@@ -11,6 +11,9 @@ function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const image = images[activeImageIndex] || "";
   const rent = listing.startingRent || listing.rent || 0;
@@ -38,9 +41,52 @@ function ListingCard({ listing, onViewDetails }) {
     return () => clearInterval(timer);
   }, [images.length]);
 
+  function goToPreviousImage() {
+    if (images.length <= 1) return;
+
+    setActiveImageIndex((previousIndex) =>
+      previousIndex === 0 ? images.length - 1 : previousIndex - 1
+    );
+  }
+
+  function goToNextImage() {
+    if (images.length <= 1) return;
+
+    setActiveImageIndex((previousIndex) =>
+      previousIndex + 1 >= images.length ? 0 : previousIndex + 1
+    );
+  }
+
+  function handleTouchStart(event) {
+    touchStartX.current = event.touches[0].clientX;
+    touchEndX.current = event.touches[0].clientX;
+  }
+
+  function handleTouchMove(event) {
+    touchEndX.current = event.touches[0].clientX;
+  }
+
+  function handleTouchEnd() {
+    const swipeDistance = touchStartX.current - touchEndX.current;
+    const minimumSwipeDistance = 45;
+
+    if (Math.abs(swipeDistance) < minimumSwipeDistance) return;
+
+    if (swipeDistance > 0) {
+      goToNextImage();
+    } else {
+      goToPreviousImage();
+    }
+  }
+
   return (
     <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative h-40 overflow-hidden bg-[#F6F1E8] sm:h-44">
+      <div
+        className="relative h-40 overflow-hidden bg-[#F6F1E8] sm:h-44"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {image ? (
           <img
             src={image}
@@ -100,12 +146,16 @@ function ListingCard({ listing, onViewDetails }) {
         {images.length > 1 && (
           <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
             {images.map((_, index) => (
-              <span
+              <button
                 key={index}
-                className={`h-1.5 rounded-full transition-all ${activeImageIndex === index
-                  ? "w-5 bg-white"
-                  : "w-1.5 bg-white/60"
-                  }`}
+                type="button"
+                onClick={() => setActiveImageIndex(index)}
+                aria-label={`Show image ${index + 1}`}
+                className={`h-1.5 rounded-full transition-all ${
+                  activeImageIndex === index
+                    ? "w-5 bg-white"
+                    : "w-1.5 bg-white/60"
+                }`}
               />
             ))}
           </div>
