@@ -20,6 +20,7 @@ import Badge from "../../components/common/Badge";
 import SaveListingButton from "../../components/student/SaveListingButton";
 import ShareListingButton from "../../components/shared/ShareListingButton";
 import StudentActionLoginPrompt from "../../components/student/StudentActionLoginPrompt";
+import ProtectedContactActions from "../../components/public/ProtectedContactActions";
 
 import { getListingById } from "../../firebase/listings";
 import { submitListingReport } from "../../firebase/reports";
@@ -452,58 +453,8 @@ function ListingDetailsPage() {
               </div>
             )}
 
-            <div className="mt-4 grid gap-2">
-              <a
-                href={auth.currentUser ? `tel:${listing.phone}` : undefined}
-                onClick={(event) => {
-                  if (requireStudentLogin("call")) {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  handleAnalyticsClick("call_click", "callClicks");
-                }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-black text-white transition hover:bg-[#123C35]"
-              >
-                <Phone size={16} />
-                Call {primaryContactPerson}
-              </a>
-
-              {alternatePhone && (
-                <a
-                  href={auth.currentUser ? `tel:${alternatePhone}` : undefined}
-                  onClick={(event) => {
-                    if (requireStudentLogin("call")) {
-                      event.preventDefault();
-                      return;
-                    }
-
-                    handleAnalyticsClick("alternate_call_click", "callClicks");
-                  }}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-black text-[#1E5B4F] transition hover:bg-[#F6F1E8]"
-                >
-                  <Phone size={16} />
-                  Call {alternateContactPerson}
-                </a>
-              )}
-
-              <a
-                href={auth.currentUser ? whatsappLink : undefined}
-                target={auth.currentUser ? "_blank" : undefined}
-                rel={auth.currentUser ? "noreferrer" : undefined}
-                onClick={(event) => {
-                  if (requireStudentLogin("whatsapp")) {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  handleAnalyticsClick("whatsapp_click", "whatsappClicks");
-                }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-[#F6F1E8]"
-              >
-                <MessageCircle size={16} />
-                WhatsApp
-              </a>
+            <div className="mt-4">
+              <ProtectedContactActions listing={listing} />
             </div>
           </aside>
         </div>
@@ -651,35 +602,7 @@ function ListingDetailsPage() {
               )}
 
             <SectionCard title="Contact numbers">
-              <div className="grid gap-2 text-sm">
-                <ContactRow
-                  label={primaryContactPerson}
-                  phone={listing.phone}
-                  onClick={(event) => {
-                    if (requireStudentLogin("call")) {
-                      event.preventDefault();
-                      return;
-                    }
-
-                    handleAnalyticsClick("call_click", "callClicks");
-                  }}
-                />
-
-                {alternatePhone && (
-                  <ContactRow
-                    label={alternateContactPerson}
-                    phone={alternatePhone}
-                    onClick={(event) => {
-                      if (requireStudentLogin("call")) {
-                        event.preventDefault();
-                        return;
-                      }
-
-                      handleAnalyticsClick("alternate_call_click", "callClicks");
-                    }}
-                  />
-                )}
-              </div>
+              <ProtectedContactActions listing={listing} />
             </SectionCard>
 
             <SectionCard title="Location">
@@ -823,39 +746,36 @@ function ListingDetailsPage() {
         <div className="mx-auto grid max-w-5xl grid-cols-4 gap-2 sm:grid-cols-6">
           <SaveListingButton listing={listing} showText={false} />
 
-          <a
-            href={auth.currentUser ? `tel:${listing.phone}` : undefined}
-            onClick={(event) => {
-              if (requireStudentLogin("call")) {
-                event.preventDefault();
-                return;
-              }
+          {auth.currentUser ? (
+            <>
+              <a
+                href={`tel:${listing.phone}`}
+                onClick={() => handleAnalyticsClick("call_click", "callClicks")}
+                className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-2.5 text-xs font-black text-white"
+              >
+                <Phone size={16} />
+                Call
+              </a>
 
-              handleAnalyticsClick("call_click", "callClicks");
-            }}
-            className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-2.5 text-xs font-black text-white"
-          >
-            <Phone size={16} />
-            Call
-          </a>
-
-          <a
-            href={auth.currentUser ? whatsappLink : undefined}
-            target={auth.currentUser ? "_blank" : undefined}
-            rel={auth.currentUser ? "noreferrer" : undefined}
-            onClick={(event) => {
-              if (requireStudentLogin("whatsapp")) {
-                event.preventDefault();
-                return;
-              }
-
-              handleAnalyticsClick("whatsapp_click", "whatsappClicks");
-            }}
-            className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2.5 text-xs font-black text-slate-700"
-          >
-            <MessageCircle size={16} />
-            WhatsApp
-          </a>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => handleAnalyticsClick("whatsapp_click", "whatsappClicks")}
+                className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl border border-[#E8DFD2] bg-white px-2 py-2.5 text-xs font-black text-slate-700"
+              >
+                <MessageCircle size={16} />
+                WhatsApp
+              </a>
+            </>
+          ) : (
+            <Link
+              to="/student/login"
+              className="col-span-2 inline-flex items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-2.5 text-xs font-black text-white"
+            >
+              Sign in to view contact
+            </Link>
+          )}
 
           <button
             type="button"

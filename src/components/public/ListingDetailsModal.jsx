@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
+import ProtectedContactActions from "./ProtectedContactActions";
 import Badge from "../common/Badge";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { submitListingReport } from "../../firebase/reports";
@@ -467,47 +468,10 @@ function ListingDetailsModal({ listing, onClose }) {
                 )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                <h3 className="text-base font-black text-slate-950">
+                <h3 className="text-base font-black text-slate-950 mb-3">
                   Contact info
                 </h3>
-
-                <div className="mt-3 grid gap-2 text-sm">
-                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                    <span className="text-slate-500">{primaryContactPerson}</span>
-                    <a
-                      href={auth.currentUser ? `tel:${listing.phone}` : undefined}
-                      onClick={(event) => {
-                        if (requireStudentLogin("call")) {
-                          event.preventDefault();
-                          return;
-                        }
-                        handleAnalyticsClick("call_click", "callClicks");
-                      }}
-                      className="font-black text-[#1E5B4F]"
-                    >
-                      {listing.phone}
-                    </a>
-                  </div>
-
-                  {alternatePhone && (
-                    <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                      <span className="text-slate-500">{alternateContactPerson}</span>
-                      <a
-                        href={auth.currentUser ? `tel:${alternatePhone}` : undefined}
-                        onClick={(event) => {
-                          if (requireStudentLogin("call")) {
-                            event.preventDefault();
-                            return;
-                          }
-                          handleAnalyticsClick("alternate_call_click", "callClicks");
-                        }}
-                        className="font-black text-[#1E5B4F]"
-                      >
-                        {alternatePhone}
-                      </a>
-                    </div>
-                  )}
-                </div>
+                <ProtectedContactActions listing={listing} />
               </div>
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4">
