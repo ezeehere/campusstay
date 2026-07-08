@@ -97,6 +97,12 @@ function Home() {
     ];
   }, [listings]);
 
+  const totalSeatsAvailable = useMemo(() => {
+    return listings.reduce((total, listing) => {
+      return total + getTotalSeatsLeft(listing);
+    }, 0);
+  }, [listings]);
+
   const filteredListings = useMemo(() => {
     const cleanSearch = search.toLowerCase().trim();
     const filtered = listings.filter((listing) => {
@@ -209,6 +215,7 @@ function Home() {
         foodFilter={foodFilter}
         setFoodFilter={setFoodFilter}
         totalListings={listings.length}
+        totalSeatsAvailable={totalSeatsAvailable}
         currentInstitutionName={institutionNames[textIndex]}
       />
 
@@ -345,6 +352,17 @@ function Home() {
 
       <Footer />
     </main>
+  );
+}
+
+function getTotalSeatsLeft(listing) {
+  if (!Array.isArray(listing.roomOptions)) {
+    return listing.available ? 1 : 0;
+  }
+
+  return listing.roomOptions.reduce(
+    (sum, room) => sum + Number(room.availableUnits || 0),
+    0
   );
 }
 

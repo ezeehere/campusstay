@@ -93,7 +93,19 @@ function RouteLineBackground() {
   );
 }
 
-export default function HeroSection({ search, setSearch, gender, setGender, type, setType, foodFilter, setFoodFilter, totalListings , currentInstitutionName }) {
+export default function HeroSection({
+  search,
+  setSearch,
+  gender,
+  setGender,
+  type,
+  setType,
+  foodFilter,
+  setFoodFilter,
+  totalListings,
+  totalSeatsAvailable = 0,
+  currentInstitutionName,
+}) {
   return (
     <section className="relative overflow-hidden border-b border-[#E8DFD2] bg-[#FFF8EF]">
       <RouteLineBackground />
@@ -132,8 +144,12 @@ export default function HeroSection({ search, setSearch, gender, setGender, type
               <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">Student areas</p>
             </div>
             <div className="rounded-2xl border border-[#E8DFD2] bg-white p-3 shadow-sm sm:p-4">
-              <p className="text-xl font-black text-[#03071F] sm:text-2xl">0</p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">Broker fee</p>
+              <p className="text-xl font-black text-[#03071F] sm:text-2xl">
+                {totalSeatsAvailable}+
+              </p>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
+                Seats available
+              </p>
             </div>
           </div>
 

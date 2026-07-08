@@ -219,6 +219,8 @@ function ListingCard({ listing, onViewDetails }) {
           )}
         </div>
 
+        <FacilityPreview facilities={listing.facilities || []} />
+
         <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] px-3.5 py-3">
           <p
             className={`text-sm leading-6 text-slate-700 ${
@@ -267,6 +269,40 @@ function ListingCard({ listing, onViewDetails }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function FacilityPreview({ facilities }) {
+  if (!Array.isArray(facilities) || facilities.length === 0) {
+    return null;
+  }
+
+  const visibleFacilities = facilities.slice(0, 3);
+  const extraCount = Math.max(facilities.length - visibleFacilities.length, 0);
+
+  return (
+    <div className="mt-3">
+      <p className="mb-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+        Facilities
+      </p>
+
+      <div className="flex flex-wrap gap-1.5">
+        {visibleFacilities.map((facility) => (
+          <span
+            key={facility}
+            className="rounded-full bg-[#F6F1E8] px-2.5 py-1 text-xs font-black text-slate-600"
+          >
+            {facility}
+          </span>
+        ))}
+
+        {extraCount > 0 && (
+          <span className="rounded-full bg-[#E9FFF4] px-2.5 py-1 text-xs font-black text-[#1E5B4F]">
+            +{extraCount} more
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -356,7 +392,6 @@ function buildHumanPgSummary(listing) {
   const seatsLeft = getTotalSeatsLeft(listing);
 
   const roomText = getAvailableRoomTypesText(listing);
-  const facilitiesText = getFacilitiesText(listing);
   const essentialsText = getEssentialsText(listing);
 
   const parts = [];
@@ -392,12 +427,6 @@ function buildHumanPgSummary(listing) {
   } else {
     addPart(parts, " and is currently marked ");
     addPart(parts, "full", true);
-    addPart(parts, ". ");
-  }
-
-  if (facilitiesText) {
-    addPart(parts, "Facilities include ");
-    addPart(parts, facilitiesText, true);
     addPart(parts, ". ");
   }
 
@@ -452,13 +481,7 @@ function getAvailableRoomTypesText(listing) {
   } rooms`;
 }
 
-function getFacilitiesText(listing) {
-  if (!Array.isArray(listing.facilities) || listing.facilities.length === 0) {
-    return "";
-  }
 
-  return listing.facilities.slice(0, 3).join(", ");
-}
 
 function getEssentialsText(listing) {
   if (
