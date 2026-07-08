@@ -1,3 +1,5 @@
+import { compressImage } from "../utils/iamgeCompress";
+
 export async function uploadImagesToCloudinary(imageFiles) {
   if (!imageFiles || imageFiles.length === 0) {
     return [];
@@ -13,9 +15,10 @@ export async function uploadImagesToCloudinary(imageFiles) {
   const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
   const uploadPromises = imageFiles.map(async (file) => {
-    const formData = new FormData();
+    const compressedFile = await compressImage(file);
 
-    formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", compressedFile);
     formData.append("upload_preset", uploadPreset);
 
     const response = await fetch(uploadUrl, {
@@ -29,7 +32,10 @@ export async function uploadImagesToCloudinary(imageFiles) {
 
     const data = await response.json();
 
-    return data.secure_url;
+    return {
+      url: data.secure_url,
+      publicId: data.public_id,
+    };
   });
 
   return Promise.all(uploadPromises);
