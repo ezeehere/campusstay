@@ -23,25 +23,14 @@ import {
 
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
 import { getListingScoreBreakdown } from "../../utils/listingScore";
+import {
+  NEARBY_INSTITUTIONS,
+  STAY_TYPES,
+  GENDER_OPTIONS,
+  CONTACT_PERSON_OPTIONS,
+} from "../../utils/constants";
 
 const MAX_IMAGES = 14;
-
-const NEARBY_INSTITUTIONS = [
-  "JIST",
-  "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy",
-];
-
-const STAY_TYPES = ["PG", "Room", "Hostel"];
-const GENDER_OPTIONS = ["Boys", "Girls", "Co-ed"];
-
-const CONTACT_PERSON_OPTIONS = [
-  "Owner",
-  "Caretaker",
-  "Manager",
-  "Family member",
-];
 
 const DEFAULT_ROOM_OPTION = {
   title: "Single Room",
