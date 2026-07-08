@@ -345,7 +345,7 @@ function ListingDetailsPage() {
               onTouchEnd={handleTouchEnd}
             >
               <img
-                src={getCloudinaryImage(activeImage, 1000)} 
+                src={getCloudinaryImage(activeImage, 1200)} 
                 alt={listing.name}
                 className="max-h-full max-w-full object-contain"
               />
