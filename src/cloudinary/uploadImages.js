@@ -12,7 +12,7 @@ export async function uploadImagesToCloudinary(imageFiles) {
 
   const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-  const uploadPromises = imageFiles.map(async (file, index) => {
+  const uploadPromises = imageFiles.map(async (file) => {
     const compressedFile = await compressImage(file);
 
     const formData = new FormData();
