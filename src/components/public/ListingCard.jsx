@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   BedDouble,
-  CalendarDays,
   MapPin,
-  Utensils,
 } from "lucide-react";
 
 import SaveListingButton from "../student/SaveListingButton";
@@ -12,24 +10,20 @@ import ShareListingButton from "../shared/ShareListingButton";
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const image = images[activeImageIndex] || "";
   const rent = listing.startingRent || listing.rent || 0;
   const seatsLeft = getTotalSeatsLeft(listing);
-  const availableFromText = getAvailableFromText(listing);
   const nearbyText = getNearbyText(listing);
-  const foodIncluded = listing.foodIncluded === true || listing.food === true;
   const pgNote = String(listing.pgNote || "").trim();
-
-  const chips = [
-    listing.type,
-    listing.gender,
-    ...(listing.facilities || []).slice(0, 1),
-    ...(listing.nearbyEssentials || []).slice(0, 2),
-  ].filter(Boolean);
+  const roomPreview = getRoomPreview(listing);
+  const summary = buildPgSummary(listing);
+  const shouldShowReadMore = summary.length > 145;
 
   useEffect(() => {
     setActiveImageIndex(0);
+    setSummaryOpen(false);
   }, [listing.id]);
 
   useEffect(() => {
@@ -131,38 +125,55 @@ function ListingCard({ listing, onViewDetails }) {
           </p>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <MiniInfo
-            icon={<BedDouble size={14} />}
-            label="Seats"
-            value={seatsLeft > 0 ? `${seatsLeft} left` : "Full"}
-          />
+        <div className="mt-3 rounded-3xl bg-[#F8F8F8] p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <BedDouble size={15} />
+              <p className="text-[10px] font-black uppercase tracking-wide">
+                Room availability
+              </p>
+            </div>
 
-          <MiniInfo
-            icon={<Utensils size={14} />}
-            label="Food"
-            value={foodIncluded ? "Yes" : "No"}
-          />
+            <p className="text-xs font-black text-[#1E5B4F]">
+              {seatsLeft > 0 ? `${seatsLeft} total left` : "Currently full"}
+            </p>
+          </div>
 
-          <MiniInfo
-            icon={<CalendarDays size={14} />}
-            label="Move-in"
-            value={availableFromText}
-          />
-        </div>
-
-        {chips.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {chips.slice(0, 4).map((chip, index) => (
-              <span
-                key={`${chip}-${index}`}
-                className="rounded-full bg-[#F6F1E8] px-2.5 py-1 text-xs font-bold text-slate-600"
-              >
-                {chip}
-              </span>
+          <div className="grid grid-cols-3 gap-2">
+            {roomPreview.map((room) => (
+              <RoomMini
+                key={room.key}
+                title={room.title}
+                seats={room.seats}
+              />
             ))}
           </div>
-        )}
+
+          {getExtraRoomCount(listing) > 0 && (
+            <p className="mt-2 text-xs font-bold text-slate-500">
+              +{getExtraRoomCount(listing)} more room option available inside details.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] px-3.5 py-3">
+          <p
+            className={`text-sm leading-6 text-slate-700 ${summaryOpen ? "" : "line-clamp-3"
+              }`}
+          >
+            {summary}
+          </p>
+
+          {shouldShowReadMore && (
+            <button
+              type="button"
+              onClick={() => setSummaryOpen((previous) => !previous)}
+              className="mt-1 text-xs font-black text-[#1E5B4F]"
+            >
+              {summaryOpen ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
 
         <div className="mt-4 flex items-center gap-2">
           <button
@@ -184,21 +195,58 @@ function ListingCard({ listing, onViewDetails }) {
   );
 }
 
-function MiniInfo({ icon, label, value }) {
+function RoomMini({ title, seats }) {
   return (
-    <div className="rounded-2xl bg-[#F8F8F8] px-2.5 py-2.5">
-      <div className="flex items-center gap-1 text-slate-400">
-        {icon}
-        <p className="text-[9px] font-black uppercase tracking-wide">
-          {label}
-        </p>
-      </div>
+    <div className="rounded-2xl bg-white px-2.5 py-2.5 shadow-sm">
+      <p className="line-clamp-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+        {title}
+      </p>
 
-      <p className="mt-1 line-clamp-1 text-xs font-black text-[#1F2933]">
-        {value || "Ask"}
+      <p className="mt-1 text-xs font-black text-[#1F2933]">
+        {seats > 0 ? `${seats} left` : "Full"}
       </p>
     </div>
   );
+}
+
+function getRoomPreview(listing) {
+  const roomOptions = Array.isArray(listing.roomOptions)
+    ? listing.roomOptions
+    : [];
+
+  if (roomOptions.length === 0) {
+    return [
+      {
+        key: "total-seats",
+        title: "Seats",
+        seats: listing.available ? 1 : 0,
+      },
+    ];
+  }
+
+  return roomOptions.slice(0, 3).map((room, index) => ({
+    key: room.id || `${room.title}-${index}`,
+    title: getShortRoomTitle(room.title),
+    seats: Number(room.availableUnits || 0),
+  }));
+}
+
+function getExtraRoomCount(listing) {
+  if (!Array.isArray(listing.roomOptions)) return 0;
+
+  return Math.max(listing.roomOptions.length - 3, 0);
+}
+
+function getShortRoomTitle(title = "") {
+  const cleanTitle = String(title).toLowerCase();
+
+  if (cleanTitle.includes("single")) return "Single";
+  if (cleanTitle.includes("double")) return "Double";
+  if (cleanTitle.includes("triple")) return "Triple";
+  if (cleanTitle.includes("four")) return "Four";
+  if (cleanTitle.includes("dorm")) return "Dorm";
+
+  return title || "Room";
 }
 
 function getTotalSeatsLeft(listing) {
@@ -210,20 +258,6 @@ function getTotalSeatsLeft(listing) {
   );
 }
 
-function getAvailableFromText(listing) {
-  if (listing.moveInNote) return listing.moveInNote;
-  if (!listing.availableFrom) return "Ask";
-
-  try {
-    return new Date(listing.availableFrom).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-    });
-  } catch {
-    return listing.availableFrom;
-  }
-}
-
 function getNearbyText(listing) {
   if (
     Array.isArray(listing.nearbyInstitutions) &&
@@ -233,6 +267,84 @@ function getNearbyText(listing) {
   }
 
   return listing.nearbyInstitutionText || listing.nearbyCollege || "";
+}
+
+function buildPgSummary(listing) {
+  const typeText = listing.type || "stay";
+  const genderText = listing.gender ? `for ${listing.gender}` : "for students";
+  const areaText = listing.area ? `in ${listing.area}` : "near campus";
+  const nearbyText = getNearbyText(listing);
+  const rent = listing.startingRent || listing.rent || 0;
+  const seatsLeft = getTotalSeatsLeft(listing);
+
+  const foodIncluded = listing.foodIncluded === true || listing.food === true;
+  const facilities = Array.isArray(listing.facilities)
+    ? listing.facilities.slice(0, 3)
+    : [];
+
+  const nearbyEssentials = Array.isArray(listing.nearbyEssentials)
+    ? listing.nearbyEssentials.slice(0, 2)
+    : [];
+
+  const roomText = getRoomSummaryText(listing);
+  const facilityText =
+    facilities.length > 0
+      ? `It offers ${facilities.join(", ")}`
+      : "It has basic student-friendly facilities";
+
+  const foodText = foodIncluded
+    ? listing.foodDetails
+      ? `Food is available, with details like ${listing.foodDetails}`
+      : "Food is available for students"
+    : "Food is not included, so students should confirm cooking or nearby food options";
+
+  const nearbyEssentialText =
+    nearbyEssentials.length > 0
+      ? `Useful nearby places include ${nearbyEssentials.join(", ")}`
+      : "";
+
+  const priceText = rent
+    ? `Rent starts from ₹${rent}/month`
+    : "Rent details are available inside";
+
+  const seatText =
+    seatsLeft > 0
+      ? `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} are currently left`
+      : "It is currently marked full";
+
+  return [
+    `${typeText} ${genderText} ${areaText}${nearbyText ? ` near ${nearbyText}` : ""
+    }.`,
+    roomText,
+    `${facilityText}.`,
+    `${foodText}.`,
+    nearbyEssentialText ? `${nearbyEssentialText}.` : "",
+    `${priceText}, and ${seatText}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function getRoomSummaryText(listing) {
+  if (!Array.isArray(listing.roomOptions) || listing.roomOptions.length === 0) {
+    return "Room availability can be checked from the details page.";
+  }
+
+  const availableRooms = listing.roomOptions
+    .filter((room) => Number(room.availableUnits || 0) > 0)
+    .slice(0, 3)
+    .map(
+      (room) =>
+        `${getShortRoomTitle(room.title)} room with ${Number(
+          room.availableUnits || 0
+        )} seat${Number(room.availableUnits || 0) === 1 ? "" : "s"} left`
+    );
+
+  if (availableRooms.length === 0) {
+    return "No room option is currently marked available.";
+  }
+
+  return `Available options include ${availableRooms.join(", ")}.`;
 }
 
 export default ListingCard;
