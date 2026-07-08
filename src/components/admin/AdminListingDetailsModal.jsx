@@ -23,25 +23,15 @@ import {
 
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
 import { getListingScoreBreakdown } from "../../utils/listingScore";
+import { getNearbyText, getNearbyInstitutions } from "../../utils/listingHelpers";
+import {
+  NEARBY_INSTITUTIONS,
+  STAY_TYPES,
+  GENDER_OPTIONS,
+  CONTACT_PERSON_OPTIONS,
+} from "../../utils/constants";
 
 const MAX_IMAGES = 14;
-
-const NEARBY_INSTITUTIONS = [
-  "JIST",
-  "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy",
-];
-
-const STAY_TYPES = ["PG", "Room", "Hostel"];
-const GENDER_OPTIONS = ["Boys", "Girls", "Co-ed"];
-
-const CONTACT_PERSON_OPTIONS = [
-  "Owner",
-  "Caretaker",
-  "Manager",
-  "Family member",
-];
 
 const DEFAULT_ROOM_OPTION = {
   title: "Single Room",
@@ -121,32 +111,7 @@ function formatDate(value) {
   return String(value);
 }
 
-function getNearbyInstitutions(listing) {
-  if (
-    Array.isArray(listing?.nearbyInstitutions) &&
-    listing.nearbyInstitutions.length > 0
-  ) {
-    return listing.nearbyInstitutions;
-  }
-
-  if (listing?.nearbyCollege) {
-    return [listing.nearbyCollege];
-  }
-
-  if (listing?.nearbyInstitutionText) {
-    return String(listing.nearbyInstitutionText)
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getNearbyText(listing) {
-  const institutions = getNearbyInstitutions(listing);
-  return institutions.length > 0 ? institutions.join(", ") : "Not selected";
-}
+// Local duplicate helpers removed
 
 function getImageCount(listing) {
   return Array.isArray(listing?.images) ? listing.images.length : 0;
@@ -227,7 +192,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
 
             <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
               <MapPin size={15} />
-              {listing.area || "Area not added"} · Near {getNearbyText(listing)}
+              {listing.area || "Area not added"} · Near {getNearbyText(listing) || "Not selected"}
             </p>
           </div>
 
@@ -502,7 +467,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                   <DetailRow label="Tracking ID" value={listing.trackingId} />
                   <DetailRow label="Type" value={listing.type} />
                   <DetailRow label="For" value={listing.gender} />
-                  <DetailRow label="Nearby" value={getNearbyText(listing)} />
+                  <DetailRow label="Nearby" value={getNearbyText(listing) || "Not selected"} />
                   <DetailRow label="Area" value={listing.area} />
                   <DetailRow label="PG note" value={listing.pgNote} />
                   <DetailRow label="Photos" value={`${getImageCount(listing)} uploaded`} />

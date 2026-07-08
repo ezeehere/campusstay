@@ -7,19 +7,25 @@ import {
 import SaveListingButton from "../student/SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
+import {
+  getNearbyText,
+  getTotalSeatsLeft,
+  getAvailableRoomTypesText,
+  getEssentialsText,
+  getRoomPreview,
+  getStartingRent,
+} from "../../utils/listingHelpers";
+import { useSwipeCarousel } from "../../hooks/useSwipeCarousel";
 
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchEndX = useRef(0);
-  const touchEndY = useRef(0);
+  const swipeHandlers = useSwipeCarousel(images, activeImageIndex, setActiveImageIndex);
 
   const image = images[activeImageIndex] || "";
-  const rent = listing.startingRent || listing.rent || 0;
+  const rent = getStartingRent(listing);
   const seatsLeft = getTotalSeatsLeft(listing);
   const nearbyText = getNearbyText(listing);
   const pgNote = String(listing.pgNote || "").trim();
@@ -60,46 +66,13 @@ function ListingCard({ listing, onViewDetails }) {
     );
   }
 
-  function handleTouchStart(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchStartX.current = event.touches[0].clientX;
-    touchStartY.current = event.touches[0].clientY;
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchMove(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchEnd() {
-    const horizontalDistance = touchStartX.current - touchEndX.current;
-    const verticalDistance = touchStartY.current - touchEndY.current;
-
-    const minimumSwipeDistance = 45;
-
-    if (Math.abs(horizontalDistance) < minimumSwipeDistance) return;
-
-    if (Math.abs(verticalDistance) > Math.abs(horizontalDistance)) return;
-
-    if (horizontalDistance > 0) {
-      goToNextImage();
-    } else {
-      goToPreviousImage();
-    }
-  }
-
   return (
     <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div
         className="relative h-40 overflow-hidden bg-[#F6F1E8] sm:h-44"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
       >
         {image ? (
           <img
@@ -328,64 +301,10 @@ function RoomMini({ title, seats }) {
   );
 }
 
-function getRoomPreview(listing) {
-  const roomOptions = Array.isArray(listing.roomOptions)
-    ? listing.roomOptions
-    : [];
-
-  if (roomOptions.length === 0) {
-    return [
-      {
-        key: "total-seats",
-        title: "Seats",
-        seats: listing.available ? 1 : 0,
-      },
-    ];
-  }
-
-  return roomOptions.slice(0, 3).map((room, index) => ({
-    key: room.id || `${room.title}-${index}`,
-    title: getShortRoomTitle(room.title),
-    seats: Number(room.availableUnits || 0),
-  }));
-}
-
 function getExtraRoomCount(listing) {
   if (!Array.isArray(listing.roomOptions)) return 0;
 
   return Math.max(listing.roomOptions.length - 3, 0);
-}
-
-function getShortRoomTitle(title = "") {
-  const cleanTitle = String(title).toLowerCase();
-
-  if (cleanTitle.includes("single")) return "Single";
-  if (cleanTitle.includes("double")) return "Double";
-  if (cleanTitle.includes("triple")) return "Triple";
-  if (cleanTitle.includes("four")) return "Four";
-  if (cleanTitle.includes("dorm")) return "Dorm";
-
-  return title || "Room";
-}
-
-function getTotalSeatsLeft(listing) {
-  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
-
-  return listing.roomOptions.reduce(
-    (sum, room) => sum + Number(room.availableUnits || 0),
-    0
-  );
-}
-
-function getNearbyText(listing) {
-  if (
-    Array.isArray(listing.nearbyInstitutions) &&
-    listing.nearbyInstitutions.length > 0
-  ) {
-    return listing.nearbyInstitutions.join(", ");
-  }
-
-  return listing.nearbyInstitutionText || listing.nearbyCollege || "";
 }
 
 function buildHumanPgSummary(listing) {
@@ -465,41 +384,6 @@ function addPart(parts, text, highlight = false) {
   });
 }
 
-function getAvailableRoomTypesText(listing) {
-  if (!Array.isArray(listing.roomOptions) || listing.roomOptions.length === 0) {
-    return "";
-  }
-
-  const availableRooms = listing.roomOptions
-    .filter((room) => Number(room.availableUnits || 0) > 0)
-    .map((room) => getShortRoomTitle(room.title));
-
-  const uniqueRooms = Array.from(new Set(availableRooms)).slice(0, 3);
-
-  if (uniqueRooms.length === 0) return "";
-
-  if (uniqueRooms.length === 1) return `${uniqueRooms[0]} room`;
-
-  if (uniqueRooms.length === 2) {
-    return `${uniqueRooms[0]} and ${uniqueRooms[1]} rooms`;
-  }
-
-  return `${uniqueRooms.slice(0, -1).join(", ")} and ${
-    uniqueRooms[uniqueRooms.length - 1]
-  } rooms`;
-}
-
-
-
-function getEssentialsText(listing) {
-  if (
-    !Array.isArray(listing.nearbyEssentials) ||
-    listing.nearbyEssentials.length === 0
-  ) {
-    return "";
-  }
-
-  return listing.nearbyEssentials.slice(0, 2).join(" and ");
-}
+// Local helper duplicates replaced by imports from listingHelpers
 
 export default ListingCard;
