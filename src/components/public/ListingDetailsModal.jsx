@@ -201,7 +201,7 @@ function ListingDetailsModal({ listing, onClose }) {
               <div className="space-y-3">
                 <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
                   <img
-                    src={getCloudinaryImage(activeImage, 800)}
+                    src={getCloudinaryImage(activeImage, 1000)}
                     alt={listing.name}
                     className="max-h-full max-w-full object-contain"
                   />
