@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   AlertTriangle,
@@ -38,6 +38,11 @@ function ListingDetailsPage() {
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loginAction, setLoginAction] = useState("");
+
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchEndX = useRef(0);
+  const touchEndY = useRef(0);
 
   const [callbackLoading, setCallbackLoading] = useState(false);
   const [callbackSent, setCallbackSent] = useState(false);
@@ -221,6 +226,55 @@ function ListingDetailsPage() {
     }
   }
 
+  function goToPreviousImage() {
+    if (images.length <= 1) return;
+
+    setActiveImageIndex((previousIndex) =>
+      previousIndex === 0 ? images.length - 1 : previousIndex - 1
+    );
+  }
+
+  function goToNextImage() {
+    if (images.length <= 1) return;
+
+    setActiveImageIndex((previousIndex) =>
+      previousIndex + 1 >= images.length ? 0 : previousIndex + 1
+    );
+  }
+
+  function handleTouchStart(event) {
+    if (!event.touches || event.touches.length === 0) return;
+
+    touchStartX.current = event.touches[0].clientX;
+    touchStartY.current = event.touches[0].clientY;
+    touchEndX.current = event.touches[0].clientX;
+    touchEndY.current = event.touches[0].clientY;
+  }
+
+  function handleTouchMove(event) {
+    if (!event.touches || event.touches.length === 0) return;
+
+    touchEndX.current = event.touches[0].clientX;
+    touchEndY.current = event.touches[0].clientY;
+  }
+
+  function handleTouchEnd() {
+    const horizontalDistance = touchStartX.current - touchEndX.current;
+    const verticalDistance = touchStartY.current - touchEndY.current;
+
+    const minimumSwipeDistance = 45;
+
+    if (Math.abs(horizontalDistance) < minimumSwipeDistance) return;
+
+    if (Math.abs(verticalDistance) > Math.abs(horizontalDistance)) return;
+
+    if (horizontalDistance > 0) {
+      goToNextImage();
+    } else {
+      goToPreviousImage();
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#FFF8EF] via-white to-[#F6F1E8] pb-28 text-slate-950">
       <header className="sticky top-0 z-40 border-b border-[#E8DFD2] bg-white/95 backdrop-blur">
@@ -283,7 +337,12 @@ function ListingDetailsPage() {
 
         <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-3">
-            <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.8rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
+            <div
+              className="relative flex aspect-[4/3] w-full touch-pan-y items-center justify-center overflow-hidden rounded-[1.8rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={activeImage}
                 alt={listing.name}

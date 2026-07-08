@@ -13,7 +13,9 @@ function ListingCard({ listing, onViewDetails }) {
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const touchEndX = useRef(0);
+  const touchEndY = useRef(0);
 
   const image = images[activeImageIndex] || "";
   const rent = listing.startingRent || listing.rent || 0;
@@ -58,21 +60,32 @@ function ListingCard({ listing, onViewDetails }) {
   }
 
   function handleTouchStart(event) {
+    if (!event.touches || event.touches.length === 0) return;
+
     touchStartX.current = event.touches[0].clientX;
+    touchStartY.current = event.touches[0].clientY;
     touchEndX.current = event.touches[0].clientX;
+    touchEndY.current = event.touches[0].clientY;
   }
 
   function handleTouchMove(event) {
+    if (!event.touches || event.touches.length === 0) return;
+
     touchEndX.current = event.touches[0].clientX;
+    touchEndY.current = event.touches[0].clientY;
   }
 
   function handleTouchEnd() {
-    const swipeDistance = touchStartX.current - touchEndX.current;
+    const horizontalDistance = touchStartX.current - touchEndX.current;
+    const verticalDistance = touchStartY.current - touchEndY.current;
+
     const minimumSwipeDistance = 45;
 
-    if (Math.abs(swipeDistance) < minimumSwipeDistance) return;
+    if (Math.abs(horizontalDistance) < minimumSwipeDistance) return;
 
-    if (swipeDistance > 0) {
+    if (Math.abs(verticalDistance) > Math.abs(horizontalDistance)) return;
+
+    if (horizontalDistance > 0) {
       goToNextImage();
     } else {
       goToPreviousImage();
