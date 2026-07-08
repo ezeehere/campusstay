@@ -1,20 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Home as HomeIcon, SlidersHorizontal } from "lucide-react";
-
-// Components Imports
 import ListingCard from "../../components/public/ListingCard";
 import Badge from "../../components/common/Badge";
 import HeroSection from "../../components/public/HeroSection";
 import Footer from "../../components/public/Footer";
-
 import { institutionNames } from "../../utils/tickerConstants";
-
 import {
   TrustProcessSection,
   OwnerCTASection,
 } from "../../components/public/InfoSections";
-
 import { getApprovedListings } from "../../firebase/listings";
 import {
   getNearbyText,
@@ -23,14 +18,13 @@ import {
 
 import { sortListingsByOption } from "../../utils/listingScore";
 
-import { 
-  genderFilters, 
-  stayTypeFilters, 
-  foodFilters, 
-  institutionFilters, 
-  sortOptions 
+import {
+  genderFilters,
+  stayTypeFilters,
+  foodFilters,
+  institutionFilters,
+  sortOptions,
 } from "../../utils/filterConstants";
-
 
 function Home() {
   const navigate = useNavigate();
@@ -247,7 +241,8 @@ function Home() {
               Available stays near you
             </h2>
             <p className="mt-2 text-sm font-medium text-slate-500">
-              Recommended stays based on availability, updates, trust, and fair visibility.
+              Recommended stays based on availability, updates, trust, and fair
+              visibility.
             </p>
           </div>
           <div className="w-fit rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm">
@@ -362,7 +357,7 @@ function getTotalSeatsLeft(listing) {
 
   return listing.roomOptions.reduce(
     (sum, room) => sum + Number(room.availableUnits || 0),
-    0
+    0,
   );
 }
 
