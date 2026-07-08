@@ -27,6 +27,7 @@ import { trackListingInteraction } from "../../firebase/analytics";
 import { createStudentLead } from "../../firebase/studentLeads";
 import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
+import { getCloudinaryImage } from "../../utils/cloudinary";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
@@ -344,7 +345,7 @@ function ListingDetailsPage() {
               onTouchEnd={handleTouchEnd}
             >
               <img
-                src={activeImage}
+                src={getCloudinaryImage(activeImage, 1000)} 
                 alt={listing.name}
                 className="max-h-full max-w-full object-contain"
               />
@@ -376,7 +377,7 @@ function ListingDetailsPage() {
                     }`}
                   >
                     <img
-                      src={image}
+                      src={getCloudinaryImage(image, 400)}
                       alt={`${listing.name} ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
