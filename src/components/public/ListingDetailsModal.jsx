@@ -200,7 +200,7 @@ function ListingDetailsModal({ listing, onClose }) {
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
               <div className="space-y-3">
-                <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
+                <div className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
                   <img
                     src={getCloudinaryOptimizedUrl(activeImage, {
                       width: 1200,

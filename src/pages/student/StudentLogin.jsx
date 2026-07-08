@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Home as HomeIcon, Loader2, LogIn, UserPlus } from "lucide-react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebase/config";
-
 import {
   loginStudentWithEmail,
   loginStudentWithGoogle,
   registerStudentWithEmail,
+  resetStudentPassword,
 } from "../../firebase/studentAuth";
 
 function StudentLogin() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
 
   function goAfterLogin() {
     navigate("/student/dashboard", { replace: true });
@@ -43,6 +43,17 @@ function StudentLogin() {
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   async function handleGoogleLogin() {
     try {
@@ -53,6 +64,28 @@ function StudentLogin() {
     } catch (error) {
       console.error(error);
       setErrorMessage("Google login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setErrorMessage("Please enter your email first.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      await resetStudentPassword(email.trim());
+
+      alert("Password reset link has been sent to your email.");
+      setCooldown(60);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Failed to send password reset email.");
     } finally {
       setLoading(false);
     }
@@ -87,7 +120,7 @@ function StudentLogin() {
       setErrorMessage(
         mode === "register"
           ? "Account creation failed. Try another email or password."
-          : "Login failed. Check your email and password."
+          : "Login failed. Check your email and password.",
       );
     } finally {
       setLoading(false);
@@ -162,16 +195,10 @@ function StudentLogin() {
                 {mode === "login" ? "Student Login" : "Create Student Account"}
               </h2>
               <p className="mt-2 text-sm text-slate-500">
-                Login is required only for saving PGs, preferences, reviews,
-                and callback requests.
+                Login is required only for saving PGs, preferences, reviews, and
+                callback requests.
               </p>
             </div>
-
-            {errorMessage && (
-              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                {errorMessage}
-              </div>
-            )}
 
             <button
               type="button"
@@ -206,7 +233,11 @@ function StudentLogin() {
                   />
                 </div>
               )}
-
+              {errorMessage && (
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                  {errorMessage}
+                </div>
+              )}
               <div>
                 <label className="text-sm font-bold text-slate-700">
                   Email
@@ -232,6 +263,21 @@ function StudentLogin() {
                   placeholder="Minimum 6 characters"
                 />
               </div>
+
+              {mode === "login" && (
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading || cooldown > 0}
+                    className="text-sm font-semibold text-[#1E5B4F] hover:underline"
+                  >
+                    {cooldown > 0
+                      ? `Resend in ${cooldown}s`
+                      : "Forgot Password?"}
+                  </button>
+                </div>
+              )}
 
               <button
                 type="submit"

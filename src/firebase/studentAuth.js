@@ -6,6 +6,7 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  sendPasswordResetEmail
 } from "firebase/auth";
 
 import { auth } from "./config";
@@ -57,4 +58,10 @@ export async function logoutStudent() {
 
 export function watchStudentAuth(callback) {
   return onAuthStateChanged(auth, callback);
+}
+
+
+
+export async function resetStudentPassword(email) {
+  await sendPasswordResetEmail(auth, email);
 }
