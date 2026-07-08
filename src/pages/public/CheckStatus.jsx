@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { getListingByTrackingIdAndPhone } from "../../firebase/listings";
+import { getNearbyText, getNearbyInstitutions } from "../../utils/listingHelpers";
 
 const statusContent = {
   pending: {
@@ -45,32 +46,7 @@ const statusContent = {
   },
 };
 
-function getNearbyInstitutions(listing) {
-  if (
-    Array.isArray(listing?.nearbyInstitutions) &&
-    listing.nearbyInstitutions.length > 0
-  ) {
-    return listing.nearbyInstitutions;
-  }
-
-  if (listing?.nearbyCollege) {
-    return [listing.nearbyCollege];
-  }
-
-  if (listing?.nearbyInstitutionText) {
-    return String(listing.nearbyInstitutionText)
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getNearbyText(listing) {
-  const institutions = getNearbyInstitutions(listing);
-  return institutions.length > 0 ? institutions.join(", ") : "Not selected";
-}
+// Local duplicate helpers removed
 
 function getImageCount(listing) {
   return Array.isArray(listing?.images) ? listing.images.length : 0;
@@ -292,7 +268,7 @@ function CheckStatus() {
 
                     <SmallBox
                       label="Nearby Institution"
-                      value={getNearbyText(listing)}
+                      value={getNearbyText(listing) || "Not selected"}
                     />
 
                     <SmallBox

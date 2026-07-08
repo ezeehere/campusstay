@@ -29,6 +29,7 @@ import { createStudentLead } from "../../firebase/studentLeads";
 import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
+import { getNearbyText, getTotalSeatsLeft } from "../../utils/listingHelpers";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
@@ -880,24 +881,6 @@ function ContactRow({ label, phone, onClick }) {
   );
 }
 
-function getTotalSeatsLeft(listing) {
-  if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
-
-  return listing.roomOptions.reduce(
-    (sum, room) => sum + Number(room.availableUnits || 0),
-    0
-  );
-}
-
-function getNearbyText(listing) {
-  if (
-    Array.isArray(listing.nearbyInstitutions) &&
-    listing.nearbyInstitutions.length > 0
-  ) {
-    return listing.nearbyInstitutions.join(", ");
-  }
-
-  return listing.nearbyInstitutionText || listing.nearbyCollege || "";
-}
+// Local helper duplicates replaced by imports from listingHelpers
 
 export default ListingDetailsPage;

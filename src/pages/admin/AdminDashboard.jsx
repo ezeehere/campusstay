@@ -26,33 +26,7 @@ import {
 
 import AdminListingDetailsModal from "../../components/admin/AdminListingDetailsModal";
 import { getListingScoreBreakdown } from "../../utils/listingScore";
-
-function getNearbyInstitutions(listing) {
-  if (
-    Array.isArray(listing?.nearbyInstitutions) &&
-    listing.nearbyInstitutions.length > 0
-  ) {
-    return listing.nearbyInstitutions;
-  }
-
-  if (listing?.nearbyCollege) {
-    return [listing.nearbyCollege];
-  }
-
-  if (listing?.nearbyInstitutionText) {
-    return String(listing.nearbyInstitutionText)
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getNearbyText(listing) {
-  const institutions = getNearbyInstitutions(listing);
-  return institutions.length > 0 ? institutions.join(", ") : "Nearby not selected";
-}
+import { getNearbyText, getNearbyInstitutions } from "../../utils/listingHelpers";
 
 function getImageCount(listing) {
   return Array.isArray(listing?.images) ? listing.images.length : 0;
@@ -421,7 +395,7 @@ function AdminDashboard() {
                           </h4>
 
                           <p className="mt-1 text-sm text-slate-500">
-                            {listing.area || "Area not added"} · Near {getNearbyText(listing)}
+                            {listing.area || "Area not added"} · Near {getNearbyText(listing) || "None"}
                           </p>
 
                           <p className="mt-2 text-lg font-bold text-[#070B1F]">
@@ -458,7 +432,7 @@ function AdminDashboard() {
                         />
                         <InfoMini
                           label="Nearby"
-                          value={getNearbyText(listing)}
+                          value={getNearbyText(listing) || "Nearby not selected"}
                         />
                       </div>
 
@@ -615,7 +589,7 @@ function AdminDashboard() {
                               {listing.area || "Not added"}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              Near {getNearbyText(listing)}
+                              Near {getNearbyText(listing) || "None"}
                             </p>
                           </td>
 
