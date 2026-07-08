@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import {
   Heart,
@@ -23,38 +24,32 @@ const actionConfig = {
   },
   call: {
     text: "call the owner",
-    description:
-      "Sign in to view the owner contact number and call directly.",
+    description: "Sign in to view the owner contact number and call directly.",
     icon: Phone,
   },
   whatsapp: {
     text: "message the owner",
-    description:
-      "Sign in to view WhatsApp contact and message the owner directly.",
+    description: "Sign in to view WhatsApp contact and message the owner directly.",
     icon: MessageCircle,
   },
   map: {
     text: "open the location",
-    description:
-      "Sign in to view the location details and map link.",
+    description: "Sign in to view the location details and map link.",
     icon: MapPin,
   },
   review: {
     text: "write a review",
-    description:
-      "Sign in to share your feedback and help other students.",
+    description: "Sign in to share your feedback and help other students.",
     icon: Star,
   },
   callback: {
     text: "request owner callback",
-    description:
-      "Sign in to request a callback from the owner.",
+    description: "Sign in to request a callback from the owner.",
     icon: Phone,
   },
   continue: {
     text: "continue",
-    description:
-      "Sign in to continue using student features on CampusStay.",
+    description: "Sign in to continue using student features on CampusStay.",
     icon: UserRound,
   },
 };
@@ -75,8 +70,8 @@ function StudentActionLoginPrompt({ listing, action = "continue", onClose }) {
     listingId: listing.id,
   });
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#070B1F]/55 px-4 py-6">
+  const modal = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto bg-[#070B1F]/55 px-4 py-6">
       <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[#E8DFD2] bg-white shadow-2xl">
         <button
           type="button"
@@ -165,6 +160,8 @@ function StudentActionLoginPrompt({ listing, action = "continue", onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 export default StudentActionLoginPrompt;
