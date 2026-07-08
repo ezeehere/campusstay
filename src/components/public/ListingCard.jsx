@@ -23,8 +23,8 @@ function ListingCard({ listing, onViewDetails }) {
   const nearbyText = getNearbyText(listing);
   const pgNote = String(listing.pgNote || "").trim();
   const roomPreview = getRoomPreview(listing);
-  const summary = buildPgSummary(listing);
-  const shouldShowReadMore = summary.length > 145;
+  const summary = buildHumanPgSummary(listing);
+  const shouldShowReadMore = summary.fullText.length > 155;
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -221,10 +221,22 @@ function ListingCard({ listing, onViewDetails }) {
 
         <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] px-3.5 py-3">
           <p
-            className={`text-sm leading-6 text-slate-700 ${summaryOpen ? "" : "line-clamp-3"
-              }`}
+            className={`text-sm leading-6 text-slate-700 ${
+              summaryOpen ? "" : "line-clamp-3"
+            }`}
           >
-            {summary}
+            {summary.parts.map((part, index) =>
+              part.highlight ? (
+                <span
+                  key={`${part.text}-${index}`}
+                  className="font-black text-[#1E5B4F]"
+                >
+                  {part.text}
+                </span>
+              ) : (
+                <span key={`${part.text}-${index}`}>{part.text}</span>
+              )
+            )}
           </p>
 
           {shouldShowReadMore && (
@@ -332,82 +344,131 @@ function getNearbyText(listing) {
   return listing.nearbyInstitutionText || listing.nearbyCollege || "";
 }
 
-function buildPgSummary(listing) {
+function buildHumanPgSummary(listing) {
   const typeText = listing.type || "stay";
-  const genderText = listing.gender ? `for ${listing.gender}` : "for students";
-  const areaText = listing.area ? `in ${listing.area}` : "near campus";
+  const genderText = listing.gender
+    ? `${listing.gender} students`
+    : "students";
+
+  const areaText = listing.area || "near campus";
   const nearbyText = getNearbyText(listing);
   const rent = listing.startingRent || listing.rent || 0;
   const seatsLeft = getTotalSeatsLeft(listing);
 
-  const foodIncluded = listing.foodIncluded === true || listing.food === true;
-  const facilities = Array.isArray(listing.facilities)
-    ? listing.facilities.slice(0, 3)
-    : [];
+  const roomText = getAvailableRoomTypesText(listing);
+  const facilitiesText = getFacilitiesText(listing);
+  const essentialsText = getEssentialsText(listing);
 
-  const nearbyEssentials = Array.isArray(listing.nearbyEssentials)
-    ? listing.nearbyEssentials.slice(0, 2)
-    : [];
+  const parts = [];
 
-  const roomText = getRoomSummaryText(listing);
-  const facilityText =
-    facilities.length > 0
-      ? `It offers ${facilities.join(", ")}`
-      : "It has basic student-friendly facilities";
+  addPart(parts, "Good for ");
+  addPart(parts, genderText, true);
+  addPart(parts, nearbyText ? " looking near " : " looking for a stay near campus. ");
+  if (nearbyText) {
+    addPart(parts, nearbyText, true);
+    addPart(parts, ". ");
+  }
 
-  const foodText = foodIncluded
-    ? listing.foodDetails
-      ? `Food is available, with details like ${listing.foodDetails}`
-      : "Food is available for students"
-    : "Food is not included, so students should confirm cooking or nearby food options";
+  addPart(parts, "Located in ");
+  addPart(parts, areaText, true);
+  addPart(parts, `, this ${typeText} `);
 
-  const nearbyEssentialText =
-    nearbyEssentials.length > 0
-      ? `Useful nearby places include ${nearbyEssentials.join(", ")}`
-      : "";
+  if (roomText) {
+    addPart(parts, "has ");
+    addPart(parts, roomText, true);
+    addPart(parts, " available");
+  } else {
+    addPart(parts, "has room options available");
+  }
 
-  const priceText = rent
-    ? `Rent starts from ₹${rent}/month`
-    : "Rent details are available inside";
+  if (seatsLeft > 0) {
+    addPart(parts, " with ");
+    addPart(
+      parts,
+      `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`,
+      true
+    );
+    addPart(parts, ". ");
+  } else {
+    addPart(parts, " and is currently marked ");
+    addPart(parts, "full", true);
+    addPart(parts, ". ");
+  }
 
-  const seatText =
-    seatsLeft > 0
-      ? `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} are currently left`
-      : "It is currently marked full";
+  if (facilitiesText) {
+    addPart(parts, "Facilities include ");
+    addPart(parts, facilitiesText, true);
+    addPart(parts, ". ");
+  }
 
-  return [
-    `${typeText} ${genderText} ${areaText}${nearbyText ? ` near ${nearbyText}` : ""
-    }.`,
-    roomText,
-    `${facilityText}.`,
-    `${foodText}.`,
-    nearbyEssentialText ? `${nearbyEssentialText}.` : "",
-    `${priceText}, and ${seatText}.`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  if (essentialsText) {
+    addPart(parts, "Nearby places like ");
+    addPart(parts, essentialsText, true);
+    addPart(parts, " make daily student life easier. ");
+  }
+
+  if (rent) {
+    addPart(parts, "Rent starts from ");
+    addPart(parts, `₹${rent}/month`, true);
+    addPart(parts, ".");
+  }
+
+  return {
+    parts,
+    fullText: parts.map((part) => part.text).join(""),
+  };
 }
 
-function getRoomSummaryText(listing) {
+function addPart(parts, text, highlight = false) {
+  if (!text) return;
+
+  parts.push({
+    text,
+    highlight,
+  });
+}
+
+function getAvailableRoomTypesText(listing) {
   if (!Array.isArray(listing.roomOptions) || listing.roomOptions.length === 0) {
-    return "Room availability can be checked from the details page.";
+    return "";
   }
 
   const availableRooms = listing.roomOptions
     .filter((room) => Number(room.availableUnits || 0) > 0)
-    .slice(0, 3)
-    .map(
-      (room) =>
-        `${getShortRoomTitle(room.title)} room with ${Number(
-          room.availableUnits || 0
-        )} seat${Number(room.availableUnits || 0) === 1 ? "" : "s"} left`
-    );
+    .map((room) => getShortRoomTitle(room.title));
 
-  if (availableRooms.length === 0) {
-    return "No room option is currently marked available.";
+  const uniqueRooms = Array.from(new Set(availableRooms)).slice(0, 3);
+
+  if (uniqueRooms.length === 0) return "";
+
+  if (uniqueRooms.length === 1) return `${uniqueRooms[0]} room`;
+
+  if (uniqueRooms.length === 2) {
+    return `${uniqueRooms[0]} and ${uniqueRooms[1]} rooms`;
   }
 
-  return `Available options include ${availableRooms.join(", ")}.`;
+  return `${uniqueRooms.slice(0, -1).join(", ")} and ${
+    uniqueRooms[uniqueRooms.length - 1]
+  } rooms`;
+}
+
+function getFacilitiesText(listing) {
+  if (!Array.isArray(listing.facilities) || listing.facilities.length === 0) {
+    return "";
+  }
+
+  return listing.facilities.slice(0, 3).join(", ");
+}
+
+function getEssentialsText(listing) {
+  if (
+    !Array.isArray(listing.nearbyEssentials) ||
+    listing.nearbyEssentials.length === 0
+  ) {
+    return "";
+  }
+
+  return listing.nearbyEssentials.slice(0, 2).join(" and ");
 }
 
 export default ListingCard;
