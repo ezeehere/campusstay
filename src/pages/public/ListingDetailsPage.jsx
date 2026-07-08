@@ -30,6 +30,7 @@ import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
 import { getNearbyText, getTotalSeatsLeft } from "../../utils/listingHelpers";
+import { useSwipeCarousel } from "../../hooks/useSwipeCarousel";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
@@ -41,11 +42,6 @@ function ListingDetailsPage() {
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loginAction, setLoginAction] = useState("");
-
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchEndX = useRef(0);
-  const touchEndY = useRef(0);
 
   const [callbackLoading, setCallbackLoading] = useState(false);
   const [callbackSent, setCallbackSent] = useState(false);
@@ -134,6 +130,7 @@ function ListingDetailsPage() {
 
   const images = listing.images?.length ? listing.images : [fallbackImage];
   const activeImage = images[activeImageIndex] || images[0];
+  const swipeHandlers = useSwipeCarousel(images, activeImageIndex, setActiveImageIndex);
 
   const primaryContactPerson = listing.contactPerson || "Owner";
   const alternatePhone = listing.alternatePhone || "";
@@ -229,54 +226,7 @@ function ListingDetailsPage() {
     }
   }
 
-  function goToPreviousImage() {
-    if (images.length <= 1) return;
 
-    setActiveImageIndex((previousIndex) =>
-      previousIndex === 0 ? images.length - 1 : previousIndex - 1
-    );
-  }
-
-  function goToNextImage() {
-    if (images.length <= 1) return;
-
-    setActiveImageIndex((previousIndex) =>
-      previousIndex + 1 >= images.length ? 0 : previousIndex + 1
-    );
-  }
-
-  function handleTouchStart(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchStartX.current = event.touches[0].clientX;
-    touchStartY.current = event.touches[0].clientY;
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchMove(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchEnd() {
-    const horizontalDistance = touchStartX.current - touchEndX.current;
-    const verticalDistance = touchStartY.current - touchEndY.current;
-
-    const minimumSwipeDistance = 45;
-
-    if (Math.abs(horizontalDistance) < minimumSwipeDistance) return;
-
-    if (Math.abs(verticalDistance) > Math.abs(horizontalDistance)) return;
-
-    if (horizontalDistance > 0) {
-      goToNextImage();
-    } else {
-      goToPreviousImage();
-    }
-  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#FFF8EF] via-white to-[#F6F1E8] pb-28 text-slate-950">
@@ -342,9 +292,9 @@ function ListingDetailsPage() {
           <div className="space-y-3">
             <div
               className="relative flex aspect-[4/3] w-full touch-pan-y items-center justify-center overflow-hidden rounded-[1.8rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onTouchStart={swipeHandlers.onTouchStart}
+              onTouchMove={swipeHandlers.onTouchMove}
+              onTouchEnd={swipeHandlers.onTouchEnd}
             >
               <img
                 src={getCloudinaryOptimizedUrl(activeImage, {

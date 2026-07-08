@@ -15,16 +15,14 @@ import {
   getRoomPreview,
   getStartingRent,
 } from "../../utils/listingHelpers";
+import { useSwipeCarousel } from "../../hooks/useSwipeCarousel";
 
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchEndX = useRef(0);
-  const touchEndY = useRef(0);
+  const swipeHandlers = useSwipeCarousel(images, activeImageIndex, setActiveImageIndex);
 
   const image = images[activeImageIndex] || "";
   const rent = getStartingRent(listing);
@@ -68,46 +66,13 @@ function ListingCard({ listing, onViewDetails }) {
     );
   }
 
-  function handleTouchStart(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchStartX.current = event.touches[0].clientX;
-    touchStartY.current = event.touches[0].clientY;
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchMove(event) {
-    if (!event.touches || event.touches.length === 0) return;
-
-    touchEndX.current = event.touches[0].clientX;
-    touchEndY.current = event.touches[0].clientY;
-  }
-
-  function handleTouchEnd() {
-    const horizontalDistance = touchStartX.current - touchEndX.current;
-    const verticalDistance = touchStartY.current - touchEndY.current;
-
-    const minimumSwipeDistance = 45;
-
-    if (Math.abs(horizontalDistance) < minimumSwipeDistance) return;
-
-    if (Math.abs(verticalDistance) > Math.abs(horizontalDistance)) return;
-
-    if (horizontalDistance > 0) {
-      goToNextImage();
-    } else {
-      goToPreviousImage();
-    }
-  }
-
   return (
     <article className="overflow-hidden rounded-[1.5rem] border border-[#E8DFD2] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div
         className="relative h-40 overflow-hidden bg-[#F6F1E8] sm:h-44"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
       >
         {image ? (
           <img
