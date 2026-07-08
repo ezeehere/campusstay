@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Home as HomeIcon, SlidersHorizontal } from "lucide-react";
 
 // Components Imports
 import ListingCard from "../../components/public/ListingCard";
-import ListingDetailsModal from "../../components/public/ListingDetailsModal";
 import Badge from "../../components/common/Badge";
 import HeroSection from "../../components/public/HeroSection";
 import Footer from "../../components/public/Footer";
@@ -34,6 +33,8 @@ import {
 
 
 function Home() {
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState("");
   const [gender, setGender] = useState("all");
   const [type, setType] = useState("all");
@@ -44,7 +45,6 @@ function Home() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [availableOnly, setAvailableOnly] = useState(true);
 
-  const [selectedListing, setSelectedListing] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -76,10 +76,11 @@ function Home() {
 
   useEffect(() => {
     const openListingId = searchParams.get("openListing");
-    if (!openListingId || listings.length === 0) return;
-    const matchedListing = listings.find((l) => l.id === openListingId);
-    if (matchedListing) setSelectedListing(matchedListing);
-  }, [searchParams, listings]);
+
+    if (!openListingId) return;
+
+    navigate(`/listing/${openListingId}`, { replace: true });
+  }, [searchParams, navigate]);
 
   const areaFilters = useMemo(() => {
     const uniqueAreas = Array.from(
@@ -328,7 +329,7 @@ function Home() {
               <ListingCard
                 key={listing.id}
                 listing={listing}
-                onViewDetails={() => setSelectedListing(listing)}
+                onViewDetails={() => navigate(`/listing/${listing.id}`)}
               />
             ))}
           </div>
@@ -343,13 +344,6 @@ function Home() {
       <OwnerCTASection />
 
       <Footer />
-
-      {selectedListing && (
-        <ListingDetailsModal
-          listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
-        />
-      )}
     </main>
   );
 }

@@ -15,7 +15,7 @@ import ProtectedOwnerRoute from "./components/owner/ProtectedOwnerRoute";
 import OwnerLogin from "./pages/owner/OwnerLogin";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import AdminCustomers from "./pages/admin/AdminCustomers";
-import ListingSharePage from "./pages/public/ListingSharePage";
+import ListingDetailsPage from "./pages/public/ListingDetailsPage";
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
         <Route path="/" element={<RoleRedirect />} />
         <Route path="/submit-listing" element={<SubmitListing />} />
         <Route path="/check-status" element={<CheckStatus />} />
-        <Route path="/listing/:listingId" element={<ListingSharePage />} />
+        <Route path="/listing/:listingId" element={<ListingDetailsPage />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route path="/student/login" element={<StudentLogin />} />
