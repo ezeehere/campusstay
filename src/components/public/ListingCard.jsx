@@ -6,7 +6,7 @@ import {
 
 import SaveListingButton from "../student/SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
-import { getCloudinaryImage } from "../../utils/cloudinary";
+import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
 
 function ListingCard({ listing, onViewDetails }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
@@ -103,9 +103,15 @@ function ListingCard({ listing, onViewDetails }) {
       >
         {image ? (
           <img
-            src={getCloudinaryImage(image, 400)}
+            src={getCloudinaryOptimizedUrl(image, {
+              width: 600,
+              height: 400,
+              crop: "fill",
+              quality: "auto:eco",
+            })}
             alt={listing.name}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (

@@ -38,6 +38,7 @@ function Home() {
   const [sortBy, setSortBy] = useState("recommended");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [availableOnly, setAvailableOnly] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(12);
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +146,12 @@ function Home() {
     availableOnly,
     sortBy,
   ]);
+
+  const visibleListings = filteredListings.slice(0, visibleCount);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [search, gender, type, area, foodFilter, institution, sortBy, verifiedOnly, availableOnly]);
 
   function resetFilters() {
     setSearch("");
@@ -326,15 +333,26 @@ function Home() {
             <h3 className="text-xl font-bold">Loading listings...</h3>
           </div>
         ) : filteredListings.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                onViewDetails={() => navigate(`/listing/${listing.id}`)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onViewDetails={() => navigate(`/listing/${listing.id}`)}
+                />
+              ))}
+            </div>
+
+            {visibleCount < filteredListings.length && (
+              <button
+                onClick={() => setVisibleCount((count) => count + 12)}
+                className="mx-auto mt-8 block rounded-2xl bg-[#1E5B4F] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#123C35]"
+              >
+                Load more stays
+              </button>
+            )}
+          </>
         ) : (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
             <h3 className="text-xl font-bold">No listing found</h3>

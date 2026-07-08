@@ -27,7 +27,7 @@ import { trackListingInteraction } from "../../firebase/analytics";
 import { createStudentLead } from "../../firebase/studentLeads";
 import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
-import { getCloudinaryImage } from "../../utils/cloudinary";
+import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
@@ -345,8 +345,14 @@ function ListingDetailsPage() {
               onTouchEnd={handleTouchEnd}
             >
               <img
-                src={getCloudinaryImage(activeImage, 1200)} 
+                src={getCloudinaryOptimizedUrl(activeImage, {
+                  width: 1200,
+                  crop: "limit",
+                  quality: "auto:good",
+                })}
                 alt={listing.name}
+                loading="lazy"
+                decoding="async"
                 className="max-h-full max-w-full object-contain"
               />
 
@@ -377,7 +383,12 @@ function ListingDetailsPage() {
                     }`}
                   >
                     <img
-                      src={getCloudinaryImage(image, 400)}
+                      src={getCloudinaryOptimizedUrl(image, {
+                        width: 180,
+                        height: 120,
+                        crop: "fill",
+                        quality: "auto:eco",
+                      })}
                       alt={`${listing.name} ${index + 1}`}
                       className="h-full w-full object-cover"
                     />

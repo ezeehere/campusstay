@@ -14,7 +14,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { getCloudinaryImage } from "../../utils/cloudinary";
+import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
 import Badge from "../common/Badge";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { submitListingReport } from "../../firebase/reports";
@@ -201,8 +201,14 @@ function ListingDetailsModal({ listing, onClose }) {
               <div className="space-y-3">
                 <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-[#E8DFD2] bg-[#F6F1E8] sm:aspect-[16/10]">
                   <img
-                    src={getCloudinaryImage(activeImage, 1000)}
+                    src={getCloudinaryOptimizedUrl(activeImage, {
+                      width: 1200,
+                      crop: "limit",
+                      quality: "auto:good",
+                    })}
                     alt={listing.name}
+                    loading="lazy"
+                    decoding="async"
                     className="max-h-full max-w-full object-contain"
                   />
 
@@ -225,7 +231,12 @@ function ListingDetailsModal({ listing, onClose }) {
                           }`}
                       >
                         <img
-                          src={image}
+                          src={getCloudinaryOptimizedUrl(image, {
+                            width: 180,
+                            height: 120,
+                            crop: "fill",
+                            quality: "auto:eco",
+                          })}
                           alt={`${listing.name} ${index + 1}`}
                           className="h-full w-full object-cover"
                         />
