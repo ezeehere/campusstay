@@ -15,6 +15,9 @@ function StudentLogin() {
   // const [searchParams] = useSearchParams();
 
   function goAfterLogin() {
+    if (mode === "login") {
+      clearLoginProtection(email);
+    }
     navigate("/student/dashboard", { replace: true });
   }
 
@@ -44,6 +47,10 @@ function StudentLogin() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const MAX_ATTEMPTS = 5;
+  const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+
+  const [lockRemaining, setLockRemaining] = useState(0);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -55,11 +62,43 @@ function StudentLogin() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  const getAttemptKey = (email) =>
+    `student_login_attempts_${email.trim().toLowerCase()}`;
+
+  const getLockKey = (email) =>
+    `student_lock_until_${email.trim().toLowerCase()}`;
+
+  const clearLoginProtection = (email) => {
+    localStorage.removeItem(getAttemptKey(email));
+    localStorage.removeItem(getLockKey(email));
+  };
+  //lock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!email.trim()) {
+        setLockRemaining(0);
+        return;
+      }
+
+      const lockUntil = Number(localStorage.getItem(getLockKey(email))) || 0;
+
+      if (lockUntil > Date.now()) {
+        setLockRemaining(Math.ceil((lockUntil - Date.now()) / 1000));
+      } else {
+        setLockRemaining(0);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [email]);
+
   async function handleGoogleLogin() {
     try {
       setLoading(true);
       setErrorMessage("");
+
       await loginStudentWithGoogle();
+
       goAfterLogin();
     } catch (error) {
       console.error(error);
@@ -90,9 +129,19 @@ function StudentLogin() {
       setLoading(false);
     }
   }
-
   async function handleEmailSubmit(event) {
     event.preventDefault();
+
+    const lockUntil = Number(localStorage.getItem(getLockKey(email))) || 0;
+
+    if (lockUntil > Date.now()) {
+      setErrorMessage(
+        `Too many failed attempts. Try again in ${Math.ceil(
+          (lockUntil - Date.now()) / 60000,
+        )} minute(s).`,
+      );
+      return;
+    }
 
     if (!email.trim() || !password.trim()) {
       setErrorMessage("Please enter email and password.");
@@ -112,21 +161,52 @@ function StudentLogin() {
         await registerStudentWithEmail(fullName.trim(), email.trim(), password);
       } else {
         await loginStudentWithEmail(email.trim(), password);
+
+        clearLoginProtection(email);
       }
 
       goAfterLogin();
     } catch (error) {
       console.error(error);
-      setErrorMessage(
-        mode === "register"
-          ? "Account creation failed. Try another email or password."
-          : "Login failed. Check your email and password.",
-      );
+
+      if (
+        mode === "login" &&
+        [
+          "auth/invalid-credential",
+          "auth/wrong-password",
+          "auth/user-not-found",
+          "auth/invalid-email",
+        ].includes(error.code)
+      ) {
+        const attemptKey = getAttemptKey(email);
+        const lockKey = getLockKey(email);
+
+        const attempts = (Number(localStorage.getItem(attemptKey)) || 0) + 1;
+
+        localStorage.setItem(attemptKey, attempts);
+
+        if (attempts >= MAX_ATTEMPTS) {
+          localStorage.setItem(lockKey, Date.now() + LOCK_TIME);
+
+          setErrorMessage(
+            "Too many failed attempts. Login disabled for 15 minutes.",
+          );
+        } else {
+          setErrorMessage(
+            `Login failed. ${MAX_ATTEMPTS - attempts} attempt(s) remaining.`,
+          );
+        }
+      } else {
+        setErrorMessage(
+          mode === "register"
+            ? "Account creation failed. Try another email or password."
+            : "Login failed. Please try again later.",
+        );
+      }
     } finally {
       setLoading(false);
     }
   }
-
   return (
     <main className="min-h-screen bg-[#FFF8EF] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl items-center justify-center">
@@ -201,7 +281,7 @@ function StudentLogin() {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              disabled={loading}
+              disabled={loading || lockRemaining > 0}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : null}
@@ -290,7 +370,11 @@ function StudentLogin() {
                   <UserPlus size={18} />
                 )}
 
-                {mode === "login" ? "Login" : "Create Account"}
+                {mode === "login"
+                  ? lockRemaining > 0
+                    ? `Try again in ${Math.ceil(lockRemaining / 60)}m`
+                    : "Login"
+                  : "Create Account"}
               </button>
             </form>
           </section>
