@@ -81,7 +81,7 @@ function StudentLogin() {
 
       await resetStudentPassword(email.trim());
 
-      alert("Password reset link has been sent to your email.");
+      alert("Password reset link has been sent to your email. Check your spam folder");
       setCooldown(60);
     } catch (error) {
       console.error(error);
@@ -165,11 +165,10 @@ function StudentLogin() {
                   setMode("login");
                   setErrorMessage("");
                 }}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition ${
-                  mode === "login"
-                    ? "bg-white text-[#1E5B4F] shadow-sm"
-                    : "text-slate-500"
-                }`}
+                className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition ${mode === "login"
+                  ? "bg-white text-[#1E5B4F] shadow-sm"
+                  : "text-slate-500"
+                  }`}
               >
                 Login
               </button>
@@ -180,11 +179,10 @@ function StudentLogin() {
                   setMode("register");
                   setErrorMessage("");
                 }}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition ${
-                  mode === "register"
-                    ? "bg-white text-[#1E5B4F] shadow-sm"
-                    : "text-slate-500"
-                }`}
+                className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition ${mode === "register"
+                  ? "bg-white text-[#1E5B4F] shadow-sm"
+                  : "text-slate-500"
+                  }`}
               >
                 Create Account
               </button>
