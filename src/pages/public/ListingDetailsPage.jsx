@@ -134,9 +134,9 @@ function ListingDetailsPage() {
   const images = listing.images?.length ? listing.images : [fallbackImage];
   const activeImage = images[activeImageIndex] || images[0];
 
-  const primaryContactPerson = listing.contactPerson || "Owner";
-  const alternatePhone = listing.alternatePhone || "";
-  const alternateContactPerson = listing.alternateContactPerson || "Caretaker";
+  // const primaryContactPerson = listing.contactPerson || "Owner";
+  // const alternatePhone = listing.alternatePhone || "";
+  // const alternateContactPerson = listing.alternateContactPerson || "Caretaker";
 
   const nearbyText = getNearbyText(listing);
   const rent = listing.startingRent || listing.rent || 0;
