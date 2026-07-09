@@ -14,7 +14,6 @@ import { getApprovedListings } from "../../firebase/listings";
 import {
   getNearbyText,
   getNearbyInstitutions,
-  getTotalSeatsLeft,
 } from "../../utils/listingHelpers";
 
 import { sortListingsByOption } from "../../utils/listingScore";
@@ -369,7 +368,16 @@ function Home() {
   );
 }
 
-// Local duplicate helper removed
+function getTotalSeatsLeft(listing) {
+  if (!Array.isArray(listing.roomOptions)) {
+    return listing.available ? 1 : 0;
+  }
+
+  return listing.roomOptions.reduce(
+    (sum, room) => sum + Number(room.availableUnits || 0),
+    0,
+  );
+}
 
 function FilterSelect({ label, value, onChange, options }) {
   return (

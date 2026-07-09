@@ -13,19 +13,49 @@ import {
 import { addPendingListing } from "../../firebase/listings";
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
 import { auth } from "../../firebase/config";
-import {
-  NEARBY_INSTITUTIONS,
-  STAY_TYPES,
-  GENDER_OPTIONS,
-  CONTACT_PERSON_OPTIONS,
-  PREDEFINED_FACILITIES,
-  NEARBY_ESSENTIALS,
-  YES_NO_OPTIONS,
-  RULE_OPTIONS,
-} from "../../utils/constants";
+
+const NEARBY_INSTITUTIONS = [
+  "JIST",
+  "JEC",
+  "Kaziranga ITI",
+  "Ayush Pharmacy",
+];
+
+const PREDEFINED_FACILITIES = [
+  "Wi-Fi",
+  "Food",
+  "Attached Bathroom",
+  "Parking",
+  "Laundry",
+  "Drinking Water",
+  "Power Backup",
+  "Study Table",
+  "CCTV",
+];
 
 const MIN_IMAGES = 3;
 const MAX_IMAGES = 15;
+
+const NEARBY_ESSENTIALS = [
+  "Market nearby",
+  "Bus stop nearby",
+  "Food shops nearby",
+  "Pharmacy nearby",
+  "Stationery nearby",
+  "ATM nearby",
+  "Medical store nearby",
+  "Public transport nearby",
+];
+
+const YES_NO_OPTIONS = ["Yes", "No"];
+const RULE_OPTIONS = ["Yes", "No", "With permission"];
+
+const CONTACT_PERSON_OPTIONS = [
+  "Owner",
+  "Caretaker",
+  "Manager",
+  "Family member",
+];
 
 const initialFormData = {
   name: "",
@@ -533,7 +563,7 @@ function SubmitListingForm({ ownerMode = false }) {
             name="type"
             value={formData.type}
             onChange={handleChange}
-            options={STAY_TYPES}
+            options={["PG", "Room", "Hostel"]}
             required
           />
 
@@ -542,7 +572,7 @@ function SubmitListingForm({ ownerMode = false }) {
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            options={GENDER_OPTIONS}
+            options={["Boys", "Girls", "Co-ed"]}
             required
           />
 
