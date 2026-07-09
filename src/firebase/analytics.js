@@ -9,21 +9,37 @@ import {
 
 import { auth, db } from "./config";
 
-export async function logAnalyticsEvent(eventType, listing, extraData = {}) {
-  if (!listing?.id) return;
+function getUserRole() {
+  if (!auth.currentUser) return "guest";
+
+  // Keep it simple for analytics.
+  // Exact role can be handled elsewhere if needed.
+  return "student";
+}
+
+export async function logAnalyticsEvent(
+  eventType,
+  listing,
+  metricKey,
+  extraData = {}
+) {
+  if (!listing?.id || !eventType) return;
 
   await addDoc(collection(db, "analyticsEvents"), {
     eventType,
+    metricKey: metricKey || eventType,
+
     listingId: listing.id,
     listingName: listing.name || "",
     area: listing.area || "",
-    rent: listing.startingRent || listing.rent || 0,
+    rent: Number(listing.startingRent || listing.rent || 0),
     ownerId: listing.ownerId || "",
-    ownerPhone: listing.phone || "",
-    studentId: auth.currentUser?.uid || null,
-    studentEmail: auth.currentUser?.email || null,
+
+    userId: auth.currentUser?.uid || null,
+    userRole: getUserRole(),
+
+    metadata: extraData || {},
     createdAt: serverTimestamp(),
-    ...extraData,
   });
 }
 
@@ -58,7 +74,7 @@ export async function trackListingInteraction(
   if (!listing?.id) return;
 
   try {
-    await logAnalyticsEvent(eventType, listing, extraData);
+    await logAnalyticsEvent(eventType, listing, metricKey, extraData);
   } catch (error) {
     console.warn("Analytics event log failed:", error);
   }
