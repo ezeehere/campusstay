@@ -7,7 +7,6 @@ import {
   Clock,
   Eye,
   Heart,
-  Home as HomeIcon,
   IndianRupee,
   Loader2,
   Lock,
@@ -420,7 +419,6 @@ function OwnerDashboard() {
 
         <LeadAccessCard
           ownerPlan={ownerPlan}
-          summary={summary}
           requested={leadAccessRequested}
           loading={leadRequestLoading}
           onRequest={handleRequestLeadAccess}
@@ -607,7 +605,7 @@ function OwnerDashboard() {
   );
 }
 
-function LeadAccessCard({ ownerPlan, summary, requested, loading, onRequest }) {
+function LeadAccessCard({ ownerPlan, requested, loading, onRequest }) {
   const hasLeadAccess = ownerPlan?.active === true && ownerPlan?.leadAccess === true;
 
   return (

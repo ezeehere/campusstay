@@ -4,7 +4,6 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  limit,
   orderBy,
   query,
   serverTimestamp,

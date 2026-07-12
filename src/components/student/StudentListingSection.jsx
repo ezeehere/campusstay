@@ -6,7 +6,6 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
-  Utensils,
 } from "lucide-react";
 
 import { trackListingInteraction } from "../../firebase/analytics";
@@ -138,16 +137,6 @@ function CompactInfo({ label, value }) {
   );
 }
 
-function getEstimatedFirstMonthCost(listing) {
-  const rent = Number(listing.startingRent || listing.rent || 0);
-  const deposit = Number(listing.deposit || 0);
-  const electricity =
-    listing.electricityIncluded === false
-      ? Number(listing.electricityCharge || 0)
-      : 0;
-
-  return rent + deposit + electricity;
-}
 
 function getTimestampSeconds(value) {
   if (!value) return 0;

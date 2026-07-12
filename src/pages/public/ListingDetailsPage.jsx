@@ -134,9 +134,6 @@ function ListingDetailsPage() {
   const images = listing.images?.length ? listing.images : [fallbackImage];
   const activeImage = images[activeImageIndex] || images[0];
 
-  // const primaryContactPerson = listing.contactPerson || "Owner";
-  // const alternatePhone = listing.alternatePhone || "";
-  // const alternateContactPerson = listing.alternateContactPerson || "Caretaker";
 
   const nearbyText = getNearbyText(listing);
   const rent = listing.startingRent || listing.rent || 0;
@@ -865,20 +862,6 @@ function DetailRow({ label, value }) {
   );
 }
 
-function ContactRow({ label, phone, onClick }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-      <span className="text-slate-500">{label}</span>
-      <a
-        href={auth.currentUser ? `tel:${phone}` : undefined}
-        onClick={onClick}
-        className="font-black text-[#1E5B4F]"
-      >
-        {phone || "Not added"}
-      </a>
-    </div>
-  );
-}
 
 function getTotalSeatsLeft(listing) {
   if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;

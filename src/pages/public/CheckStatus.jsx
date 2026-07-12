@@ -8,7 +8,6 @@ import {
   Loader2,
   MapPin,
   MessageCircle,
-  Phone,
   Search,
   ShieldCheck,
   XCircle,
