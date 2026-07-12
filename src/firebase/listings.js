@@ -28,6 +28,10 @@ export async function addPendingListing(listingData) {
     roomOptions.length > 0
       ? Math.min(...roomOptions.map((room) => Number(room.rent || 0)).filter(Boolean))
       : Number(listingData.rent || 0);
+  const hasAvailableRoom =
+    roomOptions.length > 0
+      ? roomOptions.some((room) => Number(room.availableUnits || 0) > 0)
+      : listingData.available === true;
   const docRef = await addDoc(listingsCollection, {
     ...listingData,
     contactPerson: listingData.contactPerson || "Owner",
@@ -49,7 +53,7 @@ export async function addPendingListing(listingData) {
 
     approved: false,
     verified: false,
-    available: true,
+    available: hasAvailableRoom,
     featured: false,
     reportCount: 0,
     images: listingData.images || [],
@@ -86,7 +90,7 @@ export async function addPendingListing(listingData) {
     gender: listingData.gender || "",
     startingRent,
     approved: false,
-    available: true,
+    available: hasAvailableRoom,
     status: listingData.status || "pending",
     adminNote: listingData.adminNote || "",
     createdAt: serverTimestamp(),

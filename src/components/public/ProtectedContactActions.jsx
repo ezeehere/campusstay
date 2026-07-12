@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Lock, MessageCircle, Phone } from "lucide-react";
 import { useAuthUser } from "../../hooks/useAuthUser";
+import { buildStudentLoginUrl } from "../../utils/loginRedirect";
 
 function cleanPhoneNumber(phone) {
   return String(phone || "").replace(/\D/g, "");
@@ -17,6 +18,12 @@ function getWhatsappLink(phone, listingName) {
 
 function ProtectedContactActions({ listing }) {
   const { isSignedIn, checkingAuth } = useAuthUser();
+  const listingId = listing?.id || "";
+  const loginUrl = buildStudentLoginUrl({
+    returnTo: listingId ? `/listing/${listingId}` : "/",
+    action: "contact",
+    listingId,
+  });
 
   if (checkingAuth) {
     return (
@@ -43,7 +50,7 @@ function ProtectedContactActions({ listing }) {
             </p>
 
             <Link
-              to="/student/login"
+              to={loginUrl}
               className="mt-3 inline-flex rounded-2xl bg-[#1E5B4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#123C35]"
             >
               Sign in to view

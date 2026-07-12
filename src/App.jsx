@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 
 import RoleRedirect from "./components/common/RoleRedirect";
 import SubmitListing from "./pages/public/SubmitListing";
@@ -82,6 +82,7 @@ function App() {
             </ProtectedAdminRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

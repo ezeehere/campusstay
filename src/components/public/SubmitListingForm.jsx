@@ -330,6 +330,7 @@ function SubmitListingForm({ ownerMode = false }) {
     }
 
     const startingRent = Math.min(...cleanRoomOptions.map((room) => room.rent));
+    const hasAvailableRoom = cleanRoomOptions.some((room) => room.available);
     const trackingId = generateTrackingId();
 
     const listingData = {
@@ -394,7 +395,7 @@ function SubmitListingForm({ ownerMode = false }) {
 
       approved: false,
       verified: false,
-      available: cleanRoomOptions.some((room) => room.available),
+      available: hasAvailableRoom,
       status: "pending",
       trackingId,
       adminNote: "",

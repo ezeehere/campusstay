@@ -10,10 +10,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import {
-  buildStudentLoginUrl,
-  getCurrentReturnPath,
-} from "../../utils/loginRedirect";
+import { buildStudentLoginUrl } from "../../utils/loginRedirect";
 
 const actionConfig = {
   save: {
@@ -60,9 +57,7 @@ function StudentActionLoginPrompt({ listing, action = "continue", onClose }) {
   const config = actionConfig[action] || actionConfig.continue;
   const ActionIcon = config.icon;
 
-  const returnTo = getCurrentReturnPath({
-    openListing: listing.id,
-  });
+  const returnTo = `/listing/${listing.id}`;
 
   const loginUrl = buildStudentLoginUrl({
     returnTo,

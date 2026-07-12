@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Home as HomeIcon, Loader2, LogIn, UserPlus } from "lucide-react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebase/config";
@@ -9,16 +9,22 @@ import {
   registerStudentWithEmail,
   resetStudentPassword,
 } from "../../firebase/studentAuth";
+import { getSafeReturnPath } from "../../utils/loginRedirect";
 
 function StudentLogin() {
   const navigate = useNavigate();
-  // const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const studentReturnPath = getSafeReturnPath(
+    searchParams.get("returnTo"),
+    "/student/dashboard",
+  );
 
   function goAfterLogin() {
     if (mode === "login") {
       clearLoginProtection(email);
     }
-    navigate("/student/dashboard", { replace: true });
+
+    navigate(studentReturnPath, { replace: true });
   }
 
   useEffect(() => {
@@ -28,7 +34,7 @@ function StudentLogin() {
       const activeRole = localStorage.getItem("campusstay_active_role");
 
       if (activeRole === "student") {
-        navigate("/student/dashboard", { replace: true });
+        navigate(studentReturnPath, { replace: true });
       } else if (activeRole === "owner") {
         navigate("/owner/dashboard", { replace: true });
       } else if (activeRole === "admin") {
@@ -37,7 +43,7 @@ function StudentLogin() {
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, studentReturnPath]);
 
   const [mode, setMode] = useState("login");
   const [fullName, setFullName] = useState("");

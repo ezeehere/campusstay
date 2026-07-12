@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -29,10 +29,10 @@ import { createStudentLead } from "../../firebase/studentLeads";
 import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
+import { buildStudentLoginUrl } from "../../utils/loginRedirect";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
-  const navigate = useNavigate();
 
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,6 +142,12 @@ function ListingDetailsPage() {
   const whatsappLink = createWhatsAppLink(listing.phone, listing.name);
   const mapLink = listing.mapLink || "https://maps.google.com";
   const pgNote = String(listing.pgNote || "").trim();
+  const currentListingId = listing.id || listingId;
+  const listingLoginUrl = buildStudentLoginUrl({
+    returnTo: `/listing/${currentListingId}`,
+    action: "contact",
+    listingId: currentListingId,
+  });
 
   function handleAnalyticsClick(eventType, metricKey) {
     trackListingInteraction(eventType, listing, metricKey).catch((error) => {
@@ -278,14 +284,13 @@ function ListingDetailsPage() {
     <main className="min-h-screen bg-gradient-to-b from-[#FFF8EF] via-white to-[#F6F1E8] pb-28 text-slate-950">
       <header className="sticky top-0 z-40 border-b border-[#E8DFD2] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-[#F6F1E8]"
           >
             <ArrowLeft size={16} />
-            Back
-          </button>
+            Back to listings
+          </Link>
 
           <Link
             to="/"
@@ -767,7 +772,7 @@ function ListingDetailsPage() {
             </>
           ) : (
             <Link
-              to="/student/login"
+              to={listingLoginUrl}
               className="col-span-2 inline-flex items-center justify-center gap-1 rounded-2xl bg-[#1E5B4F] px-2 py-2.5 text-xs font-black text-white"
             >
               Sign in to view contact
