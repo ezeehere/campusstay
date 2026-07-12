@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { Loader2 } from "lucide-react";
 
 import { watchOwnerAuth } from "../../firebase/ownerAuth";
 
 function ProtectedOwnerRoute({ children }) {
+  const location = useLocation();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [ownerUser, setOwnerUser] = useState(null);
 
@@ -29,7 +30,10 @@ function ProtectedOwnerRoute({ children }) {
   }
 
   if (!ownerUser) {
-    return <Navigate to="/" replace />;
+    const returnTo = `${location.pathname}${location.search}`;
+    const params = new URLSearchParams({ returnTo });
+
+    return <Navigate to={`/owner/login?${params.toString()}`} replace />;
   }
 
   return children;

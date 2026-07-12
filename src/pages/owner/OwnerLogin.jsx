@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Building2, Home as HomeIcon, Loader2, LogIn, UserPlus } from "lucide-react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebase/config";
@@ -9,27 +9,38 @@ import {
   loginOwnerWithGoogle,
   registerOwnerWithEmail,
 } from "../../firebase/ownerAuth";
+import { resolveUserRole, setStoredRole } from "../../firebase/userRoles";
+import { getSafeReturnPath } from "../../utils/loginRedirect";
 
 function OwnerLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ownerReturnPath = getSafeReturnPath(
+    searchParams.get("returnTo"),
+    "/owner/dashboard",
+  );
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
 
-      const activeRole = localStorage.getItem("campusstay_active_role");
+      try {
+        const role = await resolveUserRole(user);
 
-      if (activeRole === "owner") {
-        navigate("/owner/dashboard", { replace: true });
-      } else if (activeRole === "student") {
-        navigate("/student/dashboard", { replace: true });
-      } else if (activeRole === "admin") {
-        navigate("/admin/dashboard", { replace: true });
+        if (role === "owner") {
+          navigate(ownerReturnPath, { replace: true });
+        } else if (role === "student") {
+          navigate("/student/dashboard", { replace: true });
+        } else if (role === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Could not resolve owner login role:", error);
       }
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, ownerReturnPath]);
 
   const [mode, setMode] = useState("login");
   const [fullName, setFullName] = useState("");
@@ -44,7 +55,8 @@ function OwnerLogin() {
       setLoading(true);
       setErrorMessage("");
       await loginOwnerWithGoogle();
-      navigate("/owner/dashboard", { replace: true });
+      setStoredRole("owner");
+      navigate(ownerReturnPath, { replace: true });
     } catch (error) {
       console.error(error);
       setErrorMessage("Google login failed. Please try again.");
@@ -76,7 +88,8 @@ function OwnerLogin() {
         await loginOwnerWithEmail(email.trim(), password);
       }
 
-      navigate("/owner/dashboard", { replace: true });
+      setStoredRole("owner");
+      navigate(ownerReturnPath, { replace: true });
     } catch (error) {
       console.error(error);
       setErrorMessage(

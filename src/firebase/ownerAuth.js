@@ -10,9 +10,10 @@ import {
 
 import { auth } from "./config";
 import { ensureOwnerProfile } from "./owners";
+import { clearStoredRole, setStoredRole } from "./userRoles";
 
 function setOwnerRole() {
-  localStorage.setItem("campusstay_active_role", "owner");
+  setStoredRole("owner");
 }
 
 export async function loginOwnerWithGoogle() {
@@ -51,7 +52,7 @@ export async function loginOwnerWithEmail(email, password) {
 }
 
 export async function logoutOwner() {
-  localStorage.removeItem("campusstay_active_role");
+  clearStoredRole();
   return signOut(auth);
 }
 

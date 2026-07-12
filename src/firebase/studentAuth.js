@@ -11,9 +11,10 @@ import {
 
 import { auth } from "./config";
 import { ensureStudentProfile } from "./students";
+import { clearStoredRole, setStoredRole } from "./userRoles";
 
 function setStudentRole() {
-  localStorage.setItem("campusstay_active_role", "student");
+  setStoredRole("student");
 }
 
 export async function loginStudentWithGoogle() {
@@ -52,7 +53,7 @@ export async function loginStudentWithEmail(email, password) {
 }
 
 export async function logoutStudent() {
-  localStorage.removeItem("campusstay_active_role");
+  clearStoredRole();
   return signOut(auth);
 }
 

@@ -148,19 +148,10 @@ function OwnerDashboard() {
 
       setOwnerPlan(loadedPlan);
 
-      const ownerListings = await loadOwnerListings(user, ownerProfile);
+      await loadOwnerListings(user, ownerProfile);
       await loadCallbackLeads(user, ownerProfile, loadedPlan);
 
       setLoading(false);
-
-      const alreadyRedirected = sessionStorage.getItem(
-        "campusstay_owner_first_listing_redirected"
-      );
-
-      if (ownerListings.length === 0 && !alreadyRedirected) {
-        sessionStorage.setItem("campusstay_owner_first_listing_redirected", "true");
-        navigate("/submit-listing?ownerFirst=true", { replace: true });
-      }
     });
 
     return () => unsubscribe();

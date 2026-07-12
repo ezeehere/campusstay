@@ -4,35 +4,54 @@ import { onAuthStateChanged } from "firebase/auth";
 
 import Home from "../../pages/public/Home";
 import { auth } from "../../firebase/config";
+import { clearStoredRole, resolveUserRole } from "../../firebase/userRoles";
 
 function RoleRedirect() {
   const [checking, setChecking] = useState(true);
   const [redirectTo, setRedirectTo] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let isActive = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        if (!isActive) return;
+        clearStoredRole();
         setRedirectTo("");
         setChecking(false);
         return;
       }
 
-      const activeRole = localStorage.getItem("campusstay_active_role");
+      try {
+        const role = await resolveUserRole(user);
 
-      if (activeRole === "student") {
-        setRedirectTo("/student/dashboard");
-      } else if (activeRole === "owner") {
-        setRedirectTo("/owner/dashboard");
-      } else if (activeRole === "admin") {
-        setRedirectTo("/admin/dashboard");
-      } else {
+        if (!isActive) return;
+
+        if (role === "admin") {
+          setRedirectTo("/admin/dashboard");
+        } else if (role === "owner") {
+          setRedirectTo("/owner/dashboard");
+        } else if (role === "student") {
+          setRedirectTo("/student/dashboard");
+        } else {
+          clearStoredRole();
+          setRedirectTo("");
+        }
+      } catch (error) {
+        console.error("Could not resolve user role:", error);
+        clearStoredRole();
         setRedirectTo("");
+      } finally {
+        if (isActive) {
+          setChecking(false);
+        }
       }
-
-      setChecking(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
   }, []);
 
   if (checking) {

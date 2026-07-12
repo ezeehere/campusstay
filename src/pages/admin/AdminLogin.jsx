@@ -4,7 +4,9 @@ import { Home as HomeIcon, Loader2, Lock } from "lucide-react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebase/config";
 
-import { loginAdmin } from "../../firebase/auth";
+import { loginAdmin, logoutAdmin } from "../../firebase/auth";
+import { checkIsAdmin } from "../../firebase/admins";
+import { clearStoredRole, resolveUserRole, setStoredRole } from "../../firebase/userRoles";
 
 function AdminLogin() {
   const navigate = useNavigate();
@@ -12,19 +14,20 @@ function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
 
-      const activeRole = localStorage.getItem("campusstay_active_role");
+      try {
+        const role = await resolveUserRole(user);
 
-      if (activeRole === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-      } else if (activeRole === "student") {
-        navigate("/student/dashboard", { replace: true });
-      } else if (activeRole === "owner") {
-        navigate("/owner/dashboard", { replace: true });
+        if (role === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Could not resolve admin login role:", error);
       }
     });
 
@@ -36,12 +39,24 @@ function AdminLogin() {
 
     try {
       setLoginLoading(true);
-      await loginAdmin(email, password);
-      localStorage.setItem("campusstay_active_role", "admin");
+      setErrorMessage("");
+
+      const result = await loginAdmin(email, password);
+      const isAdmin = await checkIsAdmin(result.user.uid);
+
+      if (!isAdmin) {
+        clearStoredRole();
+        await logoutAdmin();
+        setErrorMessage("This account does not have admin access.");
+        return;
+      }
+
+      setStoredRole("admin");
       navigate("/admin/dashboard", { replace: true });
     } catch (error) {
       console.error("Admin login error:", error);
-      alert("Login failed. Check your email and password.");
+      clearStoredRole();
+      setErrorMessage("Login failed. Check your email and password.");
     } finally {
       setLoginLoading(false);
     }
@@ -82,6 +97,12 @@ function AdminLogin() {
           <p className="mt-3 text-slate-600">
             Login to review submitted listings and manage CampusStay data.
           </p>
+
+          {errorMessage && (
+            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-8 grid gap-5">
             <div>

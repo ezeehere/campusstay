@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { Loader2 } from "lucide-react";
 
 import { watchStudentAuth } from "../../firebase/studentAuth";
+import { buildStudentLoginUrl } from "../../utils/loginRedirect";
 
 function ProtectedStudentRoute({ children }) {
+  const location = useLocation();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [studentUser, setStudentUser] = useState(null);
 
@@ -29,7 +31,14 @@ function ProtectedStudentRoute({ children }) {
   }
 
   if (!studentUser) {
-    return <Navigate to="/" replace />;
+    const returnTo = `${location.pathname}${location.search}`;
+
+    return (
+      <Navigate
+        to={buildStudentLoginUrl({ returnTo })}
+        replace
+      />
+    );
   }
 
   return children;

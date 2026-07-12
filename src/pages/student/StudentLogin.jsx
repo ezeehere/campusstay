@@ -10,6 +10,7 @@ import {
   resetStudentPassword,
 } from "../../firebase/studentAuth";
 import { getSafeReturnPath } from "../../utils/loginRedirect";
+import { resolveUserRole, setStoredRole } from "../../firebase/userRoles";
 
 function StudentLogin() {
   const navigate = useNavigate();
@@ -24,21 +25,26 @@ function StudentLogin() {
       clearLoginProtection(email);
     }
 
+    setStoredRole("student");
     navigate(studentReturnPath, { replace: true });
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
 
-      const activeRole = localStorage.getItem("campusstay_active_role");
+      try {
+        const role = await resolveUserRole(user);
 
-      if (activeRole === "student") {
-        navigate(studentReturnPath, { replace: true });
-      } else if (activeRole === "owner") {
-        navigate("/owner/dashboard", { replace: true });
-      } else if (activeRole === "admin") {
-        navigate("/admin/dashboard", { replace: true });
+        if (role === "student") {
+          navigate(studentReturnPath, { replace: true });
+        } else if (role === "owner") {
+          navigate("/owner/dashboard", { replace: true });
+        } else if (role === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Could not resolve student login role:", error);
       }
     });
 
