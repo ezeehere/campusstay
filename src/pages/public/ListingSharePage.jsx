@@ -18,6 +18,7 @@ function ListingSharePage() {
     async function loadListing() {
       try {
         setLoading(true);
+        setNotLive(false);
 
         const data = await getListingById(listingId);
 

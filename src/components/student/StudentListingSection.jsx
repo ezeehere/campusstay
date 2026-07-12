@@ -87,6 +87,21 @@ function getNearbyText(listing) {
   return getNearbyInstitutions(listing).join(", ");
 }
 
+function getPreferredAreas(profile) {
+  if (Array.isArray(profile?.preferredAreas) && profile.preferredAreas.length > 0) {
+    return profile.preferredAreas;
+  }
+
+  if (profile?.preferredArea) {
+    return String(profile.preferredArea)
+      .split(",")
+      .map((area) => area.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 function getTotalSeatsLeft(listing) {
   if (!Array.isArray(listing.roomOptions)) return listing.available ? 1 : 0;
 
@@ -155,14 +170,22 @@ function getRecommendationScore(listing, profile) {
     score += 3;
   }
 
-  if (profile?.preferredArea) {
-    const listingArea = String(listing.area || "").toLowerCase();
-    const preferredArea = String(profile.preferredArea || "").toLowerCase();
+  const preferredAreas = getPreferredAreas(profile);
 
-    if (
-      listingArea.includes(preferredArea) ||
-      preferredArea.includes(listingArea)
-    ) {
+  if (preferredAreas.length > 0) {
+    const listingArea = String(listing.area || "").toLowerCase();
+    const matchesPreferredArea = preferredAreas.some((area) => {
+      const preferredArea = String(area || "").toLowerCase();
+
+      return (
+        listingArea &&
+        preferredArea &&
+        (listingArea.includes(preferredArea) ||
+          preferredArea.includes(listingArea))
+      );
+    });
+
+    if (matchesPreferredArea) {
       score += 3;
     }
   }

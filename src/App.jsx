@@ -16,6 +16,7 @@ import OwnerLogin from "./pages/owner/OwnerLogin";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import ListingDetailsPage from "./pages/public/ListingDetailsPage";
+import ListingSharePage from "./pages/public/ListingSharePage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/submit-listing" element={<SubmitListing />} />
         <Route path="/check-status" element={<CheckStatus />} />
         <Route path="/listing/:listingId" element={<ListingDetailsPage />} />
+        <Route path="/share/:listingId" element={<ListingSharePage />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route path="/student/login" element={<StudentLogin />} />

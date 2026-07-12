@@ -14,7 +14,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Trash2,
   Users,
 } from "lucide-react";
 
@@ -71,7 +70,6 @@ function AdminDashboard() {
   const [selectedListing, setSelectedListing] = useState(null);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [cleanupLoading, setCleanupLoading] = useState(false);
 
   async function loadListings() {
     try {
@@ -89,31 +87,6 @@ function AdminDashboard() {
   useEffect(() => {
     loadListings();
   }, []);
-
-  async function handleCleanupDummyData() {
-    const confirmCleanup = window.confirm(
-      "This will delete dummy demo listings, demo tracking records, saved demo listings, and demo analytics. Continue?"
-    );
-
-    if (!confirmCleanup) return;
-
-    try {
-      setCleanupLoading(true);
-
-      const result = await cleanupDummyData();
-
-      alert(
-        `Cleanup done!\n\nDeleted listings: ${result.deletedListings}\nDeleted tracking records: ${result.deletedStatuses}\nDeleted saved items: ${result.deletedSavedItems}\nDeleted analytics events: ${result.deletedAnalyticsEvents}`
-      );
-
-      await loadListings();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to cleanup dummy data. Check console.");
-    } finally {
-      setCleanupLoading(false);
-    }
-  }
 
   async function handleUpdate(listingId, updates) {
     try {
@@ -217,18 +190,6 @@ function AdminDashboard() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={handleCleanupDummyData}
-              disabled={cleanupLoading}
-              className="inline-flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {cleanupLoading ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Trash2 size={16} />
-              )}
-              Remove Demo Data
-            </button>
 
             <Link
               to="/admin/reports"

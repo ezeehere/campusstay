@@ -1,5 +1,7 @@
 // src/utils/filterConstants.js
 
+import { institutions } from "../config/institutions";
+
 export const genderFilters = [
   { label: "All Students", value: "all" },
   { label: "Boys", value: "Boys" },
@@ -20,13 +22,10 @@ export const foodFilters = [
   { label: "Without Food", value: "not_included" },
 ];
 
-export const institutionFilters = [
-  { label: "All Institutions", value: "all" },
-  { label: "JIST", value: "JIST" },
-  { label: "JEC", value: "JEC" },
-  { label: "Kaziranga ITI", value: "Kaziranga ITI" },
-  { label: "Ayush Pharmacy", value: "Ayush Pharmacy" },
-];
+export const institutionFilters = institutions.map((institution) => ({
+  label: institution.id === "all" ? "All Institutions" : institution.heroLabel,
+  value: institution.id,
+}));
 
 export const sortOptions = [
   { label: "Recommended", value: "recommended" },

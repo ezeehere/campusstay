@@ -52,6 +52,9 @@ export async function createStudentLead(listing) {
         studentBudgetMin: profile.budgetMin || "",
         studentBudgetMax: profile.budgetMax || "",
         studentPreferredArea: profile.preferredArea || "",
+        studentPreferredAreas: Array.isArray(profile.preferredAreas)
+            ? profile.preferredAreas
+            : [],
         studentPreferredStayType: profile.preferredStayType || "",
         studentFoodRequired: profile.foodRequired || "",
         studentMoveInTime: profile.moveInTime || "",

@@ -24,6 +24,7 @@ export async function ensureStudentProfile(user, extraData = {}) {
       budgetMin: "",
       budgetMax: "",
       preferredArea: "",
+      preferredAreas: [],
       preferredStayType: "",
       foodRequired: "",
       preferredRoomType: "",

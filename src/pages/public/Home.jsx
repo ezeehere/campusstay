@@ -5,16 +5,16 @@ import ListingCard from "../../components/public/ListingCard";
 import Badge from "../../components/common/Badge";
 import HeroSection from "../../components/public/HeroSection";
 import Footer from "../../components/public/Footer";
-import { institutionNames } from "../../utils/tickerConstants";
 import {
   TrustProcessSection,
   OwnerCTASection,
 } from "../../components/public/InfoSections";
-import { getApprovedListings } from "../../firebase/listings";
 import {
-  getNearbyText,
-  getNearbyInstitutions,
-} from "../../utils/listingHelpers";
+  institutions,
+  listingMatchesInstitution,
+} from "../../config/institutions";
+import { getApprovedListings } from "../../firebase/listings";
+import { getNearbyText } from "../../utils/listingHelpers";
 
 import { sortListingsByOption } from "../../utils/listingScore";
 
@@ -25,6 +25,8 @@ import {
   institutionFilters,
   sortOptions,
 } from "../../utils/filterConstants";
+
+const heroInstitutions = institutions.filter((institution) => institution.id !== "all");
 
 function Home() {
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ function Home() {
   const [textIndex, setTextIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
-      setTextIndex((prev) => (prev + 1) % institutionNames.length);
+      setTextIndex((prev) => (prev + 1) % heroInstitutions.length);
     }, 2500);
     return () => clearInterval(timer);
   }, []);
@@ -110,9 +112,7 @@ function Home() {
       const matchesGender = gender === "all" || listing.gender === gender;
       const matchesType = type === "all" || listing.type === type;
       const matchesArea = area === "all" || listing.area === area;
-      const matchesInstitution =
-        institution === "all" ||
-        getNearbyInstitutions(listing).includes(institution);
+      const matchesInstitution = listingMatchesInstitution(listing, institution);
       const foodIncluded =
         listing.foodIncluded === true || listing.food === true;
       const matchesFood =
@@ -217,9 +217,31 @@ function Home() {
         setFoodFilter={setFoodFilter}
         totalListings={listings.length}
         totalSeatsAvailable={totalSeatsAvailable}
-        currentInstitutionName={institutionNames[textIndex]}
+        currentInstitutionName={heroInstitutions[textIndex]?.heroLabel || "JIST"}
       />
 
+      <section className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          {institutions.map((item) => {
+            const selected = institution === item.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setInstitution(item.id)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-black transition ${
+                  selected
+                    ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                    : "border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#F6F1E8]"
+                }`}
+              >
+                {item.heroLabel}
+              </button>
+            );
+          })}
+        </div>
+      </section>
       <section
         id="available-stays"
         className="mx-auto max-w-7xl px-4 pt-5 pb-10 sm:px-6 lg:px-8 sm:pt-8"

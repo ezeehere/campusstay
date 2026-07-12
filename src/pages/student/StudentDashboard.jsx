@@ -18,30 +18,58 @@ import {
   updateStudentProfile,
 } from "../../firebase/students";
 import StudentListingSection from "../../components/student/StudentListingSection";
-
-const institutionOptions = [
-  "",
-  "JIST",
-  "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy",
-  "Other",
-];
+import { institutions } from "../../config/institutions";
 
 const initialFormData = {
   fullName: "",
   phone: "",
   college: "",
   gender: "",
-  budgetMin: "",
-  budgetMax: "",
+  budgetMin: 3000,
+  budgetMax: 6000,
   preferredArea: "",
+  preferredAreas: [],
   preferredStayType: "",
   foodRequired: "",
   preferredRoomType: "",
   moveInTime: "",
 };
 
+function getSavedPreferredAreas(profile) {
+  if (Array.isArray(profile?.preferredAreas)) {
+    return profile.preferredAreas;
+  }
+
+  if (profile?.preferredArea) {
+    return String(profile.preferredArea)
+      .split(",")
+      .map((area) => area.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getInstitutionFromValue(value) {
+  return (
+    institutions.find((institution) => {
+      return [
+        institution.id,
+        institution.shortName,
+        institution.fullName,
+        institution.heroLabel,
+      ].includes(value);
+    }) || null
+  );
+}
+
+function getAreaSummary(formData) {
+  if (Array.isArray(formData.preferredAreas) && formData.preferredAreas.length > 0) {
+    return formData.preferredAreas.join(", ");
+  }
+
+  return formData.preferredArea || "Any area";
+}
 function isStudentPreferencesComplete(profile) {
   const minBudget = Number(profile?.budgetMin || 0);
   const maxBudget = Number(profile?.budgetMax || 0);
@@ -91,9 +119,10 @@ function StudentDashboard() {
           phone: studentProfile.phone || "",
           college: studentProfile.college || "",
           gender: studentProfile.gender || "",
-          budgetMin: studentProfile.budgetMin || "",
-          budgetMax: studentProfile.budgetMax || "",
+          budgetMin: studentProfile.budgetMin || 3000,
+          budgetMax: studentProfile.budgetMax || 6000,
           preferredArea: studentProfile.preferredArea || "",
+          preferredAreas: getSavedPreferredAreas(studentProfile),
           preferredStayType: studentProfile.preferredStayType || "",
           foodRequired: studentProfile.foodRequired || "",
           preferredRoomType: studentProfile.preferredRoomType || "",
@@ -115,10 +144,46 @@ function StudentDashboard() {
   function handleInputChange(event) {
     const { name, value } = event.target;
 
+    setFormData((previousData) => {
+      if (name === "college") {
+        return {
+          ...previousData,
+          college: value,
+          preferredArea: "",
+          preferredAreas: [],
+        };
+      }
+
+      return {
+        ...previousData,
+        [name]: value,
+      };
+    });
+  }
+
+  function handleSingleSelect(name, value) {
     setFormData((previousData) => ({
       ...previousData,
       [name]: value,
     }));
+  }
+
+  function handlePreferredAreaToggle(area) {
+    setFormData((previousData) => {
+      const currentAreas = Array.isArray(previousData.preferredAreas)
+        ? previousData.preferredAreas
+        : [];
+
+      const nextAreas = currentAreas.includes(area)
+        ? currentAreas.filter((item) => item !== area)
+        : [...currentAreas, area];
+
+      return {
+        ...previousData,
+        preferredArea: nextAreas.join(", "),
+        preferredAreas: nextAreas,
+      };
+    });
   }
 
   function validatePreferenceForm() {
@@ -166,6 +231,9 @@ function StudentDashboard() {
 
     const minBudget = Number(formData.budgetMin || 0);
     const maxBudget = Number(formData.budgetMax || 0);
+    const preferredAreas = Array.isArray(formData.preferredAreas)
+      ? formData.preferredAreas
+      : [];
 
     try {
       setSaving(true);
@@ -179,7 +247,8 @@ function StudentDashboard() {
         gender: formData.gender,
         budgetMin: minBudget,
         budgetMax: maxBudget,
-        preferredArea: formData.preferredArea.trim(),
+        preferredArea: preferredAreas.join(", "),
+        preferredAreas,
         preferredStayType: formData.preferredStayType,
         foodRequired: formData.foodRequired,
         preferredRoomType: formData.preferredRoomType,
@@ -288,6 +357,8 @@ function StudentDashboard() {
               saving={saving}
               onChange={handleInputChange}
               onSubmit={handleSaveProfile}
+              onSingleSelect={handleSingleSelect}
+              onToggleArea={handlePreferredAreaToggle}
             />
           </section>
         ) : (
@@ -339,7 +410,7 @@ function StudentDashboard() {
                     {formData.budgetMin || "Any"} - ₹
                     {formData.budgetMax || "Any"} ·{" "}
                     {formData.foodRequired || "Food optional"} ·{" "}
-                    {formData.preferredArea || "Any area"}
+                    {getAreaSummary(formData)}
                   </p>
                 </div>
 
@@ -358,6 +429,8 @@ function StudentDashboard() {
                   saving={saving}
                   onChange={handleInputChange}
                   onSubmit={handleSaveProfile}
+                  onSingleSelect={handleSingleSelect}
+                  onToggleArea={handlePreferredAreaToggle}
                 />
               )}
             </section>
@@ -370,7 +443,26 @@ function StudentDashboard() {
   );
 }
 
-function PreferenceForm({ formData, saving, onChange, onSubmit }) {
+function PreferenceForm({
+  formData,
+  saving,
+  onChange,
+  onSubmit,
+  onSingleSelect,
+  onToggleArea,
+}) {
+  const selectedInstitution = getInstitutionFromValue(formData.college);
+  const areaOptions = selectedInstitution?.areas || institutions[0].areas;
+  const preferredAreas = Array.isArray(formData.preferredAreas)
+    ? formData.preferredAreas
+    : [];
+  const institutionOptions = [
+    "",
+    ...institutions
+      .filter((institution) => institution.id !== "all")
+      .map((institution) => institution.heroLabel),
+  ];
+
   return (
     <form onSubmit={onSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
       <InputField
@@ -427,13 +519,14 @@ function PreferenceForm({ formData, saving, onChange, onSubmit }) {
         required
       />
 
-      <InputField
-        label="Preferred Area"
-        name="preferredArea"
-        value={formData.preferredArea}
-        onChange={onChange}
-        placeholder="JIST Gate, Sotai, Tarajan"
-      />
+      <div className="md:col-span-2">
+        <ChipGroup
+          label="Preferred Areas"
+          options={areaOptions}
+          selectedValues={preferredAreas}
+          onToggle={onToggleArea}
+        />
+      </div>
 
       <SelectField
         label="Preferred Stay Type"
@@ -444,36 +537,37 @@ function PreferenceForm({ formData, saving, onChange, onSubmit }) {
         required
       />
 
-      <SelectField
+      <ChipGroup
         label="Food Required"
-        name="foodRequired"
-        value={formData.foodRequired}
-        onChange={onChange}
-        options={["", "Yes", "No", "Maybe"]}
+        options={["Yes", "No", "Maybe"]}
+        selectedValues={[formData.foodRequired].filter(Boolean)}
+        onSelect={(value) => onSingleSelect("foodRequired", value)}
         required
       />
 
-      <SelectField
+      <ChipGroup
         label="Room Sharing Preference"
-        name="preferredRoomType"
-        value={formData.preferredRoomType}
-        onChange={onChange}
         options={[
-          "",
           "Single Room",
           "Double Sharing",
           "Triple Sharing",
           "Four Sharing",
         ]}
+        selectedValues={[formData.preferredRoomType].filter(Boolean)}
+        onSelect={(value) => onSingleSelect("preferredRoomType", value)}
       />
 
       <div className="md:col-span-2">
-        <InputField
+        <ChipGroup
           label="Move-in Time"
-          name="moveInTime"
-          value={formData.moveInTime}
-          onChange={onChange}
-          placeholder="Immediately, within 1 month, after admission"
+          options={[
+            "Immediately",
+            "Within 1 month",
+            "After admission",
+            "Not sure yet",
+          ]}
+          selectedValues={[formData.moveInTime].filter(Boolean)}
+          onSelect={(value) => onSingleSelect("moveInTime", value)}
         />
       </div>
 
@@ -484,10 +578,57 @@ function PreferenceForm({ formData, saving, onChange, onSubmit }) {
           className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-          {saving ? "Saving..." : "Save and continue"}
+          {saving ? "Saving..." : "Show matching stays"}
         </button>
       </div>
     </form>
+  );
+}
+
+function ChipGroup({
+  label,
+  options,
+  selectedValues,
+  onSelect,
+  onToggle,
+  required = false,
+}) {
+  return (
+    <div>
+      <p className="text-sm font-bold text-slate-700">
+        {label}
+        {required && <span className="ml-1 text-red-600">*</span>}
+      </p>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = selectedValues.includes(option);
+
+          return (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => {
+                if (onToggle) {
+                  onToggle(option);
+                  return;
+                }
+
+                onSelect(selected ? "" : option);
+              }}
+              className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                selected
+                  ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
+                  : "border-[#E8DFD2] bg-[#FFF8EF] text-slate-700 hover:bg-white"
+              }`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
