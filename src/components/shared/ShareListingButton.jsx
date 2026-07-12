@@ -12,7 +12,7 @@ function ShareListingButton({
 
   if (!listing?.id) return null;
 
-  const shareUrl = `${window.location.origin}/share/${listing.id}`;
+  const listingUrl = `${window.location.origin}/listing/${listing.id}`;
   const shareText = buildShareText(listing);
 
   async function handleShare(event) {
@@ -29,12 +29,12 @@ function ShareListingButton({
         await navigator.share({
           title: listing.name || "CampusStay listing",
           text: shareText,
-          url: shareUrl,
+          url: listingUrl,
         });
         return;
       }
 
-      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      await navigator.clipboard.writeText(`${shareText}\n\n${listingUrl}`);
       setCopied(true);
 
       setTimeout(() => {

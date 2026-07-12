@@ -26,7 +26,14 @@ import {
   sortOptions,
 } from "../../utils/filterConstants";
 
-const heroInstitutions = institutions.filter((institution) => institution.id !== "all");
+const allInstitution = institutions.find((institution) => institution.id === "all");
+const homeInstitutionChips = [
+  allInstitution,
+  ...institutions.filter((institution) => institution.showOnHome === true),
+].filter(Boolean);
+const heroInstitutions = homeInstitutionChips.filter(
+  (institution) => institution.id !== "all"
+);
 
 function Home() {
   const navigate = useNavigate();
@@ -201,8 +208,7 @@ function Home() {
 
       <div className="mx-auto hidden max-w-7xl px-4 pt-4 sm:block sm:px-6">
         <div className="rounded-full border border-[#E8DFD2] bg-white px-4 py-2 text-center text-xs font-black text-slate-700 shadow-sm">
-          Now helping students find stays around JIST, JEC, Kaziranga ITI and
-          nearby areas
+          Now helping students find stays around JIST, JEC, and nearby areas
         </div>
       </div>
 
@@ -222,7 +228,7 @@ function Home() {
 
       <section className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          {institutions.map((item) => {
+          {homeInstitutionChips.map((item) => {
             const selected = institution === item.id;
 
             return (

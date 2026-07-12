@@ -4,6 +4,7 @@ export const institutions = [
     shortName: "All",
     fullName: "All institutions",
     heroLabel: "All Colleges",
+    showOnHome: false,
     areas: [
       "JIST Gate",
       "Sotai",
@@ -18,6 +19,7 @@ export const institutions = [
     shortName: "JIST",
     fullName: "Jorhat Institute of Science and Technology",
     heroLabel: "JIST",
+    showOnHome: true,
     areas: ["JIST Gate", "Sotai", "Kokilamukh Road", "Nearby JIST"],
   },
   {
@@ -25,6 +27,7 @@ export const institutions = [
     shortName: "JEC",
     fullName: "Jorhat Engineering College",
     heroLabel: "JEC",
+    showOnHome: true,
     areas: ["JEC Gate", "Garmur", "Tarajan", "Nearby JEC"],
   },
   {
@@ -32,6 +35,7 @@ export const institutions = [
     shortName: "Ayush",
     fullName: "Ayush Pharmacy",
     heroLabel: "Ayush Pharmacy",
+    showOnHome: false,
     areas: ["Ayush Pharmacy Area", "Tarajan", "Nearby Ayush Pharmacy"],
   },
   {
@@ -39,6 +43,7 @@ export const institutions = [
     shortName: "Kaziranga",
     fullName: "Kaziranga ITI",
     heroLabel: "Kaziranga ITI",
+    showOnHome: false,
     areas: ["Kaziranga ITI Area", "Sotai", "Nearby Kaziranga ITI"],
   },
 ];
