@@ -73,12 +73,52 @@ export async function updateStudentProfile(uid, profileData) {
   if (!uid) throw new Error("Student ID is required.");
 
   const studentRef = doc(db, "students", uid);
+  const studentSnap = await getDoc(studentRef);
+  const nextProfileData = { ...profileData };
+
+  if (
+    Array.isArray(nextProfileData.preferredAreas) &&
+    nextProfileData.preferredArea === undefined
+  ) {
+    nextProfileData.preferredArea = nextProfileData.preferredAreas.join(", ");
+  }
+
+  if (
+    !Array.isArray(nextProfileData.preferredAreas) &&
+    typeof nextProfileData.preferredArea === "string"
+  ) {
+    nextProfileData.preferredAreas = nextProfileData.preferredArea
+      .split(",")
+      .map((area) => area.trim())
+      .filter(Boolean);
+  }
+
+  const newStudentDefaults = studentSnap.exists()
+    ? {}
+    : {
+        uid,
+        fullName: "",
+        email: "",
+        phone: "",
+        college: "",
+        gender: "",
+        budgetMin: "",
+        budgetMax: "",
+        preferredArea: "",
+        preferredAreas: [],
+        preferredStayType: "",
+        foodRequired: "",
+        preferredRoomType: "",
+        moveInTime: "",
+        createdAt: serverTimestamp(),
+      };
 
   await setDoc(
     studentRef,
     {
+      ...newStudentDefaults,
       uid,
-      ...profileData,
+      ...nextProfileData,
       updatedAt: serverTimestamp(),
     },
     { merge: true }

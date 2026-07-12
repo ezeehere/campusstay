@@ -238,8 +238,6 @@ function StudentDashboard() {
     try {
       setSaving(true);
 
-      await ensureStudentProfile(studentUser);
-
       await updateStudentProfile(studentUser.uid, {
         fullName: formData.fullName.trim(),
         phone: formData.phone.trim(),
