@@ -13,7 +13,6 @@ import {
 
 import { logoutStudent, watchStudentAuth } from "../../firebase/studentAuth";
 import {
-  ensureStudentProfile,
   getStudentProfile,
   updateStudentProfile,
 } from "../../firebase/students";
@@ -91,6 +90,7 @@ function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreferenceForm, setShowPreferenceForm] = useState(false);
+  const [missingProfile, setMissingProfile] = useState(false);
 
   const [formData, setFormData] = useState(initialFormData);
 
@@ -98,17 +98,22 @@ function StudentDashboard() {
     const unsubscribe = watchStudentAuth(async (user) => {
       if (!user) {
         setStudentUser(null);
+        setProfile(null);
+        setMissingProfile(false);
         setLoading(false);
         return;
       }
 
       setStudentUser(user);
+      setMissingProfile(false);
 
-      let studentProfile = await getStudentProfile(user.uid);
+      const studentProfile = await getStudentProfile(user.uid);
 
       if (!studentProfile) {
-        await ensureStudentProfile(user);
-        studentProfile = await getStudentProfile(user.uid);
+        setProfile(null);
+        setMissingProfile(true);
+        setLoading(false);
+        return;
       }
 
       if (studentProfile) {
@@ -283,6 +288,33 @@ function StudentDashboard() {
           <Loader2 className="animate-spin" size={20} />
           Loading student dashboard...
         </div>
+      </main>
+    );
+  }
+
+  if (missingProfile) {
+    return (
+      <main className="cs-page flex min-h-screen items-center justify-center px-3 py-4 text-slate-600">
+        <section className="w-full max-w-md rounded-[1.5rem] border border-[#E8DFD2] bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F6F1E8] text-[#1E5B4F]">
+            <UserRound size={22} />
+          </div>
+
+          <h1 className="mt-4 text-xl font-bold text-[#1F2933]">
+            Student profile not found
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Please sign in through the student login page so CampusStay can set up your student account.
+          </p>
+
+          <Link
+            to="/student/login?returnTo=/student/dashboard"
+            className="mt-5 inline-flex rounded-2xl bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
+          >
+            Go to student login
+          </Link>
+        </section>
       </main>
     );
   }
