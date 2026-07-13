@@ -10,7 +10,7 @@ import {
   where,
 } from "firebase/firestore";
 
-import { db } from "./config";
+import { auth, db } from "./config";
 import {
   decrementListingAnalytics,
   trackListingInteraction,
@@ -20,20 +20,56 @@ function createSaveId(studentId, listingId) {
   return `${studentId}_${listingId}`;
 }
 
-export async function checkListingSaved(studentId, listingId) {
-  if (!studentId || !listingId) return false;
+function getListingImage(listing) {
+  if (Array.isArray(listing.images) && listing.images.length > 0) {
+    return listing.images[0] || "";
+  }
 
-  const saveRef = doc(db, "savedListings", createSaveId(studentId, listingId));
-  const saveSnap = await getDoc(saveRef);
-
-  return saveSnap.exists();
+  return listing.image || "";
 }
 
+function getTimestampSeconds(value) {
+  return value?.seconds || 0;
+}
+
+export async function checkSavedListing(studentId, listingId) {
+  if (!studentId || !listingId) return false;
+
+  const saveId = createSaveId(studentId, listingId);
+  const saveRef = doc(db, "savedListings", saveId);
+
+  try {
+    const saveSnap = await getDoc(saveRef);
+    return saveSnap.exists();
+  } catch (error) {
+    if (error?.code !== "permission-denied") throw error;
+  }
+
+  const savedQuery = query(
+    collection(db, "savedListings"),
+    where("studentId", "==", studentId)
+  );
+  const snapshot = await getDocs(savedQuery);
+
+  return snapshot.docs.some((docItem) => {
+    const data = docItem.data();
+    return docItem.id === saveId || data.listingId === listingId;
+  });
+}
+
+export const checkListingSaved = checkSavedListing;
+
 export async function saveListing(studentId, listing) {
+  const currentUserId = auth.currentUser?.uid;
+
   if (!studentId) throw new Error("Student login required.");
   if (!listing?.id) throw new Error("Listing ID missing.");
+  if (!currentUserId || currentUserId !== studentId) {
+    throw new Error("Student account mismatch. Please sign in again.");
+  }
 
   const saveRef = doc(db, "savedListings", createSaveId(studentId, listing.id));
+  const timestamp = serverTimestamp();
 
   await setDoc(
     saveRef,
@@ -42,14 +78,17 @@ export async function saveListing(studentId, listing) {
       listingId: listing.id,
       listingName: listing.name || "",
       area: listing.area || "",
+      rent: Number(listing.startingRent || listing.rent || 0),
+      image: getListingImage(listing),
+      ownerPhone: listing.phone || "",
       type: listing.type || "",
       gender: listing.gender || "",
-      rent: listing.startingRent || listing.rent || 0,
-      image: listing.images?.[0] || "",
       foodIncluded: listing.foodIncluded || false,
       verified: listing.verified || false,
       available: listing.available || false,
-      savedAt: serverTimestamp(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      savedAt: timestamp,
     },
     { merge: true }
   );
@@ -75,7 +114,11 @@ export async function unsaveListing(studentId, listingId) {
   }
 }
 
-export async function toggleSaveListing(studentId, listing, isCurrentlySaved = false) {
+export async function toggleSaveListing(
+  studentId,
+  listing,
+  isCurrentlySaved = false
+) {
   if (isCurrentlySaved) {
     await unsaveListing(studentId, listing.id);
     return false;
@@ -85,7 +128,7 @@ export async function toggleSaveListing(studentId, listing, isCurrentlySaved = f
   return true;
 }
 
-export async function getSavedListings(studentId) {
+export async function getSavedListingsForStudent(studentId) {
   if (!studentId) return [];
 
   const savedQuery = query(
@@ -101,8 +144,10 @@ export async function getSavedListings(studentId) {
   }));
 
   return savedData.sort((a, b) => {
-    const aTime = a.savedAt?.seconds || 0;
-    const bTime = b.savedAt?.seconds || 0;
+    const aTime = getTimestampSeconds(a.updatedAt || a.savedAt || a.createdAt);
+    const bTime = getTimestampSeconds(b.updatedAt || b.savedAt || b.createdAt);
     return bTime - aTime;
   });
 }
+
+export const getSavedListings = getSavedListingsForStudent;

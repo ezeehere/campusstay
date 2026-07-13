@@ -3,7 +3,7 @@ import { Heart, Loader2 } from "lucide-react";
 
 import { watchStudentAuth } from "../../firebase/studentAuth";
 import {
-  checkListingSaved,
+  checkSavedListing,
   toggleSaveListing,
 } from "../../firebase/savedListings";
 import StudentActionLoginPrompt from "./StudentActionLoginPrompt";
@@ -21,7 +21,7 @@ function SaveListingButton({ listing, showText = true }) {
 
       try {
         if (user && listing?.id) {
-          const isSaved = await checkListingSaved(user.uid, listing.id);
+          const isSaved = await checkSavedListing(user.uid, listing.id);
           setSaved(isSaved);
         } else {
           setSaved(false);
