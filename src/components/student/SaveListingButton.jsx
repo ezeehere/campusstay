@@ -53,7 +53,11 @@ function SaveListingButton({ listing, showText = true }) {
     try {
       setLoading(true);
 
-      const newSavedState = await toggleSaveListing(studentUser.uid, listing);
+      const newSavedState = await toggleSaveListing(
+        studentUser.uid,
+        listing,
+        saved
+      );
       setSaved(newSavedState);
     } catch (error) {
       console.error("Save failed:", error);

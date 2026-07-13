@@ -1,5 +1,13 @@
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "./config";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  where,
+  writeBatch,
+} from "firebase/firestore";
+import { auth, db } from "./config";
+import { checkIsAdmin } from "./admins";
 
 function getTimestampSeconds(value) {
   return value?.seconds || 0;
@@ -7,6 +15,54 @@ function getTimestampSeconds(value) {
 
 function safeLower(value) {
   return String(value || "").toLowerCase();
+}
+
+const DELETE_BATCH_LIMIT = 450;
+
+async function addMatchingDocs(refsByPath, collectionName, fieldName, studentId) {
+  const snapshot = await getDocs(
+    query(collection(db, collectionName), where(fieldName, "==", studentId))
+  );
+
+  snapshot.docs.forEach((docItem) => {
+    refsByPath.set(docItem.ref.path, docItem.ref);
+  });
+}
+
+async function deleteRefsInBatches(refs) {
+  for (let index = 0; index < refs.length; index += DELETE_BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    const chunk = refs.slice(index, index + DELETE_BATCH_LIMIT);
+
+    chunk.forEach((docRef) => batch.delete(docRef));
+    await batch.commit();
+  }
+}
+
+export async function deleteCustomerAndActivity(studentId) {
+  if (!studentId) throw new Error("Student ID is required.");
+
+  const currentUser = auth.currentUser;
+  const isAdmin = await checkIsAdmin(currentUser?.uid);
+
+  if (!isAdmin) {
+    throw new Error("Only admins can delete customers.");
+  }
+
+  const refsByPath = new Map();
+  refsByPath.set(`students/${studentId}`, doc(db, "students", studentId));
+
+  await Promise.all([
+    addMatchingDocs(refsByPath, "savedListings", "studentId", studentId),
+    addMatchingDocs(refsByPath, "studentLeads", "studentId", studentId),
+    addMatchingDocs(refsByPath, "analyticsEvents", "userId", studentId),
+    addMatchingDocs(refsByPath, "analyticsEvents", "studentId", studentId),
+  ]);
+
+  const refs = Array.from(refsByPath.values());
+  await deleteRefsInBatches(refs);
+
+  return { deletedCount: refs.length };
 }
 
 export async function getAdminCustomerAnalytics() {

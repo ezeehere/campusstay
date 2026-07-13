@@ -65,9 +65,6 @@ export async function unsaveListing(studentId, listingId) {
   if (!studentId || !listingId) return;
 
   const saveRef = doc(db, "savedListings", createSaveId(studentId, listingId));
-  const saveSnap = await getDoc(saveRef);
-
-  if (!saveSnap.exists()) return;
 
   await deleteDoc(saveRef);
 
@@ -78,10 +75,8 @@ export async function unsaveListing(studentId, listingId) {
   }
 }
 
-export async function toggleSaveListing(studentId, listing) {
-  const alreadySaved = await checkListingSaved(studentId, listing.id);
-
-  if (alreadySaved) {
+export async function toggleSaveListing(studentId, listing, isCurrentlySaved = false) {
+  if (isCurrentlySaved) {
     await unsaveListing(studentId, listing.id);
     return false;
   }

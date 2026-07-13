@@ -9,10 +9,14 @@ import {
     MessageCircle,
     Phone,
     Search,
+    Trash2,
     UserRound,
 } from "lucide-react";
 
-import { getAdminCustomerAnalytics } from "../../firebase/customerAnalytics";
+import {
+    deleteCustomerAndActivity,
+    getAdminCustomerAnalytics,
+} from "../../firebase/customerAnalytics";
 
 function formatDateFromSeconds(seconds) {
     if (!seconds) return "No activity yet";
@@ -41,6 +45,7 @@ function AdminCustomers() {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
+    const [deletingCustomerId, setDeletingCustomerId] = useState("");
 
     async function loadCustomers() {
         try {
@@ -55,6 +60,36 @@ function AdminCustomers() {
         }
     }
 
+
+    async function handleDeleteCustomer(customer) {
+        const studentId = customer.uid || customer.id;
+        const customerName = customer.fullName || customer.email || "this customer";
+
+        if (!studentId) {
+            alert("Student ID missing. Could not delete customer.");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "Delete " + customerName + " and their saved listings, leads, and activity? This cannot be undone."
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setDeletingCustomerId(studentId);
+            const result = await deleteCustomerAndActivity(studentId);
+
+            setSelectedCustomer(null);
+            await loadCustomers();
+            alert("Customer deleted successfully. Removed " + result.deletedCount + " records.");
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Could not delete customer.");
+        } finally {
+            setDeletingCustomerId("");
+        }
+    }
     useEffect(() => {
         loadCustomers();
     }, []);
@@ -184,7 +219,9 @@ function AdminCustomers() {
                 {selectedCustomer && (
                     <CustomerDetailsModal
                         customer={selectedCustomer}
+                        deleting={deletingCustomerId === (selectedCustomer.uid || selectedCustomer.id)}
                         onClose={() => setSelectedCustomer(null)}
+                        onDelete={handleDeleteCustomer}
                     />
                 )}
             </div>
@@ -269,7 +306,7 @@ function MiniStat({ label, value }) {
     );
 }
 
-function CustomerDetailsModal({ customer, onClose }) {
+function CustomerDetailsModal({ customer, deleting, onClose, onDelete }) {
     return (
         <div className="fixed inset-0 z-[999] flex items-end justify-center bg-[#070B1F]/50 px-3 pb-3 sm:items-center sm:p-4">
             <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-[1.7rem] bg-white shadow-2xl">
@@ -395,6 +432,32 @@ function CustomerDetailsModal({ customer, onClose }) {
                                     <LeadCard key={lead.id} lead={lead} />
                                 ))
                             )}
+                        </div>
+                    </section>
+                    <section className="rounded-[1.5rem] border border-red-200 bg-red-50 p-4 lg:col-span-2">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 className="text-lg font-bold text-red-900">
+                                    Delete customer
+                                </h3>
+                                <p className="mt-1 text-sm leading-6 text-red-700">
+                                    Removes this student profile, saved listings, leads, and activity logs. Listings, owners, and admin accounts are not deleted.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={() => onDelete(customer)}
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {deleting ? (
+                                    <Loader2 className="animate-spin" size={17} />
+                                ) : (
+                                    <Trash2 size={17} />
+                                )}
+                                {deleting ? "Deleting..." : "Delete customer"}
+                            </button>
                         </div>
                     </section>
                 </div>
