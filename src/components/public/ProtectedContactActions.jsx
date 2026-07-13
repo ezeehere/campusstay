@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Lock, MessageCircle, Phone } from "lucide-react";
 import { useAuthUser } from "../../hooks/useAuthUser";
 import { buildStudentLoginUrl } from "../../utils/loginRedirect";
+import { trackListingInteraction } from "../../firebase/analytics";
 
 function cleanPhoneNumber(phone) {
   return String(phone || "").replace(/\D/g, "");
@@ -24,6 +25,12 @@ function ProtectedContactActions({ listing }) {
     action: "contact",
     listingId,
   });
+
+  function handleAnalyticsClick(eventType, metricKey) {
+    trackListingInteraction(eventType, listing, metricKey).catch((error) => {
+      console.error("Contact analytics failed:", error);
+    });
+  }
 
   if (checkingAuth) {
     return (
@@ -67,6 +74,7 @@ function ProtectedContactActions({ listing }) {
     <div className="grid gap-3 sm:grid-cols-2">
       <a
         href={`tel:${phone}`}
+        onClick={() => handleAnalyticsClick("call_click", "callClicks")}
         className="flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35]"
       >
         <Phone size={17} />
@@ -77,6 +85,9 @@ function ProtectedContactActions({ listing }) {
         href={getWhatsappLink(listing.phone, listing.name)}
         target="_blank"
         rel="noreferrer"
+        onClick={() =>
+          handleAnalyticsClick("whatsapp_click", "whatsappClicks")
+        }
         className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
       >
         <MessageCircle size={17} />

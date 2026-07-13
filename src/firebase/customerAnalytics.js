@@ -46,7 +46,7 @@ export async function getAdminCustomerAnalytics() {
     );
 
     const studentEvents = analyticsEvents.filter(
-      (event) => event.studentId === studentId
+      (event) => event.userId === studentId || event.studentId === studentId
     );
 
     const studentLeads = leads.filter((lead) => lead.studentId === studentId);
