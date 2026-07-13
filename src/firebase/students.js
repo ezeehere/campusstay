@@ -7,6 +7,8 @@ import {
 
 import { db } from "./config";
 
+const CURRENT_TERMS_VERSION = "2026-07-13";
+
 export async function ensureStudentProfile(user, extraData = {}) {
   if (!user) return null;
 
@@ -19,6 +21,8 @@ export async function ensureStudentProfile(user, extraData = {}) {
       fullName: extraData.fullName || user.displayName || "",
       email: user.email || "",
       phone: "",
+      institutionId: "",
+      institutionName: "",
       college: "",
       gender: "",
       budgetMin: "",
@@ -29,6 +33,8 @@ export async function ensureStudentProfile(user, extraData = {}) {
       foodRequired: "",
       preferredRoomType: "",
       moveInTime: "",
+      termsAccepted: false,
+      termsVersion: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastLoginAt: serverTimestamp(),
@@ -74,6 +80,7 @@ export async function updateStudentProfile(uid, profileData) {
 
   const studentRef = doc(db, "students", uid);
   const studentSnap = await getDoc(studentRef);
+  const existingProfile = studentSnap.exists() ? studentSnap.data() : {};
   const nextProfileData = { ...profileData };
 
   if (
@@ -93,6 +100,15 @@ export async function updateStudentProfile(uid, profileData) {
       .filter(Boolean);
   }
 
+  if (nextProfileData.termsAccepted === true) {
+    nextProfileData.termsVersion =
+      nextProfileData.termsVersion || existingProfile.termsVersion || CURRENT_TERMS_VERSION;
+
+    if (!nextProfileData.termsAcceptedAt && !existingProfile.termsAcceptedAt) {
+      nextProfileData.termsAcceptedAt = serverTimestamp();
+    }
+  }
+
   const newStudentDefaults = studentSnap.exists()
     ? {}
     : {
@@ -100,6 +116,8 @@ export async function updateStudentProfile(uid, profileData) {
         fullName: "",
         email: "",
         phone: "",
+        institutionId: "",
+        institutionName: "",
         college: "",
         gender: "",
         budgetMin: "",
@@ -110,6 +128,8 @@ export async function updateStudentProfile(uid, profileData) {
         foodRequired: "",
         preferredRoomType: "",
         moveInTime: "",
+        termsAccepted: false,
+        termsVersion: "",
         createdAt: serverTimestamp(),
       };
 

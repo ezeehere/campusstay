@@ -263,6 +263,46 @@ service cloud.firestore {
         );
     }
 
+    match /students/{studentId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && request.auth.uid == studentId);
+
+      allow create: if isSignedIn()
+        && request.auth.uid == studentId
+        && request.resource.data.uid == studentId;
+
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && request.auth.uid == studentId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "uid",
+            "fullName",
+            "email",
+            "phone",
+            "institutionId",
+            "institutionName",
+            "college",
+            "gender",
+            "budgetMin",
+            "budgetMax",
+            "preferredArea",
+            "preferredAreas",
+            "preferredStayType",
+            "foodRequired",
+            "preferredRoomType",
+            "moveInTime",
+            "termsAccepted",
+            "termsAcceptedAt",
+            "termsVersion",
+            "lastLoginAt",
+            "updatedAt"
+          ])
+        );
+
+      allow delete: if isAdmin();
+    }
+
     match /admins/{adminId} {
       allow read, write: if isAdmin();
     }

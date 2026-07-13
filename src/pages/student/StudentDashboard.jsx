@@ -19,9 +19,13 @@ import {
 import StudentListingSection from "../../components/student/StudentListingSection";
 import { institutions } from "../../config/institutions";
 
+const TERMS_VERSION = "2026-07-13";
+
 const initialFormData = {
   fullName: "",
   phone: "",
+  institutionId: "",
+  institutionName: "",
   college: "",
   gender: "",
   budgetMin: 3000,
@@ -32,6 +36,8 @@ const initialFormData = {
   foodRequired: "",
   preferredRoomType: "",
   moveInTime: "",
+  termsAccepted: false,
+  termsVersion: TERMS_VERSION,
 };
 
 function getSavedPreferredAreas(profile) {
@@ -49,7 +55,15 @@ function getSavedPreferredAreas(profile) {
   return [];
 }
 
+function normalizeInstitutionValue(value) {
+  return String(value || "").toLowerCase().trim();
+}
+
 function getInstitutionFromValue(value) {
+  const cleanValue = normalizeInstitutionValue(value);
+
+  if (!cleanValue) return null;
+
   return (
     institutions.find((institution) => {
       return [
@@ -57,9 +71,15 @@ function getInstitutionFromValue(value) {
         institution.shortName,
         institution.fullName,
         institution.heroLabel,
-      ].includes(value);
+      ]
+        .map(normalizeInstitutionValue)
+        .includes(cleanValue);
     }) || null
   );
+}
+
+function getInstitutionDisplay(data) {
+  return data?.institutionName || data?.college || "";
 }
 
 function getAreaSummary(formData) {
@@ -72,14 +92,20 @@ function getAreaSummary(formData) {
 function isStudentPreferencesComplete(profile) {
   const minBudget = Number(profile?.budgetMin || 0);
   const maxBudget = Number(profile?.budgetMax || 0);
+  const selectedInstitution =
+    profile?.institutionId || profile?.institutionName || profile?.college;
 
   return Boolean(
-    profile?.college &&
+    profile?.fullName &&
+    profile?.phone &&
+    selectedInstitution &&
     profile?.gender &&
     minBudget > 0 &&
     maxBudget > 0 &&
+    maxBudget >= minBudget &&
     profile?.preferredStayType &&
-    profile?.foodRequired
+    profile?.foodRequired &&
+    profile?.termsAccepted === true
   );
 }
 
@@ -119,10 +145,19 @@ function StudentDashboard() {
       if (studentProfile) {
         setProfile(studentProfile);
 
+        const selectedInstitution = getInstitutionFromValue(
+          studentProfile.institutionId ||
+            studentProfile.institutionName ||
+            studentProfile.college
+        );
+
         const nextFormData = {
           fullName: studentProfile.fullName || user.displayName || "",
           phone: studentProfile.phone || "",
-          college: studentProfile.college || "",
+          institutionId: studentProfile.institutionId || selectedInstitution?.id || "",
+          institutionName:
+            studentProfile.institutionName || selectedInstitution?.fullName || "",
+          college: studentProfile.college || selectedInstitution?.heroLabel || "",
           gender: studentProfile.gender || "",
           budgetMin: studentProfile.budgetMin || 3000,
           budgetMax: studentProfile.budgetMax || 6000,
@@ -132,6 +167,8 @@ function StudentDashboard() {
           foodRequired: studentProfile.foodRequired || "",
           preferredRoomType: studentProfile.preferredRoomType || "",
           moveInTime: studentProfile.moveInTime || "",
+          termsAccepted: studentProfile.termsAccepted === true,
+          termsVersion: studentProfile.termsVersion || TERMS_VERSION,
         };
 
         setFormData(nextFormData);
@@ -147,13 +184,18 @@ function StudentDashboard() {
   const preferencesComplete = isStudentPreferencesComplete(profile);
 
   function handleInputChange(event) {
-    const { name, value } = event.target;
+    const { checked, name, type, value } = event.target;
+    const nextValue = type === "checkbox" ? checked : value;
 
     setFormData((previousData) => {
-      if (name === "college") {
+      if (name === "institutionId") {
+        const selectedInstitution = getInstitutionFromValue(nextValue);
+
         return {
           ...previousData,
-          college: value,
+          institutionId: selectedInstitution?.id || "",
+          institutionName: selectedInstitution?.fullName || "",
+          college: selectedInstitution?.heroLabel || "",
           preferredArea: "",
           preferredAreas: [],
         };
@@ -161,7 +203,7 @@ function StudentDashboard() {
 
       return {
         ...previousData,
-        [name]: value,
+        [name]: nextValue,
       };
     });
   }
@@ -195,7 +237,17 @@ function StudentDashboard() {
     const minBudget = Number(formData.budgetMin || 0);
     const maxBudget = Number(formData.budgetMax || 0);
 
-    if (!formData.college) {
+    if (!formData.fullName.trim()) {
+      alert("Please enter your full name.");
+      return false;
+    }
+
+    if (!formData.phone.trim()) {
+      alert("Please enter your phone number.");
+      return false;
+    }
+
+    if (!formData.institutionId) {
       alert("Please select your nearby institution.");
       return false;
     }
@@ -205,8 +257,8 @@ function StudentDashboard() {
       return false;
     }
 
-    if (!minBudget || !maxBudget) {
-      alert("Please enter your minimum and maximum budget.");
+    if (!minBudget || !maxBudget || minBudget <= 0 || maxBudget <= 0) {
+      alert("Please enter a valid minimum and maximum budget.");
       return false;
     }
 
@@ -225,6 +277,11 @@ function StudentDashboard() {
       return false;
     }
 
+    if (formData.termsAccepted !== true) {
+      alert("Please accept the CampusStay Terms & Conditions.");
+      return false;
+    }
+
     return true;
   }
 
@@ -239,14 +296,18 @@ function StudentDashboard() {
     const preferredAreas = Array.isArray(formData.preferredAreas)
       ? formData.preferredAreas
       : [];
+    const selectedInstitution = getInstitutionFromValue(formData.institutionId);
 
     try {
       setSaving(true);
 
       await updateStudentProfile(studentUser.uid, {
         fullName: formData.fullName.trim(),
+        email: studentUser.email || "",
         phone: formData.phone.trim(),
-        college: formData.college,
+        institutionId: selectedInstitution?.id || formData.institutionId,
+        institutionName: selectedInstitution?.fullName || formData.institutionName,
+        college: selectedInstitution?.heroLabel || formData.college,
         gender: formData.gender,
         budgetMin: minBudget,
         budgetMax: maxBudget,
@@ -255,7 +316,9 @@ function StudentDashboard() {
         preferredStayType: formData.preferredStayType,
         foodRequired: formData.foodRequired,
         preferredRoomType: formData.preferredRoomType,
-        moveInTime: formData.moveInTime.trim(),
+        moveInTime: String(formData.moveInTime || "").trim(),
+        termsAccepted: formData.termsAccepted === true,
+        termsVersion: TERMS_VERSION,
       });
 
       const updatedProfile = await getStudentProfile(studentUser.uid);
@@ -404,7 +467,7 @@ function StudentDashboard() {
 
               <DashboardMiniCard
                 title="Institution"
-                value={formData.college || "Any"}
+                value={getInstitutionDisplay(formData) || "Any"}
                 description="Nearby"
                 icon={<SlidersHorizontal size={19} />}
               />
@@ -434,7 +497,7 @@ function StudentDashboard() {
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {formData.college || "Any institution"} ·{" "}
+                    {getInstitutionDisplay(formData) || "Any institution"} ·{" "}
                     {formData.gender || "Any gender"} ·{" "}
                     {formData.preferredStayType || "PG or Room"} · ₹
                     {formData.budgetMin || "Any"} - ₹
@@ -481,16 +544,21 @@ function PreferenceForm({
   onSingleSelect,
   onToggleArea,
 }) {
-  const selectedInstitution = getInstitutionFromValue(formData.college);
+  const selectedInstitution = getInstitutionFromValue(
+    formData.institutionId || formData.institutionName || formData.college
+  );
   const areaOptions = selectedInstitution?.areas || institutions[0].areas;
   const preferredAreas = Array.isArray(formData.preferredAreas)
     ? formData.preferredAreas
     : [];
   const institutionOptions = [
-    "",
+    { value: "", label: "Select" },
     ...institutions
       .filter((institution) => institution.id !== "all")
-      .map((institution) => institution.heroLabel),
+      .map((institution) => ({
+        value: institution.id,
+        label: institution.heroLabel,
+      })),
   ];
 
   return (
@@ -501,6 +569,7 @@ function PreferenceForm({
         value={formData.fullName}
         onChange={onChange}
         placeholder="Your name"
+        required
       />
 
       <InputField
@@ -508,13 +577,14 @@ function PreferenceForm({
         name="phone"
         value={formData.phone}
         onChange={onChange}
-        placeholder="Optional now, required when requesting callback"
+        placeholder="Enter your phone number"
+        required
       />
 
       <SelectField
         label="Nearby Institution"
-        name="college"
-        value={formData.college}
+        name="institutionId"
+        value={formData.institutionId}
         onChange={onChange}
         options={institutionOptions}
         required
@@ -600,6 +670,22 @@ function PreferenceForm({
           onSelect={(value) => onSingleSelect("moveInTime", value)}
         />
       </div>
+
+      <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] p-4 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          name="termsAccepted"
+          checked={formData.termsAccepted === true}
+          onChange={onChange}
+          className="mt-1 h-4 w-4 rounded border-[#E8DFD2] accent-[#1E5B4F]"
+        />
+        <span>
+          I agree to the CampusStay{" "}
+          <Link to="/terms" className="font-bold text-[#1E5B4F] underline">
+            Terms & Conditions
+          </Link>
+        </span>
+      </label>
 
       <div className="md:col-span-2">
         <button
@@ -734,11 +820,16 @@ function SelectField({ label, name, value, onChange, options, required = false }
         required={required}
         className="mt-2 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3 text-sm outline-none focus:border-[#1E5B4F]"
       >
-        {options.map((option) => (
-          <option key={option || "empty"} value={option}>
-            {option || "Select"}
-          </option>
-        ))}
+        {options.map((option) => {
+          const optionValue = typeof option === "string" ? option : option.value;
+          const optionLabel = typeof option === "string" ? option : option.label;
+
+          return (
+            <option key={optionValue || "empty"} value={optionValue}>
+              {optionLabel || "Select"}
+            </option>
+          );
+        })}
       </select>
     </div>
   );

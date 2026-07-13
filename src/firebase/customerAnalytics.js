@@ -166,7 +166,11 @@ export async function getAdminCustomerAnalytics() {
       searchText: safeLower(
         `${student.fullName || ""} ${student.email || ""} ${
           student.phone || ""
-        } ${student.college || ""} ${student.preferredArea || ""}`
+        } ${student.institutionName || ""} ${student.college || ""} ${
+          Array.isArray(student.preferredAreas)
+            ? student.preferredAreas.join(" ")
+            : ""
+        } ${student.preferredArea || ""}`
       ),
     };
   });

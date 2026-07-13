@@ -40,6 +40,55 @@ function getEventLabel(eventType) {
     return labels[eventType] || eventType || "Activity";
 }
 
+function getPreferredAreasText(customer) {
+    if (Array.isArray(customer.preferredAreas) && customer.preferredAreas.length > 0) {
+        return customer.preferredAreas.join(", ");
+    }
+
+    return customer.preferredArea || "Any";
+}
+
+function getPreferenceRows(customer) {
+    return [
+        {
+            label: "Institution",
+            value: customer.institutionName || customer.college || "Not set",
+        },
+        {
+            label: "Gender / Stay Suitable For",
+            value: customer.gender || "Not set",
+        },
+        {
+            label: "Budget",
+            value: `Rs.${customer.budgetMin || "Any"} - Rs.${customer.budgetMax || "Any"}`,
+        },
+        {
+            label: "Preferred Areas",
+            value: getPreferredAreasText(customer),
+        },
+        {
+            label: "Preferred Stay Type",
+            value: customer.preferredStayType || "PG or Room",
+        },
+        {
+            label: "Food Required",
+            value: customer.foodRequired || "Not set",
+        },
+        {
+            label: "Room Sharing Preference",
+            value: customer.preferredRoomType || "Not set",
+        },
+        {
+            label: "Move-in Time",
+            value: customer.moveInTime || "Not set",
+        },
+        {
+            label: "Terms Accepted",
+            value: customer.termsAccepted ? "Accepted" : "Not accepted",
+        },
+    ];
+}
+
 function AdminCustomers() {
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -273,15 +322,7 @@ function CustomerCard({ customer, onOpen }) {
             </div>
 
             <div className="mt-4 rounded-2xl bg-[#FFF8EF] p-3 text-sm leading-6 text-slate-600">
-                <p>
-                    <span className="font-bold text-[#1F2933]">Preference:</span>{" "}
-                    {customer.preferredStayType || "Any stay"} · ₹
-                    {customer.budgetMin || "Any"} - ₹{customer.budgetMax || "Any"}
-                </p>
-                <p>
-                    <span className="font-bold text-[#1F2933]">Area:</span>{" "}
-                    {customer.preferredArea || "Any area"}
-                </p>
+                <CustomerPreferenceSummary customer={customer} compact />
             </div>
 
             <button
@@ -342,30 +383,7 @@ function CustomerDetailsModal({ customer, deleting, onClose, onDelete }) {
                             Preferences
                         </h3>
 
-                        <div className="mt-4 grid gap-3 text-sm">
-                            <InfoRow label="Institution" value={customer.college || "Not set"} />
-                            <InfoRow label="Gender" value={customer.gender || "Not set"} />
-                            <InfoRow
-                                label="Budget"
-                                value={`₹${customer.budgetMin || "Any"} - ₹${customer.budgetMax || "Any"}`}
-                            />
-                            <InfoRow
-                                label="Preferred area"
-                                value={customer.preferredArea || "Any"}
-                            />
-                            <InfoRow
-                                label="Stay type"
-                                value={customer.preferredStayType || "PG or Room"}
-                            />
-                            <InfoRow
-                                label="Food"
-                                value={customer.foodRequired || "Optional"}
-                            />
-                            <InfoRow
-                                label="Move-in"
-                                value={customer.moveInTime || "Not set"}
-                            />
-                        </div>
+                        <CustomerPreferenceSummary customer={customer} />
                     </section>
 
                     <section className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4">
@@ -462,6 +480,31 @@ function CustomerDetailsModal({ customer, deleting, onClose, onDelete }) {
                     </section>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function CustomerPreferenceSummary({ customer, compact = false }) {
+    const rows = getPreferenceRows(customer);
+
+    if (compact) {
+        return (
+            <div className="grid gap-1.5">
+                {rows.map((row) => (
+                    <p key={row.label}>
+                        <span className="font-bold text-[#1F2933]">{row.label}:</span>{" "}
+                        {row.value}
+                    </p>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="mt-4 grid gap-3 text-sm">
+            {rows.map((row) => (
+                <InfoRow key={row.label} label={row.label} value={row.value} />
+            ))}
         </div>
     );
 }
