@@ -5,6 +5,7 @@ import ListingCard from "../../components/public/ListingCard";
 import Badge from "../../components/common/Badge";
 import HeroSection from "../../components/public/HeroSection";
 import Footer from "../../components/public/Footer";
+import InstitutionUpdateCard from "../../components/public/InstitutionUpdateCard";
 import {
   TrustProcessSection,
   OwnerCTASection,
@@ -107,6 +108,10 @@ function Home() {
     }, 0);
   }, [listings]);
 
+  const jecListingCount = useMemo(() => {
+    return listings.filter((listing) => listingMatchesInstitution(listing, "jec")).length;
+  }, [listings]);
+
   const filteredListings = useMemo(() => {
     const cleanSearch = search.toLowerCase().trim();
     const filtered = listings.filter((listing) => {
@@ -155,6 +160,7 @@ function Home() {
   ]);
 
   const visibleListings = filteredListings.slice(0, visibleCount);
+  const showJecUpdate = institution === "jec";
 
   useEffect(() => {
     setVisibleCount(12);
@@ -356,6 +362,10 @@ function Home() {
           </div>
         </div>
 
+        {showJecUpdate && !loading && (
+          <InstitutionUpdateCard listingCount={jecListingCount || 6} />
+        )}
+
         {loading ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
             <h3 className="text-xl font-bold">Loading listings...</h3>
@@ -381,7 +391,7 @@ function Home() {
               </button>
             )}
           </>
-        ) : (
+        ) : showJecUpdate ? null : (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
             <h3 className="text-xl font-bold">No listing found</h3>
           </div>
