@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
+  BedDouble,
   CheckCircle2,
+  Edit3,
+  GraduationCap,
   Heart,
-  Home as HomeIcon,
   Loader2,
   LogOut,
   Save,
-  SlidersHorizontal,
   UserRound,
+  Wallet,
 } from "lucide-react";
 
 import { logoutStudent, watchStudentAuth } from "../../firebase/studentAuth";
@@ -113,8 +115,8 @@ function getPreferenceSummaryText(formData) {
     formData.gender || "Any gender",
     formData.preferredStayType || "PG or Room",
     formatBudgetRange(formData.budgetMin, formData.budgetMax),
-    formData.foodRequired || "Food optional",
-    getAreaSummary(formData),
+    `Food: ${formData.foodRequired || "Food optional"}`,
+    `Area: ${getAreaSummary(formData)}`,
   ].join(` ${DOT} `);
 }
 
@@ -503,21 +505,21 @@ function StudentDashboard() {
                 title="Institution"
                 value={getInstitutionDisplay(formData) || "Any"}
                 description="Nearby"
-                icon={<SlidersHorizontal size={19} />}
+                icon={<GraduationCap size={19} />}
               />
 
               <DashboardMiniCard
                 title="Budget"
                 value={formatBudgetRange(formData.budgetMin, formData.budgetMax)}
                 description="Monthly range"
-                icon={<SlidersHorizontal size={19} />}
+                icon={<Wallet size={19} />}
               />
 
               <DashboardMiniCard
                 title="Stay"
                 value={formData.preferredStayType || "PG/Room"}
                 description="Type"
-                icon={<HomeIcon size={19} />}
+                icon={<BedDouble size={19} />}
               />
             </section>
 
@@ -537,8 +539,9 @@ function StudentDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowPreferenceForm((previous) => !previous)}
-                  className="w-full rounded-2xl border border-[#E8DFD2] bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] transition hover:bg-[#F6F1E8] sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#123C35] sm:w-auto"
                 >
+                  <Edit3 size={16} />
                   {showPreferenceForm ? "Hide preferences" : "Edit preferences"}
                 </button>
               </div>

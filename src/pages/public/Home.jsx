@@ -15,7 +15,7 @@ import {
   listingMatchesInstitution,
 } from "../../config/institutions";
 import { getApprovedListings } from "../../firebase/listings";
-import { getNearbyText } from "../../utils/listingHelpers";
+import { getListingId, getNearbyText } from "../../utils/listingHelpers";
 
 import { sortListingsByOption } from "../../utils/listingScore";
 
@@ -86,6 +86,17 @@ function Home() {
 
     navigate(`/listing/${openListingId}`, { replace: true });
   }, [searchParams, navigate]);
+
+  function handleViewListing(listing) {
+    const listingId = getListingId(listing);
+
+    if (!listingId) {
+      alert("Listing details are not available.");
+      return;
+    }
+
+    navigate(`/listing/${listingId}`);
+  }
 
   const areaFilters = useMemo(() => {
     const uniqueAreas = Array.from(
@@ -377,7 +388,7 @@ function Home() {
                 <ListingCard
                   key={listing.id}
                   listing={listing}
-                  onViewDetails={() => navigate(`/listing/${listing.id}`)}
+                  onViewDetails={() => handleViewListing(listing)}
                 />
               ))}
             </div>

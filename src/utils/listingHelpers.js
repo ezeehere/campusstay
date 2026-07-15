@@ -1,3 +1,7 @@
+export function getListingId(listing) {
+  return listing?.id || listing?.listingId || listing?.docId || "";
+}
+
 export function getListingRent(listing) {
   return Number(listing.startingRent || listing.rent || 0);
 }

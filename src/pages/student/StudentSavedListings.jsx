@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   ArrowLeft,
   Eye,
@@ -9,24 +9,21 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { getListingById } from "../../firebase/listings";
 import { watchStudentAuth } from "../../firebase/studentAuth";
 import {
   getSavedListings,
   unsaveListing,
 } from "../../firebase/savedListings";
-import ListingDetailsModal from "../../components/public/ListingDetailsModal";
 
 const RUPEE = "\u20B9";
 const DOT = "\u00B7";
 
 function StudentSavedListings() {
+  const navigate = useNavigate();
   const [studentUser, setStudentUser] = useState(null);
   const [savedListings, setSavedListings] = useState([]);
-  const [selectedListing, setSelectedListing] = useState(null);
 
   const [loading, setLoading] = useState(true);
-  const [openingId, setOpeningId] = useState("");
   const [removingId, setRemovingId] = useState("");
 
   async function loadSavedListings(uid) {
@@ -48,24 +45,13 @@ function StudentSavedListings() {
     return () => unsubscribe();
   }, []);
 
-  async function handleViewDetails(savedItem) {
-    try {
-      setOpeningId(savedItem.listingId);
-
-      const listing = await getListingById(savedItem.listingId);
-
-      if (!listing) {
-        alert("This listing is no longer available.");
-        return;
-      }
-
-      setSelectedListing(listing);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to open listing details.");
-    } finally {
-      setOpeningId("");
+  function handleViewDetails(savedItem) {
+    if (!savedItem?.listingId) {
+      alert("Listing details are not available.");
+      return;
     }
+
+    navigate(`/listing/${savedItem.listingId}`);
   }
 
   async function handleRemove(savedItem) {
@@ -207,14 +193,9 @@ function StudentSavedListings() {
                     <button
                       type="button"
                       onClick={() => handleViewDetails(item)}
-                      disabled={openingId === item.listingId}
                       className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#123C35] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {openingId === item.listingId ? (
-                        <Loader2 className="animate-spin" size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
+                      <Eye size={16} />
                       View details
                     </button>
 
@@ -236,13 +217,6 @@ function StudentSavedListings() {
               </article>
             ))}
           </section>
-        )}
-
-        {selectedListing && (
-          <ListingDetailsModal
-            listing={selectedListing}
-            onClose={() => setSelectedListing(null)}
-          />
         )}
       </div>
     </main>

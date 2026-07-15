@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Loader2,
   MapPin,
@@ -12,7 +13,7 @@ import { trackListingInteraction } from "../../firebase/analytics";
 import { getApprovedListings } from "../../firebase/listings";
 import { getSavedListings } from "../../firebase/savedListings";
 import { watchStudentAuth } from "../../firebase/studentAuth";
-import ListingDetailsModal from "../public/ListingDetailsModal";
+import { getListingId } from "../../utils/listingHelpers";
 import SaveListingButton from "./SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
 
@@ -256,9 +257,9 @@ function sortListings(items, sortBy, profile) {
 }
 
 function StudentListingSection({ profile }) {
+  const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
-  const [selectedListing, setSelectedListing] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -395,6 +396,17 @@ function StudentListingSection({ profile }) {
     setVerifiedOnly(false);
   }
 
+  function handleViewDetails(listing) {
+    const listingId = getListingId(listing);
+
+    if (!listingId) {
+      alert("Listing details are not available.");
+      return;
+    }
+
+    navigate(`/listing/${listingId}`);
+  }
+
   if (loading) {
     return (
       <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
@@ -436,7 +448,7 @@ function StudentListingSection({ profile }) {
                 key={listing.id}
                 listing={listing}
                 saved={savedListingIds.has(listing.id)}
-                onView={() => setSelectedListing(listing)}
+                onView={() => handleViewDetails(listing)}
               />
             ))}
           </div>
@@ -581,19 +593,12 @@ function StudentListingSection({ profile }) {
                 key={listing.id}
                 listing={listing}
                 saved={savedListingIds.has(listing.id)}
-                onView={() => setSelectedListing(listing)}
+                onView={() => handleViewDetails(listing)}
               />
             ))}
           </div>
         )}
       </section>
-
-      {selectedListing && (
-        <ListingDetailsModal
-          listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
-        />
-      )}
     </>
   );
 }
