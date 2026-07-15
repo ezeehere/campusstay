@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 
 const sections = [
   {
@@ -63,6 +63,14 @@ function Terms() {
             </section>
           ))}
         </div>
+
+        <p className="mt-6 rounded-2xl bg-[#F1FAF7] p-4 text-sm leading-6 text-slate-600">
+          Please also read our{" "}
+          <Link to="/privacy" className="font-bold text-[#1E5B4F] underline">
+            Privacy Policy
+          </Link>{" "}
+          to understand how CampusStay collects and uses user data.
+        </p>
 
         <Link
           to="/"

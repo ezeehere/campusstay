@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import {
     ArrowLeft,
@@ -20,6 +20,18 @@ import {
 
 function formatDateFromSeconds(seconds) {
     if (!seconds) return "No activity yet";
+
+    return new Date(seconds * 1000).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+}
+
+function formatConsentDate(value) {
+    const seconds = value?.seconds;
+
+    if (!seconds) return "Not accepted";
 
     return new Date(seconds * 1000).toLocaleDateString("en-IN", {
         day: "2-digit",
@@ -85,6 +97,18 @@ function getPreferenceRows(customer) {
         {
             label: "Terms Accepted",
             value: customer.termsAccepted ? "Accepted" : "Not accepted",
+        },
+        {
+            label: "Terms Accepted At",
+            value: formatConsentDate(customer.termsAcceptedAt),
+        },
+        {
+            label: "Privacy Accepted",
+            value: customer.privacyAccepted ? "Accepted" : "Not accepted",
+        },
+        {
+            label: "Privacy Accepted At",
+            value: formatConsentDate(customer.privacyAcceptedAt),
         },
     ];
 }
@@ -363,7 +387,7 @@ function CustomerDetailsModal({ customer, deleting, onClose, onDelete }) {
                             </h2>
 
                             <p className="mt-1 text-sm text-slate-500">
-                                {customer.email || "No email"} · {customer.phone || "No phone"}
+                                {customer.email || "No email"} Â· {customer.phone || "No phone"}
                             </p>
                         </div>
 
@@ -536,7 +560,7 @@ function SmallListingRow({ item }) {
                     {item.listingName}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500">
-                    {item.area} · ₹{item.rent}
+                    {item.area} Â· â‚¹{item.rent}
                 </p>
             </div>
         </div>
@@ -563,7 +587,7 @@ function ActivityRow({ event }) {
                     {getEventLabel(event.eventType)}
                 </p>
                 <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                    {event.listingName || "Unknown listing"} · {event.area || "Area not added"}
+                    {event.listingName || "Unknown listing"} Â· {event.area || "Area not added"}
                 </p>
             </div>
         </div>
@@ -578,7 +602,7 @@ function LeadCard({ lead }) {
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
-                {lead.listingArea} · ₹{lead.listingRent}
+                {lead.listingArea} Â· â‚¹{lead.listingRent}
             </p>
 
             <div className="mt-3 grid gap-2 text-sm">
@@ -596,3 +620,4 @@ function LeadCard({ lead }) {
 }
 
 export default AdminCustomers;
+

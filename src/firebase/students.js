@@ -1,4 +1,4 @@
-import {
+﻿import {
   doc,
   getDoc,
   serverTimestamp,
@@ -7,7 +7,8 @@ import {
 
 import { db } from "./config";
 
-const CURRENT_TERMS_VERSION = "2026-07-13";
+const CURRENT_TERMS_VERSION = "2026-07-terms-v1";
+const CURRENT_PRIVACY_VERSION = "2026-07-privacy-v1";
 
 export async function ensureStudentProfile(user, extraData = {}) {
   if (!user) return null;
@@ -35,6 +36,8 @@ export async function ensureStudentProfile(user, extraData = {}) {
       moveInTime: "",
       termsAccepted: false,
       termsVersion: "",
+      privacyAccepted: false,
+      privacyVersion: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastLoginAt: serverTimestamp(),
@@ -109,6 +112,17 @@ export async function updateStudentProfile(uid, profileData) {
     }
   }
 
+  if (nextProfileData.privacyAccepted === true) {
+    nextProfileData.privacyVersion =
+      nextProfileData.privacyVersion ||
+      existingProfile.privacyVersion ||
+      CURRENT_PRIVACY_VERSION;
+
+    if (!nextProfileData.privacyAcceptedAt && !existingProfile.privacyAcceptedAt) {
+      nextProfileData.privacyAcceptedAt = serverTimestamp();
+    }
+  }
+
   const newStudentDefaults = studentSnap.exists()
     ? {}
     : {
@@ -130,6 +144,8 @@ export async function updateStudentProfile(uid, profileData) {
         moveInTime: "",
         termsAccepted: false,
         termsVersion: "",
+        privacyAccepted: false,
+        privacyVersion: "",
         createdAt: serverTimestamp(),
       };
 
@@ -144,3 +160,7 @@ export async function updateStudentProfile(uid, profileData) {
     { merge: true }
   );
 }
+
+
+
+

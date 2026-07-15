@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+﻿import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 
 import RoleRedirect from "./components/common/RoleRedirect";
 import SubmitListing from "./pages/public/SubmitListing";
@@ -17,6 +17,7 @@ import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import ListingDetailsPage from "./pages/public/ListingDetailsPage";
 import Terms from "./pages/public/Terms";
+import PrivacyPolicy from "./pages/public/PrivacyPolicy";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/check-status" element={<CheckStatus />} />
         <Route path="/listing/:listingId" element={<ListingDetailsPage />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route path="/student/login" element={<StudentLogin />} />
@@ -91,3 +93,5 @@ function App() {
 }
 
 export default App;
+
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   CheckCircle2,
@@ -19,7 +19,8 @@ import {
 import StudentListingSection from "../../components/student/StudentListingSection";
 import { institutions } from "../../config/institutions";
 
-const TERMS_VERSION = "2026-07-13";
+const TERMS_VERSION = "2026-07-terms-v1";
+const PRIVACY_VERSION = "2026-07-privacy-v1";
 
 const initialFormData = {
   fullName: "",
@@ -38,6 +39,8 @@ const initialFormData = {
   moveInTime: "",
   termsAccepted: false,
   termsVersion: TERMS_VERSION,
+  privacyAccepted: false,
+  privacyVersion: PRIVACY_VERSION,
 };
 
 function getSavedPreferredAreas(profile) {
@@ -105,7 +108,8 @@ function isStudentPreferencesComplete(profile) {
     maxBudget >= minBudget &&
     profile?.preferredStayType &&
     profile?.foodRequired &&
-    profile?.termsAccepted === true
+    profile?.termsAccepted === true &&
+    profile?.privacyAccepted === true
   );
 }
 
@@ -169,6 +173,8 @@ function StudentDashboard() {
           moveInTime: studentProfile.moveInTime || "",
           termsAccepted: studentProfile.termsAccepted === true,
           termsVersion: studentProfile.termsVersion || TERMS_VERSION,
+          privacyAccepted: studentProfile.privacyAccepted === true,
+          privacyVersion: studentProfile.privacyVersion || PRIVACY_VERSION,
         };
 
         setFormData(nextFormData);
@@ -277,8 +283,8 @@ function StudentDashboard() {
       return false;
     }
 
-    if (formData.termsAccepted !== true) {
-      alert("Please accept the CampusStay Terms & Conditions.");
+    if (formData.termsAccepted !== true || formData.privacyAccepted !== true) {
+      alert("Please accept the Terms & Conditions and Privacy Policy before saving your preferences.");
       return false;
     }
 
@@ -319,6 +325,8 @@ function StudentDashboard() {
         moveInTime: String(formData.moveInTime || "").trim(),
         termsAccepted: formData.termsAccepted === true,
         termsVersion: TERMS_VERSION,
+        privacyAccepted: formData.privacyAccepted === true,
+        privacyVersion: PRIVACY_VERSION,
       });
 
       const updatedProfile = await getStudentProfile(studentUser.uid);
@@ -474,7 +482,7 @@ function StudentDashboard() {
 
               <DashboardMiniCard
                 title="Budget"
-                value={`₹${formData.budgetMin || "Any"} - ₹${formData.budgetMax || "Any"
+                value={`â‚¹${formData.budgetMin || "Any"} - â‚¹${formData.budgetMax || "Any"
                   }`}
                 description="Monthly range"
                 icon={<SlidersHorizontal size={19} />}
@@ -497,12 +505,12 @@ function StudentDashboard() {
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {getInstitutionDisplay(formData) || "Any institution"} ·{" "}
-                    {formData.gender || "Any gender"} ·{" "}
-                    {formData.preferredStayType || "PG or Room"} · ₹
-                    {formData.budgetMin || "Any"} - ₹
-                    {formData.budgetMax || "Any"} ·{" "}
-                    {formData.foodRequired || "Food optional"} ·{" "}
+                    {getInstitutionDisplay(formData) || "Any institution"} Â·{" "}
+                    {formData.gender || "Any gender"} Â·{" "}
+                    {formData.preferredStayType || "PG or Room"} Â· â‚¹
+                    {formData.budgetMin || "Any"} - â‚¹
+                    {formData.budgetMax || "Any"} Â·{" "}
+                    {formData.foodRequired || "Food optional"} Â·{" "}
                     {getAreaSummary(formData)}
                   </p>
                 </div>
@@ -677,12 +685,30 @@ function PreferenceForm({
           name="termsAccepted"
           checked={formData.termsAccepted === true}
           onChange={onChange}
+          required
           className="mt-1 h-4 w-4 rounded border-[#E8DFD2] accent-[#1E5B4F]"
         />
         <span>
           I agree to the CampusStay{" "}
           <Link to="/terms" className="font-bold text-[#1E5B4F] underline">
             Terms & Conditions
+          </Link>
+        </span>
+      </label>
+
+      <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] p-4 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          name="privacyAccepted"
+          checked={formData.privacyAccepted === true}
+          onChange={onChange}
+          required
+          className="mt-1 h-4 w-4 rounded border-[#E8DFD2] accent-[#1E5B4F]"
+        />
+        <span>
+          I have read and agree to the CampusStay{" "}
+          <Link to="/privacy" className="font-bold text-[#1E5B4F] underline">
+            Privacy Policy
           </Link>
         </span>
       </label>
@@ -836,3 +862,12 @@ function SelectField({ label, name, value, onChange, options, required = false }
 }
 
 export default StudentDashboard;
+
+
+
+
+
+
+
+
+
