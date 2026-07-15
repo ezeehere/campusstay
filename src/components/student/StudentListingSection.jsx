@@ -16,6 +16,9 @@ import ListingDetailsModal from "../public/ListingDetailsModal";
 import SaveListingButton from "./SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
 
+const RUPEE = "\u20B9";
+const DOT = "\u00B7";
+
 const genderFilters = [
   { label: "All Students", value: "all" },
   { label: "Boys", value: "Boys" },
@@ -698,7 +701,7 @@ function StudentListingCard({ listing, onView }) {
             rent
           </p>
           <p className="text-lg font-black leading-none text-[#1F2933]">
-            ₹{rent}
+            {RUPEE}{rent}
           </p>
         </div>
 
@@ -724,7 +727,7 @@ function StudentListingCard({ listing, onView }) {
             <span className="font-bold text-slate-700">
               {listing.area || "Area not added"}
             </span>
-            {nearbyText ? ` · Near ${nearbyText}` : ""}
+            {nearbyText ? ` ${DOT} Near ${nearbyText}` : ""}
           </span>
         </p>
 

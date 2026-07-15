@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { buildStudentLoginUrl } from "../../utils/loginRedirect";
 
+const RUPEE = "\u20B9";
+const DOT = "\u00B7";
+
 const actionConfig = {
   save: {
     text: "save this stay",
@@ -104,7 +107,7 @@ function StudentActionLoginPrompt({ listing, action = "continue", onClose }) {
                 </h3>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  {listing.area} · ₹
+                  {listing.area} {DOT} {RUPEE}
                   {listing.startingRent || listing.rent || 0} starts
                 </p>
               </div>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   CheckCircle2,
@@ -21,6 +21,8 @@ import { institutions } from "../../config/institutions";
 
 const TERMS_VERSION = "2026-07-terms-v1";
 const PRIVACY_VERSION = "2026-07-privacy-v1";
+const RUPEE = "\u20B9";
+const DOT = "\u00B7";
 
 const initialFormData = {
   fullName: "",
@@ -92,6 +94,30 @@ function getAreaSummary(formData) {
 
   return formData.preferredArea || "Any area";
 }
+
+function hasBudgetValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
+function formatBudgetValue(value) {
+  return hasBudgetValue(value) ? `${RUPEE}${value}` : "Any";
+}
+
+function formatBudgetRange(minBudget, maxBudget) {
+  return `${formatBudgetValue(minBudget)} - ${formatBudgetValue(maxBudget)}`;
+}
+
+function getPreferenceSummaryText(formData) {
+  return [
+    getInstitutionDisplay(formData) || "Any institution",
+    formData.gender || "Any gender",
+    formData.preferredStayType || "PG or Room",
+    formatBudgetRange(formData.budgetMin, formData.budgetMax),
+    formData.foodRequired || "Food optional",
+    getAreaSummary(formData),
+  ].join(` ${DOT} `);
+}
+
 function isStudentPreferencesComplete(profile) {
   const minBudget = Number(profile?.budgetMin || 0);
   const maxBudget = Number(profile?.budgetMax || 0);
@@ -482,8 +508,7 @@ function StudentDashboard() {
 
               <DashboardMiniCard
                 title="Budget"
-                value={`â‚¹${formData.budgetMin || "Any"} - â‚¹${formData.budgetMax || "Any"
-                  }`}
+                value={formatBudgetRange(formData.budgetMin, formData.budgetMax)}
                 description="Monthly range"
                 icon={<SlidersHorizontal size={19} />}
               />
@@ -505,13 +530,7 @@ function StudentDashboard() {
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {getInstitutionDisplay(formData) || "Any institution"} Â·{" "}
-                    {formData.gender || "Any gender"} Â·{" "}
-                    {formData.preferredStayType || "PG or Room"} Â· â‚¹
-                    {formData.budgetMin || "Any"} - â‚¹
-                    {formData.budgetMax || "Any"} Â·{" "}
-                    {formData.foodRequired || "Food optional"} Â·{" "}
-                    {getAreaSummary(formData)}
+                    {getPreferenceSummaryText(formData)}
                   </p>
                 </div>
 

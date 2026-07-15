@@ -17,6 +17,9 @@ import {
 } from "../../firebase/savedListings";
 import ListingDetailsModal from "../../components/public/ListingDetailsModal";
 
+const RUPEE = "\u20B9";
+const DOT = "\u00B7";
+
 function StudentSavedListings() {
   const [studentUser, setStudentUser] = useState(null);
   const [savedListings, setSavedListings] = useState([]);
@@ -175,12 +178,12 @@ function StudentSavedListings() {
                       </h2>
 
                       <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-                        {item.area} · {item.type}
+                        {item.area} {DOT} {item.type}
                       </p>
                     </div>
 
                     <span className="shrink-0 rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
-                      ₹{item.rent}
+                      {RUPEE}{item.rent}
                     </span>
                   </div>
 
