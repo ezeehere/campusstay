@@ -341,7 +341,7 @@ function sortListings(items, sortBy, profile) {
   });
 }
 
-function StudentListingSection({ profile }) {
+function StudentListingSection({ profile, activeView = "forYou" }) {
   const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
@@ -443,6 +443,21 @@ function StudentListingSection({ profile }) {
     );
   }, [listings, activeFilters, sortBy, profile]);
   const savedListingIds = new Set(savedListings.map((item) => item.listingId));
+  const isForYouView = activeView === "forYou";
+  const currentListings = isForYouView ? recommendedListings : filteredListings;
+  const sectionTitle = isForYouView ? "Recommended for you" : "Browse all stays";
+  const sectionSubtitle = isForYouView
+    ? "Based on your preferences and active filters."
+    : "Explore all approved listings.";
+  const resultLabel = isForYouView
+    ? `${recommendedListings.length} matches`
+    : `${filteredListings.length} stays`;
+  const emptyTitle = isForYouView
+    ? "No recommended stays match your preferences yet."
+    : "No stays found for these filters.";
+  const emptyText = isForYouView
+    ? "Try changing filters or browse all stays."
+    : "Try changing budget, area, or stay type.";
 
   function resetFilters() {
     setSearch("");
@@ -480,12 +495,12 @@ function StudentListingSection({ profile }) {
 
   return (
     <>
-      <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
+      <section className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-[#1F2933] sm:text-xl">
               <SlidersHorizontal size={19} />
-              Matching stays
+              Filters & Sort
             </h2>
           </div>
 
@@ -604,65 +619,25 @@ function StudentListingSection({ profile }) {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
-              <Sparkles size={21} />
-              Recommended for you
+              {isForYouView && <Sparkles size={21} />}
+              {sectionTitle}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Based on your saved preferences and active filters.
-            </p>
-          </div>
-
-          <p className="text-sm font-bold text-[#1E5B4F]">
-            {recommendedListings.length} matches
-          </p>
-        </div>
-
-        {recommendedListings.length === 0 ? (
-          <div className="mt-3 rounded-3xl bg-[#FFF8EF] p-4 text-sm text-slate-500">
-            No recommended stays match these filters yet.
-          </div>
-        ) : (
-          <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
-            {recommendedListings.map((listing) => (
-              <StudentListingCard
-                key={listing.id}
-                listing={listing}
-                saved={savedListingIds.has(listing.id)}
-                onView={() => handleViewDetails(listing)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-[#1F2933]">
-              Browse all matching stays
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              All listings matching your selected filters.
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{sectionSubtitle}</p>
           </div>
 
           <p className="rounded-full bg-[#F1FAF7] px-4 py-2 text-sm font-bold text-[#1E5B4F]">
-            {filteredListings.length} stays
+            {resultLabel}
           </p>
         </div>
 
-        {filteredListings.length === 0 ? (
+        {currentListings.length === 0 ? (
           <div className="mt-3 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-8">
-            <h3 className="text-lg font-bold text-[#1F2933]">
-              No stays found for these filters.
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Try changing budget, area, or stay type.
-            </p>
+            <h3 className="text-lg font-bold text-[#1F2933]">{emptyTitle}</h3>
+            <p className="mt-2 text-sm text-slate-500">{emptyText}</p>
           </div>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredListings.map((listing) => (
+            {currentListings.map((listing) => (
               <StudentListingCard
                 key={listing.id}
                 listing={listing}
@@ -676,7 +651,6 @@ function StudentListingSection({ profile }) {
     </>
   );
 }
-
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <label className="block">

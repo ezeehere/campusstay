@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
-  BedDouble,
   CheckCircle2,
   Edit3,
-  GraduationCap,
-  Heart,
   Loader2,
-  LogOut,
   Save,
   UserRound,
-  Wallet,
 } from "lucide-react";
 
 import { logoutStudent, watchStudentAuth } from "../../firebase/studentAuth";
@@ -19,6 +14,8 @@ import {
   updateStudentProfile,
 } from "../../firebase/students";
 import StudentListingSection from "../../components/student/StudentListingSection";
+import StudentSavedTab from "../../components/student/StudentSavedTab";
+import StudentProfileTab from "../../components/student/StudentProfileTab";
 import { institutions } from "../../config/institutions";
 
 const TERMS_VERSION = "2026-07-terms-v1";
@@ -147,7 +144,7 @@ function StudentDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showPreferenceForm, setShowPreferenceForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("forYou");
   const [missingProfile, setMissingProfile] = useState(false);
 
   const [formData, setFormData] = useState(initialFormData);
@@ -206,7 +203,9 @@ function StudentDashboard() {
         };
 
         setFormData(nextFormData);
-        setShowPreferenceForm(!isStudentPreferencesComplete(studentProfile));
+        if (!isStudentPreferencesComplete(studentProfile)) {
+          setActiveTab("preferences");
+        }
       }
 
       setLoading(false);
@@ -359,7 +358,9 @@ function StudentDashboard() {
 
       const updatedProfile = await getStudentProfile(studentUser.uid);
       setProfile(updatedProfile);
-      setShowPreferenceForm(!isStudentPreferencesComplete(updatedProfile));
+      setActiveTab(
+        isStudentPreferencesComplete(updatedProfile) ? "forYou" : "preferences"
+      );
 
       alert("Preferences saved successfully!");
     } catch (error) {
@@ -378,6 +379,25 @@ function StudentDashboard() {
       console.error(error);
       alert("Logout failed.");
     }
+  }
+
+  function handleTabChange(nextTab) {
+    const needsPreferences = ["forYou", "browse", "saved"].includes(nextTab);
+
+    if (!preferencesComplete && needsPreferences) {
+      setActiveTab("preferences");
+      return;
+    }
+
+    setActiveTab(nextTab);
+  }
+
+  function openPreferencesTab() {
+    setActiveTab("preferences");
+  }
+
+  function openBrowseTab() {
+    setActiveTab(preferencesComplete ? "browse" : "preferences");
   }
 
   if (loading) {
@@ -418,154 +438,165 @@ function StudentDashboard() {
     );
   }
 
+  const displayedTab =
+    !preferencesComplete && ["forYou", "browse", "saved"].includes(activeTab)
+      ? "preferences"
+      : activeTab;
+
   return (
     <main className="cs-page min-h-screen px-3 py-4 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl overflow-x-hidden">
         <header className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
-                <UserRound size={21} />
-              </div>
-
-              <div>
-                <h1 className="text-2xl font-bold text-[#1F2933]">
-                  Hi, {profile?.fullName || studentUser?.displayName || "Student"}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  {preferencesComplete
-                    ? "Browse, save, and compare PGs near campus."
-                    : "Complete your preferences first to see matched stays."}
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1E5B4F] text-white">
+              <UserRound size={21} />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              <Link
-                to="/student/saved"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
-              >
-                <Heart size={16} />
-                Saved
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E5B4F] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#123C35]"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
+            <div>
+              <h1 className="text-2xl font-bold text-[#1F2933]">
+                Hi, {profile?.fullName || studentUser?.displayName || "Student"}
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Find PGs and rooms near your campus.
+              </p>
             </div>
           </div>
         </header>
 
-        {!preferencesComplete ? (
-          <section className="mt-5 rounded-[1.5rem] border border-[#DDECE7] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
-            <div className="rounded-[1.5rem] border border-[#DDECE7] bg-[#F1FAF7] p-4 sm:p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-2xl font-black text-[#123C35]">
-                    Set your PG preferences first
-                  </h2>
+        <StudentPreferenceStrip
+          summary={getPreferenceSummaryText(formData)}
+          complete={preferencesComplete}
+          onEdit={openPreferencesTab}
+        />
 
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    This helps CampusStay show relevant PGs and rooms based on your
-                    institution, budget, stay type, and food requirement.
-                  </p>
-                </div>
+        <StudentDashboardTabs
+          activeTab={displayedTab}
+          preferencesComplete={preferencesComplete}
+          onTabChange={handleTabChange}
+        />
 
-                <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] shadow-sm">
-                  Required before browsing
+        <div className="mt-4">
+          {(displayedTab === "forYou" || displayedTab === "browse") && (
+            <StudentListingSection profile={profile} activeView={displayedTab} />
+          )}
+
+          {displayedTab === "saved" && (
+            <StudentSavedTab studentUser={studentUser} onBrowse={openBrowseTab} />
+          )}
+
+          {displayedTab === "preferences" && (
+            <section className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+              <div className="rounded-[1.5rem] border border-[#DDECE7] bg-[#F1FAF7] p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black text-[#123C35]">
+                      Edit your preferences
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      Update your details so CampusStay can recommend better stays.
+                    </p>
+                  </div>
+
+                  {!preferencesComplete && (
+                    <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1E5B4F] shadow-sm">
+                      Required before browsing
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            <PreferenceForm
-              formData={formData}
-              saving={saving}
-              onChange={handleInputChange}
-              onSubmit={handleSaveProfile}
-              onSingleSelect={handleSingleSelect}
-              onToggleArea={handlePreferredAreaToggle}
+              <PreferenceForm
+                formData={formData}
+                saving={saving}
+                onChange={handleInputChange}
+                onSubmit={handleSaveProfile}
+                onSingleSelect={handleSingleSelect}
+                onToggleArea={handlePreferredAreaToggle}
+              />
+            </section>
+          )}
+
+          {displayedTab === "profile" && (
+            <StudentProfileTab
+              profile={profile}
+              studentUser={studentUser}
+              onEditPreferences={openPreferencesTab}
+              onLogout={handleLogout}
             />
-          </section>
-        ) : (
-          <>
-            <section className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3 lg:grid-cols-4">
-              <DashboardMiniCard
-                title="Saved"
-                value="View"
-                description="Your shortlist"
-                to="/student/saved"
-                icon={<Heart size={19} />}
-              />
-
-              <DashboardMiniCard
-                title="Institution"
-                value={getInstitutionDisplay(formData) || "Any"}
-                description="Nearby"
-                icon={<GraduationCap size={19} />}
-              />
-
-              <DashboardMiniCard
-                title="Budget"
-                value={formatBudgetRange(formData.budgetMin, formData.budgetMax)}
-                description="Monthly range"
-                icon={<Wallet size={19} />}
-              />
-
-              <DashboardMiniCard
-                title="Stay"
-                value={formData.preferredStayType || "PG/Room"}
-                description="Type"
-                icon={<BedDouble size={19} />}
-              />
-            </section>
-
-            <section className="mt-3 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:mt-5 sm:rounded-[2rem] sm:p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
-                    <CheckCircle2 size={20} className="text-[#1E5B4F]" />
-                    Your preference summary
-                  </h2>
-
-                  <p className="mt-1.5 text-sm leading-6 text-slate-500 sm:mt-2">
-                    {getPreferenceSummaryText(formData)}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowPreferenceForm((previous) => !previous)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1E5B4F] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#123C35] sm:w-auto"
-                >
-                  <Edit3 size={16} />
-                  {showPreferenceForm ? "Hide preferences" : "Edit preferences"}
-                </button>
-              </div>
-
-              {showPreferenceForm && (
-                <PreferenceForm
-                  formData={formData}
-                  saving={saving}
-                  onChange={handleInputChange}
-                  onSubmit={handleSaveProfile}
-                  onSingleSelect={handleSingleSelect}
-                  onToggleArea={handlePreferredAreaToggle}
-                />
-              )}
-            </section>
-
-            <StudentListingSection profile={profile} />
-          </>
-        )}
+          )}
+        </div>
       </div>
     </main>
   );
 }
 
+const studentTabs = [
+  { id: "forYou", label: "For You", requiresPreferences: true },
+  { id: "browse", label: "Browse", requiresPreferences: true },
+  { id: "saved", label: "Saved", requiresPreferences: true },
+  { id: "preferences", label: "Preferences", requiresPreferences: false },
+  { id: "profile", label: "Profile", requiresPreferences: false },
+];
+
+function StudentDashboardTabs({ activeTab, preferencesComplete, onTabChange }) {
+  return (
+    <nav className="mt-4 overflow-x-auto pb-1">
+      <div className="flex min-w-max gap-2">
+        {studentTabs.map((tab) => {
+          const active = activeTab === tab.id;
+          const locked = tab.requiresPreferences && !preferencesComplete;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`rounded-full px-4 py-2.5 text-sm font-bold transition ${
+                active
+                  ? "bg-[#1E5B4F] text-white shadow-sm"
+                  : "border border-[#E8DFD2] bg-white text-slate-700 hover:bg-[#FFF8EF]"
+              } ${locked ? "opacity-60" : ""}`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function StudentPreferenceStrip({ summary, complete, onEdit }) {
+  return (
+    <section className="mt-3 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:mt-4 sm:p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#1E5B4F]">
+            <CheckCircle2 size={15} />
+            Preferences
+          </p>
+          <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">
+            {summary}
+          </p>
+          {!complete && (
+            <p className="mt-1 text-xs font-bold text-amber-700">
+              Complete preferences to unlock matched stays.
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#1E5B4F] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#123C35]"
+        >
+          <Edit3 size={15} />
+          Edit
+        </button>
+      </div>
+    </section>
+  );
+}
 function PreferenceForm({
   formData,
   saving,
@@ -794,34 +825,6 @@ function ChipGroup({
       </div>
     </div>
   );
-}
-
-function DashboardMiniCard({ title, value, description, icon, to }) {
-  const content = (
-    <div className="rounded-[1.35rem] border border-[#E8DFD2] bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {title}
-          </p>
-          <h2 className="mt-1 line-clamp-1 text-base font-bold text-[#1F2933]">
-            {value}
-          </h2>
-          <p className="mt-1 line-clamp-1 text-xs text-slate-500">
-            {description}
-          </p>
-        </div>
-
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#F6F1E8] text-[#1E5B4F]">
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-
-  if (to) return <Link to={to}>{content}</Link>;
-
-  return content;
 }
 
 function InputField({
