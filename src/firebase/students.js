@@ -1,14 +1,35 @@
-﻿import {
+import {
   doc,
   getDoc,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
 
+import { PRIVACY_VERSION, TERMS_VERSION } from "../config/legal";
 import { db } from "./config";
 
-const CURRENT_TERMS_VERSION = "2026-07-terms-v1";
-const CURRENT_PRIVACY_VERSION = "2026-07-privacy-v1";
+function applyAcceptanceData(
+  nextProfileData,
+  existingProfile,
+  acceptedKey,
+  versionKey,
+  acceptedAtKey,
+  activeVersion
+) {
+  if (nextProfileData[acceptedKey] !== true) return;
+
+  const acceptedVersion = nextProfileData[versionKey] || activeVersion;
+  const alreadyAcceptedThisVersion =
+    existingProfile[acceptedKey] === true &&
+    existingProfile[versionKey] === acceptedVersion &&
+    existingProfile[acceptedAtKey];
+
+  nextProfileData[versionKey] = acceptedVersion;
+
+  if (!nextProfileData[acceptedAtKey] && !alreadyAcceptedThisVersion) {
+    nextProfileData[acceptedAtKey] = serverTimestamp();
+  }
+}
 
 export async function ensureStudentProfile(user, extraData = {}) {
   if (!user) return null;
@@ -103,25 +124,23 @@ export async function updateStudentProfile(uid, profileData) {
       .filter(Boolean);
   }
 
-  if (nextProfileData.termsAccepted === true) {
-    nextProfileData.termsVersion =
-      nextProfileData.termsVersion || existingProfile.termsVersion || CURRENT_TERMS_VERSION;
+  applyAcceptanceData(
+    nextProfileData,
+    existingProfile,
+    "termsAccepted",
+    "termsVersion",
+    "termsAcceptedAt",
+    TERMS_VERSION
+  );
 
-    if (!nextProfileData.termsAcceptedAt && !existingProfile.termsAcceptedAt) {
-      nextProfileData.termsAcceptedAt = serverTimestamp();
-    }
-  }
-
-  if (nextProfileData.privacyAccepted === true) {
-    nextProfileData.privacyVersion =
-      nextProfileData.privacyVersion ||
-      existingProfile.privacyVersion ||
-      CURRENT_PRIVACY_VERSION;
-
-    if (!nextProfileData.privacyAcceptedAt && !existingProfile.privacyAcceptedAt) {
-      nextProfileData.privacyAcceptedAt = serverTimestamp();
-    }
-  }
+  applyAcceptanceData(
+    nextProfileData,
+    existingProfile,
+    "privacyAccepted",
+    "privacyVersion",
+    "privacyAcceptedAt",
+    PRIVACY_VERSION
+  );
 
   const newStudentDefaults = studentSnap.exists()
     ? {}

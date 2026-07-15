@@ -21,9 +21,7 @@ import StudentListingSection from "../../components/student/StudentListingSectio
 import StudentSavedTab from "../../components/student/StudentSavedTab";
 import StudentProfileTab from "../../components/student/StudentProfileTab";
 import { institutions } from "../../config/institutions";
-
-const TERMS_VERSION = "2026-07-terms-v1";
-const PRIVACY_VERSION = "2026-07-privacy-v1";
+import { PRIVACY_VERSION, TERMS_VERSION } from "../../config/legal";
 const RUPEE = "\u20B9";
 const DOT = "\u00B7";
 
@@ -121,11 +119,27 @@ function getPreferenceSummaryText(formData) {
   ].join(` ${DOT} `);
 }
 
+function hasAcceptedLegalVersion(profile, acceptedKey, versionKey, activeVersion) {
+  return profile?.[acceptedKey] === true && profile?.[versionKey] === activeVersion;
+}
+
 function isStudentPreferencesComplete(profile) {
   const minBudget = Number(profile?.budgetMin || 0);
   const maxBudget = Number(profile?.budgetMax || 0);
   const selectedInstitution =
     profile?.institutionId || profile?.institutionName || profile?.college;
+  const acceptedTerms = hasAcceptedLegalVersion(
+    profile,
+    "termsAccepted",
+    "termsVersion",
+    TERMS_VERSION
+  );
+  const acceptedPrivacy = hasAcceptedLegalVersion(
+    profile,
+    "privacyAccepted",
+    "privacyVersion",
+    PRIVACY_VERSION
+  );
 
   return Boolean(
     profile?.fullName &&
@@ -137,8 +151,8 @@ function isStudentPreferencesComplete(profile) {
     maxBudget >= minBudget &&
     profile?.preferredStayType &&
     profile?.foodRequired &&
-    profile?.termsAccepted === true &&
-    profile?.privacyAccepted === true
+    acceptedTerms &&
+    acceptedPrivacy
   );
 }
 
@@ -200,10 +214,20 @@ function StudentDashboard() {
           foodRequired: studentProfile.foodRequired || "",
           preferredRoomType: studentProfile.preferredRoomType || "",
           moveInTime: studentProfile.moveInTime || "",
-          termsAccepted: studentProfile.termsAccepted === true,
-          termsVersion: studentProfile.termsVersion || TERMS_VERSION,
-          privacyAccepted: studentProfile.privacyAccepted === true,
-          privacyVersion: studentProfile.privacyVersion || PRIVACY_VERSION,
+          termsAccepted: hasAcceptedLegalVersion(
+            studentProfile,
+            "termsAccepted",
+            "termsVersion",
+            TERMS_VERSION
+          ),
+          termsVersion: TERMS_VERSION,
+          privacyAccepted: hasAcceptedLegalVersion(
+            studentProfile,
+            "privacyAccepted",
+            "privacyVersion",
+            PRIVACY_VERSION
+          ),
+          privacyVersion: PRIVACY_VERSION,
         };
 
         setFormData(nextFormData);
