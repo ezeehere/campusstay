@@ -492,7 +492,7 @@ function StudentDashboard() {
           </section>
         ) : (
           <>
-            <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <section className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3 lg:grid-cols-4">
               <DashboardMiniCard
                 title="Saved"
                 value="View"
@@ -523,7 +523,7 @@ function StudentDashboard() {
               />
             </section>
 
-            <section className="mt-5 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+            <section className="mt-3 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:mt-5 sm:rounded-[2rem] sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
@@ -531,7 +531,7 @@ function StudentDashboard() {
                     Your preference summary
                   </h2>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                  <p className="mt-1.5 text-sm leading-6 text-slate-500 sm:mt-2">
                     {getPreferenceSummaryText(formData)}
                   </p>
                 </div>
