@@ -510,8 +510,12 @@ function StudentDashboard() {
         />
 
         <div className="mt-4">
-          {(displayedTab === "forYou" || displayedTab === "browse") && (
-            <StudentListingSection profile={profile} activeView={displayedTab} />
+          {preferencesComplete && (
+            <StudentListingSection
+              profile={profile}
+              activeView={displayedTab === "browse" ? "browse" : "forYou"}
+              visible={displayedTab === "forYou" || displayedTab === "browse"}
+            />
           )}
 
           {displayedTab === "saved" && (

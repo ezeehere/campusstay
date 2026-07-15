@@ -19,6 +19,7 @@ import ShareListingButton from "../shared/ShareListingButton";
 
 const RUPEE = "\u20B9";
 const DOT = "\u00B7";
+const LISTINGS_PER_PAGE = 4;
 
 const genderFilters = [
   { label: "All Students", value: "all" },
@@ -341,7 +342,7 @@ function sortListings(items, sortBy, profile) {
   });
 }
 
-function StudentListingSection({ profile, activeView = "forYou" }) {
+function StudentListingSection({ profile, activeView = "forYou", visible = true }) {
   const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
@@ -357,6 +358,10 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
   const [availableOnly, setAvailableOnly] = useState(true);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [recommendedVisibleCount, setRecommendedVisibleCount] =
+    useState(LISTINGS_PER_PAGE);
+  const [browseVisibleCount, setBrowseVisibleCount] =
+    useState(LISTINGS_PER_PAGE);
 
   async function loadData(user) {
     const approvedListings = await getApprovedListings();
@@ -376,6 +381,21 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    setRecommendedVisibleCount(LISTINGS_PER_PAGE);
+    setBrowseVisibleCount(LISTINGS_PER_PAGE);
+  }, [
+    search,
+    gender,
+    type,
+    foodFilter,
+    institution,
+    area,
+    availableOnly,
+    verifiedOnly,
+    sortBy,
+  ]);
 
   const areaFilters = useMemo(() => {
     const uniqueAreas = Array.from(
@@ -432,7 +452,7 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
       filterListingsByControls(recommendedBase, activeFilters),
       sortBy,
       profile
-    ).slice(0, 6);
+    );
   }, [listings, profile, activeFilters, sortBy]);
 
   const filteredListings = useMemo(() => {
@@ -444,14 +464,29 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
   }, [listings, activeFilters, sortBy, profile]);
   const savedListingIds = new Set(savedListings.map((item) => item.listingId));
   const isForYouView = activeView === "forYou";
-  const currentListings = isForYouView ? recommendedListings : filteredListings;
+  const visibleRecommendedListings = recommendedListings.slice(
+    0,
+    recommendedVisibleCount
+  );
+  const visibleBrowseListings = filteredListings.slice(0, browseVisibleCount);
+  const currentListings = isForYouView
+    ? visibleRecommendedListings
+    : visibleBrowseListings;
+  const totalCurrentListings = isForYouView
+    ? recommendedListings.length
+    : filteredListings.length;
+  const currentVisibleCount = isForYouView
+    ? recommendedVisibleCount
+    : browseVisibleCount;
+  const shownListingCount = Math.min(currentVisibleCount, totalCurrentListings);
+  const canLoadMore = currentVisibleCount < totalCurrentListings;
   const sectionTitle = isForYouView ? "Recommended for you" : "Browse all stays";
   const sectionSubtitle = isForYouView
     ? "Based on your preferences and active filters."
     : "Explore all approved listings.";
   const resultLabel = isForYouView
-    ? `${recommendedListings.length} matches`
-    : `${filteredListings.length} of ${listings.length}`;
+    ? `Showing ${shownListingCount} of ${recommendedListings.length} recommendations`
+    : `Showing ${shownListingCount} of ${filteredListings.length} stays`;
   const emptyTitle = isForYouView
     ? "No recommended stays match your preferences yet."
     : "No stays found for these filters.";
@@ -480,6 +515,21 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
     }
 
     navigate(`/listing/${listingId}`);
+  }
+
+  function handleLoadMore() {
+    if (isForYouView) {
+      setRecommendedVisibleCount(
+        (previousCount) => previousCount + LISTINGS_PER_PAGE
+      );
+      return;
+    }
+
+    setBrowseVisibleCount((previousCount) => previousCount + LISTINGS_PER_PAGE);
+  }
+
+  if (!visible) {
+    return null;
   }
 
   if (loading) {
@@ -614,22 +664,40 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
         </div>
       </div>
 
-      {currentListings.length === 0 ? (
+      {totalCurrentListings === 0 ? (
         <div className="mt-3 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-8">
           <h3 className="text-lg font-bold text-[#1F2933]">{emptyTitle}</h3>
           <p className="mt-2 text-sm text-slate-500">{emptyText}</p>
         </div>
       ) : (
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
-          {currentListings.map((listing) => (
-            <StudentListingCard
-              key={listing.id}
-              listing={listing}
-              saved={savedListingIds.has(listing.id)}
-              onView={() => handleViewDetails(listing)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
+            {currentListings.map((listing) => {
+              const listingId = getListingId(listing);
+
+              return (
+                <StudentListingCard
+                  key={listingId}
+                  listing={listing}
+                  saved={savedListingIds.has(listingId)}
+                  onView={() => handleViewDetails(listing)}
+                />
+              );
+            })}
+          </div>
+
+          {canLoadMore && (
+            <div className="mt-5 flex justify-center pb-3">
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                className="rounded-full border border-[#1E5B4F] bg-white px-5 py-3 text-sm font-black text-[#1E5B4F] transition hover:bg-[#F1FAF7]"
+              >
+                {isForYouView ? "Load more recommendations" : "Load more stays"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );
@@ -690,6 +758,8 @@ function StudentListingCard({ listing, onView }) {
           <img
             src={image}
             alt={listing.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
