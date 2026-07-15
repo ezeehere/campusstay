@@ -451,7 +451,7 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
     : "Explore all approved listings.";
   const resultLabel = isForYouView
     ? `${recommendedListings.length} matches`
-    : `${filteredListings.length} stays`;
+    : `${filteredListings.length} of ${listings.length}`;
   const emptyTitle = isForYouView
     ? "No recommended stays match your preferences yet."
     : "No stays found for these filters.";
@@ -494,161 +494,144 @@ function StudentListingSection({ profile, activeView = "forYou" }) {
   }
 
   return (
-    <>
-      <section className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 text-lg font-bold text-[#1F2933] sm:text-xl">
-              <SlidersHorizontal size={19} />
-              Filters & Sort
-            </h2>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowFilters((previous) => !previous)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1E5B4F] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#123C35]"
-            >
-              <SlidersHorizontal size={15} />
-              {showFilters ? "Hide filters" : "Filters & Sort"}
-            </button>
-
-            <p className="rounded-full bg-[#F1FAF7] px-4 py-2 text-sm font-bold text-[#1E5B4F]">
-              {filteredListings.length} of {listings.length}
-            </p>
-          </div>
+    <section className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
+            {isForYouView && <Sparkles size={21} />}
+            {sectionTitle}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">{sectionSubtitle}</p>
         </div>
 
-        <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-          <div className="mt-3">
-            <div className="relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
-              />
-
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search PG name, area, institution, facilities..."
-                className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-11 pr-4 text-sm outline-none focus:border-[#1E5B4F] focus:bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-3 sm:p-4">
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-              <FilterSelect
-                label="For"
-                value={gender}
-                onChange={setGender}
-                options={genderFilters}
-              />
-
-              <FilterSelect
-                label="Stay Type"
-                value={type}
-                onChange={setType}
-                options={stayTypeFilters}
-              />
-
-              <FilterSelect
-                label="Food"
-                value={foodFilter}
-                onChange={setFoodFilter}
-                options={foodFilters}
-              />
-
-              <FilterSelect
-                label="Nearby Institution"
-                value={institution}
-                onChange={setInstitution}
-                options={institutionFilters}
-              />
-
-              <FilterSelect
-                label="Area"
-                value={area}
-                onChange={setArea}
-                options={areaFilters}
-              />
-
-              <FilterSelect
-                label="Sort By"
-                value={sortBy}
-                onChange={setSortBy}
-                options={sortOptions}
-              />
-            </div>
-
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-3">
-                <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-medium text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={availableOnly}
-                    onChange={(event) => setAvailableOnly(event.target.checked)}
-                  />
-                  Available only
-                </label>
-
-                <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-medium text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(event) => setVerifiedOnly(event.target.checked)}
-                  />
-                  Verified only
-                </label>
-              </div>
-
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="h-11 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
-              >
-                Reset filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-4 rounded-[1.5rem] border border-[#E8DFD2] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-bold text-[#1F2933]">
-              {isForYouView && <Sparkles size={21} />}
-              {sectionTitle}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">{sectionSubtitle}</p>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowFilters((previous) => !previous)}
+            className="inline-flex items-center gap-2 rounded-full bg-[#1E5B4F] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#123C35]"
+          >
+            <SlidersHorizontal size={15} />
+            {showFilters ? "Hide filters" : "Filters & Sort"}
+          </button>
 
           <p className="rounded-full bg-[#F1FAF7] px-4 py-2 text-sm font-bold text-[#1E5B4F]">
             {resultLabel}
           </p>
         </div>
+      </div>
 
-        {currentListings.length === 0 ? (
-          <div className="mt-3 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-8">
-            <h3 className="text-lg font-bold text-[#1F2933]">{emptyTitle}</h3>
-            <p className="mt-2 text-sm text-slate-500">{emptyText}</p>
+      <div className={`${showFilters ? "block" : "hidden lg:block"}`}>
+        <div className="mt-3">
+          <div className="relative">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search PG name, area, institution, facilities..."
+              className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] pl-11 pr-4 text-sm outline-none focus:border-[#1E5B4F] focus:bg-white"
+            />
           </div>
-        ) : (
-          <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
-            {currentListings.map((listing) => (
-              <StudentListingCard
-                key={listing.id}
-                listing={listing}
-                saved={savedListingIds.has(listing.id)}
-                onView={() => handleViewDetails(listing)}
-              />
-            ))}
+        </div>
+
+        <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-3 sm:p-4">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <FilterSelect
+              label="For"
+              value={gender}
+              onChange={setGender}
+              options={genderFilters}
+            />
+
+            <FilterSelect
+              label="Stay Type"
+              value={type}
+              onChange={setType}
+              options={stayTypeFilters}
+            />
+
+            <FilterSelect
+              label="Food"
+              value={foodFilter}
+              onChange={setFoodFilter}
+              options={foodFilters}
+            />
+
+            <FilterSelect
+              label="Nearby Institution"
+              value={institution}
+              onChange={setInstitution}
+              options={institutionFilters}
+            />
+
+            <FilterSelect
+              label="Area"
+              value={area}
+              onChange={setArea}
+              options={areaFilters}
+            />
+
+            <FilterSelect
+              label="Sort By"
+              value={sortBy}
+              onChange={setSortBy}
+              options={sortOptions}
+            />
           </div>
-        )}
-      </section>
-    </>
+
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-3">
+              <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={availableOnly}
+                  onChange={(event) => setAvailableOnly(event.target.checked)}
+                />
+                Available only
+              </label>
+
+              <label className="flex h-11 items-center gap-2 rounded-2xl border border-[#E8DFD2] bg-white px-4 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(event) => setVerifiedOnly(event.target.checked)}
+                />
+                Verified only
+              </label>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="h-11 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-[#F6F1E8]"
+            >
+              Reset filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {currentListings.length === 0 ? (
+        <div className="mt-3 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center sm:p-8">
+          <h3 className="text-lg font-bold text-[#1F2933]">{emptyTitle}</h3>
+          <p className="mt-2 text-sm text-slate-500">{emptyText}</p>
+        </div>
+      ) : (
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3">
+          {currentListings.map((listing) => (
+            <StudentListingCard
+              key={listing.id}
+              listing={listing}
+              saved={savedListingIds.has(listing.id)}
+              onView={() => handleViewDetails(listing)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 function FilterSelect({ label, value, onChange, options }) {

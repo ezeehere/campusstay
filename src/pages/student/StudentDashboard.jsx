@@ -3,8 +3,12 @@ import { Link } from "react-router";
 import {
   CheckCircle2,
   Edit3,
+  Heart,
   Loader2,
   Save,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
   UserRound,
 } from "lucide-react";
 
@@ -444,7 +448,7 @@ function StudentDashboard() {
       : activeTab;
 
   return (
-    <main className="cs-page min-h-screen px-3 py-4 sm:px-6 lg:px-8">
+    <main className="cs-page min-h-screen px-3 pb-28 pt-4 sm:px-6 sm:pb-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl overflow-x-hidden">
         <header className="rounded-[1.5rem] border border-[#E8DFD2] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
           <div className="flex items-center gap-3">
@@ -470,6 +474,12 @@ function StudentDashboard() {
         />
 
         <StudentDashboardTabs
+          activeTab={displayedTab}
+          preferencesComplete={preferencesComplete}
+          onTabChange={handleTabChange}
+        />
+
+        <StudentDashboardBottomNav
           activeTab={displayedTab}
           preferencesComplete={preferencesComplete}
           onTabChange={handleTabChange}
@@ -531,16 +541,46 @@ function StudentDashboard() {
 }
 
 const studentTabs = [
-  { id: "forYou", label: "For You", requiresPreferences: true },
-  { id: "browse", label: "Browse", requiresPreferences: true },
-  { id: "saved", label: "Saved", requiresPreferences: true },
-  { id: "preferences", label: "Preferences", requiresPreferences: false },
-  { id: "profile", label: "Profile", requiresPreferences: false },
+  {
+    id: "forYou",
+    label: "For You",
+    mobileLabel: "For You",
+    icon: Sparkles,
+    requiresPreferences: true,
+  },
+  {
+    id: "browse",
+    label: "Browse",
+    mobileLabel: "Browse",
+    icon: Search,
+    requiresPreferences: true,
+  },
+  {
+    id: "saved",
+    label: "Saved",
+    mobileLabel: "Saved",
+    icon: Heart,
+    requiresPreferences: true,
+  },
+  {
+    id: "preferences",
+    label: "Preferences",
+    mobileLabel: "Prefs",
+    icon: SlidersHorizontal,
+    requiresPreferences: false,
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    mobileLabel: "Profile",
+    icon: UserRound,
+    requiresPreferences: false,
+  },
 ];
 
 function StudentDashboardTabs({ activeTab, preferencesComplete, onTabChange }) {
   return (
-    <nav className="mt-4 overflow-x-auto pb-1">
+    <nav className="mt-4 hidden overflow-x-auto pb-1 sm:block">
       <div className="flex min-w-max gap-2">
         {studentTabs.map((tab) => {
           const active = activeTab === tab.id;
@@ -558,6 +598,45 @@ function StudentDashboardTabs({ activeTab, preferencesComplete, onTabChange }) {
               } ${locked ? "opacity-60" : ""}`}
             >
               {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function StudentDashboardBottomNav({ activeTab, preferencesComplete, onTabChange }) {
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[#E8DFD2] bg-white/95 px-2 pt-2 shadow-[0_-8px_24px_rgba(31,41,51,0.08)] backdrop-blur sm:hidden"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)" }}
+    >
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        {studentTabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          const locked = tab.requiresPreferences && !preferencesComplete;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`flex min-w-0 flex-col items-center justify-center rounded-2xl px-1.5 py-1.5 text-[11px] font-bold transition ${
+                active ? "text-[#1E5B4F]" : "text-slate-500"
+              } ${locked ? "opacity-60" : ""}`}
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-2xl transition ${
+                  active
+                    ? "bg-[#1E5B4F] text-white shadow-sm"
+                    : "bg-transparent text-slate-500"
+                }`}
+              >
+                <Icon size={18} />
+              </span>
+              <span className="mt-1 truncate leading-none">{tab.mobileLabel}</span>
             </button>
           );
         })}
