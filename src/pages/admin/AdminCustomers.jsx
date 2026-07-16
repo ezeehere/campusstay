@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import {
     ArrowLeft,
@@ -9,6 +9,7 @@ import {
     MessageCircle,
     Phone,
     Search,
+    Share2,
     Trash2,
     UserRound,
 } from "lucide-react";
@@ -17,6 +18,14 @@ import {
     deleteCustomerAndActivity,
     getAdminCustomerAnalytics,
 } from "../../firebase/customerAnalytics";
+import {
+    DOT,
+    RUPEE,
+    getActivityLabel,
+    getActivitySubtitle,
+    normalizeActivityType,
+    normalizeDisplayText,
+} from "../../utils/activityFormatter";
 
 function formatDateFromSeconds(seconds) {
     if (!seconds) return "No activity yet";
@@ -38,18 +47,6 @@ function formatConsentDate(value) {
         month: "short",
         year: "numeric",
     });
-}
-
-function getEventLabel(eventType) {
-    const labels = {
-        view_details: "Viewed listing",
-        save: "Saved listing",
-        call_click: "Clicked call",
-        whatsapp_click: "Clicked WhatsApp",
-        map_click: "Opened map",
-    };
-
-    return labels[eventType] || eventType || "Activity";
 }
 
 function getPreferredAreasText(customer) {
@@ -387,7 +384,7 @@ function CustomerDetailsModal({ customer, deleting, onClose, onDelete }) {
                             </h2>
 
                             <p className="mt-1 text-sm text-slate-500">
-                                {customer.email || "No email"} Â· {customer.phone || "No phone"}
+                                {[normalizeDisplayText(customer.email || "No email"), normalizeDisplayText(customer.phone || "No phone")].filter(Boolean).join(` ${DOT} `)}
                             </p>
                         </div>
 
@@ -543,12 +540,19 @@ function InfoRow({ label, value }) {
 }
 
 function SmallListingRow({ item }) {
+    const listingName = normalizeDisplayText(
+        item.listingName || item.propertyName || item.listingTitle || "Saved listing"
+    );
+    const area = normalizeDisplayText(item.area || item.listingArea || item.location || "");
+    const rentText = item.rent || item.rent === 0 ? `${RUPEE}${item.rent}` : "";
+    const subtitle = [area, rentText].filter(Boolean).join(` ${DOT} `);
+
     return (
         <div className="flex items-center gap-3 rounded-2xl bg-[#FFF8EF] p-3">
             {item.image ? (
                 <img
                     src={item.image}
-                    alt={item.listingName}
+                    alt={listingName}
                     className="h-12 w-14 rounded-xl object-cover"
                 />
             ) : (
@@ -557,53 +561,76 @@ function SmallListingRow({ item }) {
 
             <div className="min-w-0">
                 <p className="line-clamp-1 text-sm font-bold text-[#1F2933]">
-                    {item.listingName}
+                    {listingName}
                 </p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                    {item.area} Â· â‚¹{item.rent}
-                </p>
+                {subtitle && (
+                    <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
+                )}
             </div>
         </div>
     );
 }
 
 function ActivityRow({ event }) {
+    const eventType = normalizeActivityType(event.eventType);
+    const subtitle = getActivitySubtitle(event);
     const iconMap = {
-        view_details: <Eye size={16} />,
-        call_click: <Phone size={16} />,
-        whatsapp_click: <MessageCircle size={16} />,
-        map_click: <MapPin size={16} />,
-        save: <Heart size={16} />,
+        listing_view: Eye,
+        view_details: Eye,
+        view_listing: Eye,
+        listing_viewed: Eye,
+        save: Heart,
+        save_listing: Heart,
+        listing_saved: Heart,
+        unsave_listing: Heart,
+        share_click: Share2,
+        listing_share: Share2,
+        call_click: Phone,
+        phone_click: Phone,
+        whatsapp_click: MessageCircle,
+        map_click: MapPin,
+        callback_request: Phone,
+        contact_request: Phone,
+        report_listing: Eye,
     };
+    const ActivityIcon = iconMap[eventType] || Eye;
 
     return (
         <div className="flex items-start gap-3 rounded-2xl bg-[#FFF8EF] p-3">
             <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#1E5B4F]">
-                {iconMap[event.eventType] || <Eye size={16} />}
+                <ActivityIcon size={16} />
             </div>
 
             <div className="min-w-0">
                 <p className="text-sm font-bold text-[#1F2933]">
-                    {getEventLabel(event.eventType)}
+                    {getActivityLabel(event.eventType)}
                 </p>
-                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                    {event.listingName || "Unknown listing"} Â· {event.area || "Area not added"}
-                </p>
+                {subtitle && (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
+                        {subtitle}
+                    </p>
+                )}
             </div>
         </div>
     );
 }
 
 function LeadCard({ lead }) {
+    const listingName = normalizeDisplayText(lead.listingName || "Listing");
+    const listingArea = normalizeDisplayText(lead.listingArea || lead.area || "");
+    const rentText =
+        lead.listingRent || lead.listingRent === 0 ? `${RUPEE}${lead.listingRent}` : "";
+    const subtitle = [listingArea, rentText].filter(Boolean).join(` ${DOT} `);
+
     return (
         <div className="rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] p-4">
             <p className="text-sm font-bold text-[#1F2933]">
-                {lead.listingName}
+                {listingName}
             </p>
 
-            <p className="mt-1 text-xs text-slate-500">
-                {lead.listingArea} Â· â‚¹{lead.listingRent}
-            </p>
+            {subtitle && (
+                <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
+            )}
 
             <div className="mt-3 grid gap-2 text-sm">
                 <p>
