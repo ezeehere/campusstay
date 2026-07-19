@@ -232,7 +232,7 @@ function ListingCard({ listing, onViewDetails }) {
         <div className="mt-3 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] px-3.5 py-3">
           <p
             className={`text-sm leading-6 text-slate-700 ${
-              summaryOpen ? "" : "line-clamp-3"
+              summaryOpen ? "" : "line-clamp-2"
             }`}
           >
             {summary.parts.map((part, index) =>
