@@ -58,6 +58,11 @@ function Terms() {
           involvement and supervision of a parent or legal guardian.
         </p>
         <p>
+          Incase of dispute or missrepresetation for person below the age of 18 years or more.
+          The legal representation or guardian shall be soly representation.
+        </p>
+
+        <p>
           Parents or guardians are responsible for reviewing property
           information, communicating with owners, visiting properties, and
           approving payments or rental decisions made for a minor.
