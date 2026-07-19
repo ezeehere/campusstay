@@ -9,17 +9,9 @@ export const launchData = {
 //                     Kaziranga ITI, Ayush Pharmacy, Sotai, and nearby Jorhat student areas.
 export const teamMembers = [
   {
-    name: "Ezaz Ahmed",
-    role: "Developer",
+    name: "CampusStay India",
+    role: "Helpline & Support",
     email: "ezazstudy@gmail.com", 
-    instagram: "https://instagram.com/ezee.io",
-    phone: "+917281904209"
-  },
-  {
-    name: "kongkon Ray",
-    role: "Designer",
-    email: "kankanray059@gmail.com", 
-    instagram: "https://instagram.com/kongkon_ray_",
-    phone: "+916003963538"
+    instagram: "https://www.instagram.com/campusstay_india/",
   }
 ];

@@ -25,7 +25,7 @@ function getCampusStayWhatsAppLink() {
 
 const progressSteps = [
   {
-    label: "7 listings live",
+    label: "Most listings are live",
     state: "done",
     icon: CheckCircle2,
   },
