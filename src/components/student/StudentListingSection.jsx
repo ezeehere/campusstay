@@ -4,6 +4,7 @@ import {
   Loader2,
   MapPin,
   Phone,
+  Route,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -13,7 +14,7 @@ import { trackListingInteraction } from "../../firebase/analytics";
 import { getApprovedListings } from "../../firebase/listings";
 import { getSavedListings } from "../../firebase/savedListings";
 import { watchStudentAuth } from "../../firebase/studentAuth";
-import { getListingId } from "../../utils/listingHelpers";
+import { getBestInstitutionDistanceInfo, getListingId } from "../../utils/listingHelpers";
 import SaveListingButton from "./SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
 
@@ -681,6 +682,7 @@ function StudentListingSection({ profile, activeView = "forYou", visible = true 
                   listing={listing}
                   saved={savedListingIds.has(listingId)}
                   onView={() => handleViewDetails(listing)}
+                  selectedInstitutionId={institution}
                 />
               );
             })}
@@ -724,7 +726,7 @@ function FilterSelect({ label, value, onChange, options }) {
   );
 }
 
-function StudentListingCard({ listing, onView }) {
+function StudentListingCard({ listing, onView, selectedInstitutionId }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -734,6 +736,7 @@ function StudentListingCard({ listing, onView }) {
   const seatsLeft = getTotalSeatsLeft(listing);
   const foodIncluded = isFoodIncluded(listing);
   const availableFromText = getAvailableFromText(listing);
+  const distanceInfo = getBestInstitutionDistanceInfo(listing, selectedInstitutionId);
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -837,6 +840,12 @@ function StudentListingCard({ listing, onView }) {
           </span>
         </p>
 
+        {distanceInfo && (
+          <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold leading-5 text-slate-500">
+            <Route size={14} className="mt-0.5 shrink-0 text-[#1E5B4F]" />
+            <span className="line-clamp-2">{distanceInfo.label}</span>
+          </p>
+        )}
         <div className="mt-3 grid grid-cols-3 gap-2">
           <CompactInfo label="Seats" value={seatsLeft > 0 ? `${seatsLeft} left` : "Full"} />
           <CompactInfo label="Food" value={foodIncluded ? "Yes" : "No"} />

@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Route,
   ShieldCheck,
   Utensils,
   User,
@@ -30,6 +31,7 @@ import { auth } from "../../firebase/config";
 import { createWhatsAppLink } from "../../utils/whatsapp";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
 import { buildStudentLoginUrl } from "../../utils/loginRedirect";
+import { getListingDistanceEntries } from "../../utils/listingHelpers";
 
 function ListingDetailsPage() {
   const { listingId } = useParams();
@@ -143,6 +145,7 @@ function ListingDetailsPage() {
   const mapLink = listing.mapLink || "https://maps.google.com";
   const pgNote = String(listing.pgNote || "").trim();
   const currentListingId = listing.id || listingId;
+  const distanceEntries = getListingDistanceEntries(listing);
   const listingLoginUrl = buildStudentLoginUrl({
     returnTo: `/listing/${currentListingId}`,
     action: "contact",
@@ -607,6 +610,30 @@ function ListingDetailsPage() {
               <ProtectedContactActions listing={listing} />
             </SectionCard>
 
+            {distanceEntries.length > 0 && (
+              <SectionCard title="Distance from campus">
+                <div className="grid gap-2">
+                  {distanceEntries.map((entry) => (
+                    <div
+                      key={entry.institutionId}
+                      className="rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 py-3"
+                    >
+                      <div className="flex items-start gap-2 text-sm font-black text-[#1F2933]">
+                        <Route size={16} className="mt-0.5 shrink-0 text-[#1E5B4F]" />
+                        <span>{entry.referencePoint}</span>
+                      </div>
+                      <p className="mt-1 pl-6 text-sm font-semibold text-slate-600">
+                        Approx. {entry.distanceText}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-3 text-xs font-semibold leading-5 text-slate-500">
+                  Road distance is approximate and may vary by route.
+                </p>
+              </SectionCard>
+            )}
             <SectionCard title="Location">
               <a
                 href={auth.currentUser ? mapLink : undefined}

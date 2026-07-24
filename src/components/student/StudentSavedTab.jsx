@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Eye, Heart, Loader2, Trash2 } from "lucide-react";
+import { Eye, Heart, Loader2, Route, Trash2 } from "lucide-react";
 
 import { getSavedListings, unsaveListing } from "../../firebase/savedListings";
+import { getBestInstitutionDistanceInfo } from "../../utils/listingHelpers";
 
 const RUPEE = "\u20B9";
 const DOT = "\u00B7";
@@ -98,7 +99,10 @@ function StudentSavedTab({ studentUser, onBrowse }) {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {savedListings.map((item) => (
+          {savedListings.map((item) => {
+            const distanceInfo = getBestInstitutionDistanceInfo(item);
+
+            return (
             <article
               key={item.id}
               className="overflow-hidden rounded-[1.4rem] border border-[#E8DFD2] bg-white shadow-sm"
@@ -126,6 +130,12 @@ function StudentSavedTab({ studentUser, onBrowse }) {
                     <p className="mt-1 line-clamp-1 text-sm text-slate-500">
                       {item.area || "Area not added"} {DOT} {item.type || "Stay"}
                     </p>
+                    {distanceInfo && (
+                      <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold leading-5 text-slate-500">
+                        <Route size={14} className="mt-0.5 shrink-0 text-[#1E5B4F]" />
+                        <span className="line-clamp-2">{distanceInfo.label}</span>
+                      </p>
+                    )}
                   </div>
 
                   <span className="shrink-0 rounded-full bg-[#FFF4D8] px-3 py-1 text-xs font-bold text-[#8A5A00]">
@@ -178,7 +188,8 @@ function StudentSavedTab({ studentUser, onBrowse }) {
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

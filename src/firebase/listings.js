@@ -14,14 +14,57 @@ import {
 } from "firebase/firestore";
 
 import { db } from "./config";
+import { normalizeInstitutionDistances } from "../utils/listingHelpers";
 
 function createStatusKey(trackingId, phone) {
   return `${trackingId}_${phone}`.replace(/\s+/g, "");
 }
 
 const listingsCollection = collection(db, "listings");
+function prepareInstitutionDistancesForWrite(value) {
+  const distances = normalizeInstitutionDistances(value);
+
+  return Object.fromEntries(
+    Object.entries(distances).map(([institutionId, item]) => [
+      institutionId,
+      {
+        distanceKm: Number(item.distanceKm),
+        referencePoint: item.referencePoint || "",
+        updatedAt: item.updatedAt || serverTimestamp(),
+      },
+    ])
+  );
+}
+
+function prepareListingDataForCreate(listingData) {
+  const { institutionDistances, ...restListingData } = listingData;
+  const preparedDistances = prepareInstitutionDistancesForWrite(institutionDistances);
+
+  if (Object.keys(preparedDistances).length === 0) {
+    return restListingData;
+  }
+
+  return {
+    ...restListingData,
+    institutionDistances: preparedDistances,
+  };
+}
+
+function prepareListingUpdatesForWrite(updates) {
+  if (!Object.prototype.hasOwnProperty.call(updates, "institutionDistances")) {
+    return updates;
+  }
+
+  const { institutionDistances, ...restUpdates } = updates;
+
+  return {
+    ...restUpdates,
+    institutionDistances: prepareInstitutionDistancesForWrite(institutionDistances),
+  };
+}
 
 export async function addPendingListing(listingData) {
+  const listingWriteData = prepareListingDataForCreate(listingData);
   const roomOptions = listingData.roomOptions || [];
 
   const startingRent =
@@ -33,7 +76,7 @@ export async function addPendingListing(listingData) {
       ? roomOptions.some((room) => Number(room.availableUnits || 0) > 0)
       : listingData.available === true;
   const docRef = await addDoc(listingsCollection, {
-    ...listingData,
+    ...listingWriteData,
     contactPerson: listingData.contactPerson || "Owner",
     alternatePhone: listingData.alternatePhone || "",
     alternateContactPerson: listingData.alternateContactPerson || "",
@@ -164,8 +207,10 @@ export async function getAllListings() {
 export async function updateListing(listingId, updates) {
   const listingRef = doc(db, "listings", listingId);
 
+  const preparedUpdates = prepareListingUpdatesForWrite(updates);
+
   await updateDoc(listingRef, {
-    ...updates,
+    ...preparedUpdates,
     updatedAt: serverTimestamp(),
   });
 

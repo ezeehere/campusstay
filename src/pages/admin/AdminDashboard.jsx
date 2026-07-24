@@ -25,6 +25,13 @@ import {
 
 import AdminListingDetailsModal from "../../components/admin/AdminListingDetailsModal";
 import { getListingScoreBreakdown } from "../../utils/listingScore";
+import {
+  formatDistance,
+  getInstitutionDistance,
+  getInstitutionIdFromValue,
+  getInstitutionReferencePoint,
+  getListingDistanceEntries,
+} from "../../utils/listingHelpers";
 
 function getNearbyInstitutions(listing) {
   if (
@@ -53,6 +60,30 @@ function getNearbyText(listing) {
   return institutions.length > 0 ? institutions.join(", ") : "Nearby not selected";
 }
 
+
+function getAdminDistanceSummary(listing) {
+  const relatedInstitutions = getNearbyInstitutions(listing);
+  const savedDistanceEntries = getListingDistanceEntries(listing);
+  const displayValues =
+    relatedInstitutions.length > 0
+      ? relatedInstitutions
+      : savedDistanceEntries.map((entry) => entry.institutionId);
+  const rows = Array.from(new Set(displayValues))
+    .map((institutionValue) => {
+      const institutionId = getInstitutionIdFromValue(institutionValue);
+      const referencePoint =
+        getInstitutionReferencePoint(institutionId) || String(institutionValue || "");
+      const distanceKm = getInstitutionDistance(listing, institutionId);
+      const distanceText = distanceKm === null ? "" : formatDistance(distanceKm);
+
+      return referencePoint
+        ? `${referencePoint}: ${distanceText || "Distance not added"}`
+        : "";
+    })
+    .filter(Boolean);
+
+  return rows.length > 0 ? rows.join(" / ") : "Distance not added";
+}
 function getImageCount(listing) {
   return Array.isArray(listing?.images) ? listing.images.length : 0;
 }
@@ -421,6 +452,10 @@ function AdminDashboard() {
                           label="Nearby"
                           value={getNearbyText(listing)}
                         />
+                        <InfoMini
+                          label="Distance"
+                          value={getAdminDistanceSummary(listing)}
+                        />
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
@@ -577,6 +612,9 @@ function AdminDashboard() {
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
                               Near {getNearbyText(listing)}
+                            </p>
+                            <p className="mt-1 max-w-xs text-xs font-semibold text-amber-700">
+                              {getAdminDistanceSummary(listing)}
                             </p>
                           </td>
 

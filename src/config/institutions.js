@@ -5,6 +5,7 @@ export const institutions = [
     fullName: "All institutions",
     heroLabel: "All Colleges",
     showOnHome: false,
+    referencePoint: "",
     areas: [
       "JIST Gate",
       "Sotai",
@@ -20,6 +21,7 @@ export const institutions = [
     fullName: "Jorhat Institute of Science and Technology",
     heroLabel: "JIST",
     showOnHome: true,
+    referencePoint: "JIST Main Gate",
     areas: ["JIST Gate", "Sotai", "Kokilamukh Road", "Nearby JIST"],
   },
   {
@@ -28,6 +30,7 @@ export const institutions = [
     fullName: "Jorhat Engineering College",
     heroLabel: "JEC",
     showOnHome: true,
+    referencePoint: "JEC Main Gate",
     areas: ["JEC Gate", "Garmur", "Tarajan", "Nearby JEC"],
   },
   {
@@ -36,6 +39,7 @@ export const institutions = [
     fullName: "Ayush Pharmacy",
     heroLabel: "Ayush Pharmacy",
     showOnHome: false,
+    referencePoint: "Ayush Pharmacy Main Gate",
     areas: ["Ayush Pharmacy Area", "Tarajan", "Nearby Ayush Pharmacy"],
   },
   {
@@ -44,6 +48,7 @@ export const institutions = [
     fullName: "Kaziranga ITI",
     heroLabel: "Kaziranga ITI",
     showOnHome: false,
+    referencePoint: "Kaziranga ITI Main Gate",
     areas: ["Kaziranga ITI Area", "Sotai", "Nearby Kaziranga ITI"],
   },
 ];
@@ -53,7 +58,36 @@ export function getInstitutionById(id) {
     institutions.find((institution) => institution.id === id) || institutions[0]
   );
 }
+export function findInstitution(value) {
+  const normalizedValue = normalizeInstitution(value);
 
+  if (!normalizedValue) return null;
+
+  return (
+    institutions.find((institution) => {
+      const aliases = [
+        institution.id,
+        institution.shortName,
+        institution.fullName,
+        institution.heroLabel,
+        institution.referencePoint,
+      ]
+        .map(normalizeInstitution)
+        .filter(Boolean);
+
+      return aliases.some(
+        (alias) =>
+          alias === normalizedValue ||
+          alias.includes(normalizedValue) ||
+          normalizedValue.includes(alias)
+      );
+    }) || null
+  );
+}
+
+export function getInstitutionReferencePoint(value) {
+  return findInstitution(value)?.referencePoint || "";
+}
 function normalizeInstitution(value) {
   return String(value || "")
     .toLowerCase()
@@ -70,6 +104,7 @@ export function listingMatchesInstitution(listing, institutionId) {
     institution.shortName,
     institution.fullName,
     institution.heroLabel,
+    institution.referencePoint,
   ]
     .map(normalizeInstitution)
     .filter(Boolean);

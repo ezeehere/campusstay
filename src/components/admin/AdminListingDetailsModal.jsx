@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Phone,
   PlusCircle,
+  Route,
   Save,
   ShieldCheck,
   Trash2,
@@ -22,16 +23,26 @@ import {
 } from "lucide-react";
 
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
+import { institutions } from "../../config/institutions";
 import { getListingScoreBreakdown } from "../../utils/listingScore";
+import {
+  buildInstitutionDistanceInputs,
+  buildInstitutionDistancesFromInputs,
+  formatDistance,
+  getInstitutionDistance,
+  getInstitutionIdFromValue,
+  getInstitutionReferencePoint,
+  getListingDistanceEntries,
+} from "../../utils/listingHelpers";
 
 const MAX_IMAGES = 14;
 
-const NEARBY_INSTITUTIONS = [
-  "JIST",
-  "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy",
-];
+const NEARBY_INSTITUTION_OPTIONS = institutions
+  .filter((institution) => institution.id !== "all")
+  .map((institution) => ({
+    id: institution.id,
+    label: institution.heroLabel,
+  }));
 
 const STAY_TYPES = ["PG", "Room", "Hostel"];
 const GENDER_OPTIONS = ["Boys", "Girls", "Co-ed"];
@@ -152,6 +163,44 @@ function getImageCount(listing) {
   return Array.isArray(listing?.images) ? listing.images.length : 0;
 }
 
+
+function getAdminDistanceRows(listing) {
+  const relatedInstitutions = getNearbyInstitutions(listing);
+  const savedDistanceEntries = getListingDistanceEntries(listing);
+  const displayValues =
+    relatedInstitutions.length > 0
+      ? relatedInstitutions
+      : savedDistanceEntries.map((entry) => entry.institutionId);
+
+  return Array.from(new Set(displayValues))
+    .map((institutionValue) => {
+      const institutionId = getInstitutionIdFromValue(institutionValue);
+      const referencePoint =
+        getInstitutionReferencePoint(institutionId) || String(institutionValue || "");
+      const distanceKm = getInstitutionDistance(listing, institutionId);
+      const distanceText = distanceKm === null ? "" : formatDistance(distanceKm);
+
+      return {
+        institutionId: institutionId || String(institutionValue || ""),
+        referencePoint,
+        distanceText,
+        label: distanceText
+          ? `Approx. ${distanceText} from ${referencePoint}`
+          : "Distance not added",
+      };
+    })
+    .filter((row) => row.referencePoint);
+}
+
+function getAdminDistanceSummary(listing) {
+  const rows = getAdminDistanceRows(listing);
+
+  if (rows.length === 0) return "Distance not added";
+
+  return rows
+    .map((row) => `${row.referencePoint}: ${row.distanceText || "Distance not added"}`)
+    .join(" / ");
+}
 function getFoodText(listing) {
   const hasFood = listing?.foodIncluded === true || listing?.food === true;
 
@@ -306,6 +355,8 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                 onUpdate={onUpdate}
                 saving={saving}
               />
+
+              <AdminDistanceSummary listing={listing} />
 
               <RecommendationScoreBox scoreData={scoreData} />
 
@@ -503,6 +554,7 @@ function AdminListingDetailsModal({ listing, onClose, onUpdate, saving }) {
                   <DetailRow label="Type" value={listing.type} />
                   <DetailRow label="For" value={listing.gender} />
                   <DetailRow label="Nearby" value={getNearbyText(listing)} />
+                  <DetailRow label="Distance" value={getAdminDistanceSummary(listing)} />
                   <DetailRow label="Area" value={listing.area} />
                   <DetailRow label="PG note" value={listing.pgNote} />
                   <DetailRow label="Photos" value={`${getImageCount(listing)} uploaded`} />
@@ -671,6 +723,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     availableFrom: "",
     moveInNote: "",
     nearbyInstitutions: [],
+    institutionDistanceInputs: {},
     food: "Yes",
     foodDetails: "",
     facilitiesText: "",
@@ -699,6 +752,9 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
         : listing?.nearbyCollege
           ? [listing.nearbyCollege]
           : [],
+      institutionDistanceInputs: buildInstitutionDistanceInputs(
+        listing?.institutionDistances
+      ),
       food: listing?.foodIncluded || listing?.food ? "Yes" : "No",
       foodDetails: listing?.foodDetails || "",
       facilitiesText: Array.isArray(listing?.facilities)
@@ -747,6 +803,20 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
     });
   }
 
+
+  function handleInstitutionDistanceChange(institutionValue, value) {
+    const institutionId = getInstitutionIdFromValue(institutionValue);
+
+    if (!institutionId) return;
+
+    setEditData((previous) => ({
+      ...previous,
+      institutionDistanceInputs: {
+        ...previous.institutionDistanceInputs,
+        [institutionId]: value,
+      },
+    }));
+  }
   function updateRoomOption(index, field, value) {
     setEditData((previous) => ({
       ...previous,
@@ -910,6 +980,16 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       .map((item) => item.trim())
       .filter(Boolean);
 
+    const distanceResult = buildInstitutionDistancesFromInputs(
+      editData.nearbyInstitutions,
+      editData.institutionDistanceInputs,
+      listing?.institutionDistances
+    );
+
+    if (distanceResult.error) {
+      alert(distanceResult.error);
+      return;
+    }
     const rules = editData.rulesText
       .split(",")
       .map((item) => item.trim())
@@ -933,6 +1013,7 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
       nearbyInstitutions: editData.nearbyInstitutions,
       nearbyCollege: editData.nearbyInstitutions[0] || "",
       nearbyInstitutionText: editData.nearbyInstitutions.join(", "),
+      institutionDistances: distanceResult.institutionDistances,
 
       food: editData.food === "Yes",
       foodIncluded: editData.food === "Yes",
@@ -1124,27 +1205,74 @@ function AdminListingEditPanel({ listing, onUpdate, saving }) {
             </p>
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {NEARBY_INSTITUTIONS.map((institution) => {
+              {NEARBY_INSTITUTION_OPTIONS.map((institution) => {
                 const selected =
-                  editData.nearbyInstitutions.includes(institution);
+                  editData.nearbyInstitutions.includes(institution.label);
 
                 return (
                   <button
-                    key={institution}
+                    key={institution.id}
                     type="button"
-                    onClick={() => toggleInstitution(institution)}
+                    onClick={() => toggleInstitution(institution.label)}
                     className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${
                       selected
                         ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
                         : "border-[#E8DFD2] bg-white text-slate-700"
                     }`}
                   >
-                    {institution}
+                    {institution.label}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {editData.nearbyInstitutions.length > 0 && (
+            <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">
+              <h4 className="text-base font-black text-[#1F2933]">
+                Distance from institution
+              </h4>
+              <p className="mt-1 text-sm text-slate-500">
+                Leave blank to remove the distance for that institution. Enter 0 only if the property is actually at the gate.
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {editData.nearbyInstitutions.map((institutionValue) => {
+                  const institutionId = getInstitutionIdFromValue(institutionValue);
+                  const referencePoint =
+                    getInstitutionReferencePoint(institutionId) || institutionValue;
+
+                  return (
+                    <label key={institutionId || institutionValue} className="block">
+                      <span className="mb-2 block text-sm font-bold text-slate-700">
+                        {referencePoint}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          inputMode="decimal"
+                          value={editData.institutionDistanceInputs?.[institutionId] || ""}
+                          onChange={(event) =>
+                            handleInstitutionDistanceChange(
+                              institutionValue,
+                              event.target.value
+                            )
+                          }
+                          placeholder="Example: 1.8"
+                          className="h-12 w-full rounded-2xl border border-[#E8DFD2] bg-[#FFF8EF] px-4 text-sm font-semibold text-slate-700 outline-none focus:border-[#1E5B4F]"
+                        />
+                        <span className="shrink-0 text-sm font-black text-slate-500">
+                          km
+                        </span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <AdminEditTextarea
@@ -1487,6 +1615,48 @@ function DetailRow({ label, value }) {
   );
 }
 
+
+function AdminDistanceSummary({ listing }) {
+  const rows = getAdminDistanceRows(listing);
+
+  return (
+    <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">
+      <div className="flex items-start gap-2">
+        <Route size={18} className="mt-0.5 shrink-0 text-[#1E5B4F]" />
+        <div>
+          <h3 className="text-base font-black text-slate-950">
+            Distance from institution
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Admin-only check before approving or updating a listing.
+          </p>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
+          Distance not added
+        </p>
+      ) : (
+        <div className="mt-3 grid gap-2">
+          {rows.map((row) => (
+            <div
+              key={row.institutionId}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                row.distanceText
+                  ? "bg-[#F1FAF7] text-[#1E5B4F]"
+                  : "bg-amber-50 text-amber-700"
+              }`}
+            >
+              <p>{row.referencePoint}</p>
+              <p className="mt-1 font-semibold opacity-90">{row.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 function RecommendationScoreBox({ scoreData }) {
   return (
     <div className="rounded-3xl border border-[#E8DFD2] bg-white p-4">

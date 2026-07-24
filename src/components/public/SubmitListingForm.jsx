@@ -13,13 +13,19 @@ import {
 import { addPendingListing } from "../../firebase/listings";
 import { uploadImagesToCloudinary } from "../../cloudinary/uploadImages";
 import { auth } from "../../firebase/config";
+import { institutions } from "../../config/institutions";
+import {
+  buildInstitutionDistancesFromInputs,
+  getInstitutionIdFromValue,
+  getInstitutionReferencePoint,
+} from "../../utils/listingHelpers";
 
-const NEARBY_INSTITUTIONS = [
-  "JIST",
-  "JEC",
-  "Kaziranga ITI",
-  "Ayush Pharmacy",
-];
+const NEARBY_INSTITUTION_OPTIONS = institutions
+  .filter((institution) => institution.id !== "all")
+  .map((institution) => ({
+    id: institution.id,
+    label: institution.heroLabel,
+  }));
 
 const PREDEFINED_FACILITIES = [
   "Wi-Fi",
@@ -64,6 +70,7 @@ const initialFormData = {
   area: "",
   pgNote: "",
   nearbyInstitutions: [],
+  institutionDistanceInputs: {},
   food: "Yes",
   foodDetails: "",
   facilities: [],
@@ -140,6 +147,20 @@ function SubmitListingForm({ ownerMode = false }) {
     });
   }
 
+
+  function handleInstitutionDistanceChange(institutionValue, value) {
+    const institutionId = getInstitutionIdFromValue(institutionValue);
+
+    if (!institutionId) return;
+
+    setFormData((previousData) => ({
+      ...previousData,
+      institutionDistanceInputs: {
+        ...previousData.institutionDistanceInputs,
+        [institutionId]: value,
+      },
+    }));
+  }
   function toggleFacility(facility) {
     setFormData((previousData) => {
       const selected = previousData.facilities.includes(facility);
@@ -333,6 +354,15 @@ function SubmitListingForm({ ownerMode = false }) {
     const hasAvailableRoom = cleanRoomOptions.some((room) => room.available);
     const trackingId = generateTrackingId();
 
+    const distanceResult = buildInstitutionDistancesFromInputs(
+      formData.nearbyInstitutions,
+      formData.institutionDistanceInputs
+    );
+
+    if (distanceResult.error) {
+      alert(distanceResult.error);
+      return;
+    }
     const listingData = {
       name: formData.name.trim(),
       type: formData.type,
@@ -343,6 +373,7 @@ function SubmitListingForm({ ownerMode = false }) {
       nearbyInstitutions: formData.nearbyInstitutions,
       nearbyCollege: formData.nearbyInstitutions[0] || "",
       nearbyInstitutionText: formData.nearbyInstitutions.join(", "),
+      institutionDistances: distanceResult.institutionDistances,
 
       food: formData.food === "Yes",
       foodIncluded: formData.food === "Yes",
@@ -651,21 +682,21 @@ function SubmitListingForm({ ownerMode = false }) {
             </label>
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {NEARBY_INSTITUTIONS.map((institution) => {
+              {NEARBY_INSTITUTION_OPTIONS.map((institution) => {
                 const selected =
-                  formData.nearbyInstitutions.includes(institution);
+                  formData.nearbyInstitutions.includes(institution.label);
 
                 return (
                   <button
-                    key={institution}
+                    key={institution.id}
                     type="button"
-                    onClick={() => toggleNearbyInstitution(institution)}
+                    onClick={() => toggleNearbyInstitution(institution.label)}
                     className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selected
                       ? "border-[#1E5B4F] bg-[#1E5B4F] text-white"
                       : "border-[#E8DFD2] bg-[#FFF8EF] text-slate-700 hover:bg-[#F6F1E8]"
                       }`}
                   >
-                    {institution}
+                    {institution.label}
                   </button>
                 );
               })}
@@ -675,6 +706,53 @@ function SubmitListingForm({ ownerMode = false }) {
               Select one or more institutions this stay is useful for.
             </p>
           </div>
+
+          {formData.nearbyInstitutions.length > 0 && (
+            <div className="md:col-span-2 rounded-3xl border border-[#E8DFD2] bg-[#FFF8EF] p-4">
+              <h4 className="text-base font-extrabold text-[#1F2933]">
+                Distance from institution
+              </h4>
+              <p className="mt-1 text-sm text-slate-500">
+                Add approximate road distance from the selected campus main gate. Leave blank if not checked yet.
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {formData.nearbyInstitutions.map((institutionValue) => {
+                  const institutionId = getInstitutionIdFromValue(institutionValue);
+                  const referencePoint =
+                    getInstitutionReferencePoint(institutionId) || institutionValue;
+
+                  return (
+                    <label key={institutionId || institutionValue} className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        {referencePoint}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          inputMode="decimal"
+                          value={formData.institutionDistanceInputs?.[institutionId] || ""}
+                          onChange={(event) =>
+                            handleInstitutionDistanceChange(
+                              institutionValue,
+                              event.target.value
+                            )
+                          }
+                          placeholder="Example: 1.8"
+                          className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none focus:border-slate-400"
+                        />
+                        <span className="shrink-0 text-sm font-bold text-slate-500">
+                          km
+                        </span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

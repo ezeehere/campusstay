@@ -389,6 +389,7 @@ function Home() {
                   key={listing.id}
                   listing={listing}
                   onViewDetails={() => handleViewListing(listing)}
+                  selectedInstitutionId={institution}
                 />
               ))}
             </div>

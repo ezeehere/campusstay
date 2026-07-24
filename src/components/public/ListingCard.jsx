@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   BedDouble,
   MapPin,
+  Route,
 } from "lucide-react";
 
 import SaveListingButton from "../student/SaveListingButton";
 import ShareListingButton from "../shared/ShareListingButton";
 import { getCloudinaryOptimizedUrl } from "../../utils/cloudinaryImage";
+import { getBestInstitutionDistanceInfo } from "../../utils/listingHelpers";
 
-function ListingCard({ listing, onViewDetails }) {
+function ListingCard({ listing, onViewDetails, selectedInstitutionId }) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -25,6 +27,7 @@ function ListingCard({ listing, onViewDetails }) {
   const pgNote = String(listing.pgNote || "").trim();
   const roomPreview = getRoomPreview(listing);
   const summary = buildHumanPgSummary(listing);
+  const distanceInfo = getBestInstitutionDistanceInfo(listing, selectedInstitutionId);
   const shouldShowReadMore = summary.fullText.length > 155;
 
   useEffect(() => {
@@ -196,6 +199,12 @@ function ListingCard({ listing, onViewDetails }) {
           </p>
         </div>
 
+        {distanceInfo && (
+          <div className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-slate-500">
+            <Route size={14} className="mt-0.5 shrink-0 text-[#1E5B4F]" />
+            <p className="line-clamp-2">{distanceInfo.label}</p>
+          </div>
+        )}
         <div className="mt-3 rounded-3xl bg-[#F8F8F8] p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-slate-500">
